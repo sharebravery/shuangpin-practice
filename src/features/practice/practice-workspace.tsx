@@ -43,11 +43,12 @@ export function PracticeWorkspace() {
     }
   }, [hasHydrated, startSession]);
 
-  // 题目/字索引/状态/反馈变化时清空输入（渲染期调整 state，避免 effect 内 setState）。
-  const resetKey = `${questionId}:${phraseIndex}:${status}:${feedback}`;
-  const [lastResetKey, setLastResetKey] = useState(resetKey);
-  if (lastResetKey !== resetKey) {
-    setLastResetKey(resetKey);
+  // 仅在「新题目 / 新字」时清空输入与 lastInput；状态变化（如 wrong）不清空
+  // lastInput，以便键位图高亮错误输入。输入本身在 onSubmit 时已清空。
+  const questionResetKey = `${questionId}:${phraseIndex}`;
+  const [lastResetKey, setLastResetKey] = useState(questionResetKey);
+  if (lastResetKey !== questionResetKey) {
+    setLastResetKey(questionResetKey);
     setInput("");
     setLastInput("");
   }
@@ -60,7 +61,7 @@ export function PracticeWorkspace() {
     } else {
       document.getElementById("practice-action")?.focus();
     }
-  }, [resetKey, status, feedback]);
+  }, [questionResetKey, status, feedback]);
 
   // 练习级全局键盘监听（Enter/Space/Escape）。
   useEffect(() => {

@@ -20,6 +20,22 @@ test("答错 -> Enter -> 下一题", async ({ page }) => {
   await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
 });
 
+/** 答错时键位图高亮错误键与正确键。 */
+test("答错时键位图高亮错误键与正确键", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#practice-input").waitFor({ timeout: 10_000 });
+  await page.locator("#practice-input").click();
+  await page.keyboard.type("zz");
+  await page.getByRole("button", { name: "下一题" }).waitFor({ timeout: 5_000 });
+
+  const keyboard = page.getByLabel("双拼键位图");
+  // 错误键（z）标红
+  await expect(keyboard.locator("div.border-destructive")).toHaveCount(1);
+  // 正确键标绿（至少 1 个）
+  const correctCount = await keyboard.locator("div.border-emerald-500").count();
+  expect(correctCount).toBeGreaterThanOrEqual(1);
+});
+
 /** Space 暂停，Space 恢复。 */
 test("Space -> 暂停 -> Space -> 恢复", async ({ page }) => {
   await page.goto("/");
