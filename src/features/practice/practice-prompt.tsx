@@ -59,9 +59,9 @@ export function PracticePrompt() {
 
   if (status === "completed") {
     return (
-      <div className="flex flex-col items-center gap-3 py-12">
+      <div className="py-12 text-center">
         <p className="text-lg font-medium">本组完成 🎉</p>
-        <Button onClick={() => next()}>再练一组</Button>
+        <p className="mt-1 text-sm text-muted-foreground">结果见弹窗</p>
       </div>
     );
   }
