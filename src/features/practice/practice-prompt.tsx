@@ -1,6 +1,7 @@
 "use client";
 
 import { usePracticeStore } from "@/stores/practice-store";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /** 单字错误拆解：ch -> i, uang -> d。 */
@@ -36,6 +37,8 @@ export function PracticePrompt() {
   const phraseIndex = usePracticeStore((s) => s.session.phraseIndex);
   const feedback = usePracticeStore((s) => s.session.feedback);
   const showPinyin = usePracticeStore((s) => s.settings.showPinyin);
+  const next = usePracticeStore((s) => s.next);
+  const resume = usePracticeStore((s) => s.resume);
 
   if (status === "ready" || !question) {
     return (
@@ -47,18 +50,18 @@ export function PracticePrompt() {
 
   if (status === "paused") {
     return (
-      <div className="py-12 text-center">
+      <div className="flex flex-col items-center gap-3 py-12">
         <p className="text-lg font-medium">已暂停</p>
-        <p className="mt-1 text-sm text-muted-foreground">按 Space 继续</p>
+        <Button onClick={() => resume()}>继续</Button>
       </div>
     );
   }
 
   if (status === "completed") {
     return (
-      <div className="py-12 text-center">
+      <div className="flex flex-col items-center gap-3 py-12">
         <p className="text-lg font-medium">本组完成 🎉</p>
-        <p className="mt-1 text-sm text-muted-foreground">按 Enter 再练一组</p>
+        <Button onClick={() => next()}>再练一组</Button>
       </div>
     );
   }
@@ -114,7 +117,7 @@ export function PracticePrompt() {
 
       {/* 反馈区 */}
       {wrong && (
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-3">
           {question.kind === "character" && (
             <Breakdown breakdown={question.breakdown} answer={question.answer} />
           )}
@@ -132,12 +135,15 @@ export function PracticePrompt() {
               <span className="font-mono text-foreground">{question.answer}</span>
             </span>
           )}
-          <span className="text-xs text-muted-foreground">按 Enter 继续</span>
+          <Button onClick={() => next()}>下一题</Button>
         </div>
       )}
 
       {!wrong && correctFeedback && (
-        <span className="text-sm font-medium text-primary">正确</span>
+        <div className="flex flex-col items-center gap-3">
+          <span className="text-sm font-medium text-primary">正确</span>
+          <Button onClick={() => next()}>下一题</Button>
+        </div>
       )}
     </div>
   );

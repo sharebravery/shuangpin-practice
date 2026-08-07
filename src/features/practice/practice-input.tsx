@@ -22,16 +22,15 @@ interface PracticeInputProps {
   disabled: boolean;
   onChange: (value: string) => void;
   onSubmit: (value: string) => void;
-  onEnter: () => void;
-  onEsc: () => void;
-  onSpace: () => void;
 }
 
 /**
  * 练习输入框（实现细则 §13）：
  * - 关闭自动更正/大写/拼写检查。
  * - 仅保留 a-z 与分号；输入法组合期间不判断，compositionend 后清理。
- * - 达到答案长度自动判断；Esc 清空、Space 暂停/继续、Enter 继续/下一题。
+ * - 达到答案长度自动判断。
+ * - 练习级快捷键（Esc/Enter/Space）由 PracticeWorkspace 的全局键盘监听处理，
+ *   不依赖本输入框（wrong/paused 等状态下输入框被禁用仍可触发）。
  */
 export function PracticeInput({
   value,
@@ -39,14 +38,12 @@ export function PracticeInput({
   disabled,
   onChange,
   onSubmit,
-  onEnter,
-  onEsc,
-  onSpace,
 }: PracticeInputProps) {
   const [composing, setComposing] = useState(false);
 
-  const trySubmit = (raw: string) => {
+  const handle = (raw: string) => {
     const filtered = clean(raw);
+    onChange(filtered);
     if (filtered.length >= expectedLength) {
       onSubmit(filtered);
     }
@@ -67,45 +64,16 @@ export function PracticeInput({
       placeholder="请输入双拼编码"
       className="mx-auto max-w-56 text-center font-mono text-lg"
       onChange={(e) => {
-        const v = e.target.value;
         if (composing) {
-          onChange(v);
+          onChange(e.target.value);
           return;
         }
-        const filtered = clean(v);
-        onChange(filtered);
-        trySubmit(filtered);
+        handle(e.target.value);
       }}
       onCompositionStart={() => setComposing(true)}
       onCompositionEnd={(e) => {
         setComposing(false);
-        const v = (e.target as HTMLInputElement).value;
-        const filtered = clean(v);
-        onChange(filtered);
-        if (filtered.length >= expectedLength) {
-          onSubmit(filtered);
-        }
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          e.preventDefault();
-          onEsc();
-          return;
-        }
-        if (e.key === "Enter") {
-          e.preventDefault();
-          onEnter();
-          return;
-        }
-        if (e.key === " ") {
-          // Space 仅在输入为空时控制暂停；否则阻止（输入不接受空格）。
-          if (value === "" && !disabled) {
-            e.preventDefault();
-            onSpace();
-          } else {
-            e.preventDefault();
-          }
-        }
+        handle((e.target as HTMLInputElement).value);
       }}
     />
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { usePracticeStore } from "@/stores/practice-store";
 import { PracticeToolbar } from "./practice-toolbar";
@@ -13,24 +13,28 @@ import { ResultDialog } from "./result-dialog";
 /**
  * 练习工作区（Client Component）。
  * 持有输入框本地状态，串联 Toolbar / Prompt / Input / Stats / KeyboardMap，
- * 处理自动聚焦、点击聚焦与键盘交互。
+ * 处理自动聚焦、点击聚焦与练习级键盘交互。
+ *
+ * 练习级快捷键（Enter/Space/Escape）通过 window 全局监听处理，
+ * 这样在 wrong / paused / 正确反馈状态下（输入框被禁用）仍可触发。
  */
 export function PracticeWorkspace() {
-  const status = usePracticeStore((s) => s.session.status);
-  const feedback = usePracticeStore((s) => s.session.feedback);
   const question = usePracticeStore((s) => s.session.question);
   const phraseIndex = usePracticeStore((s) => s.session.phraseIndex);
   const questionId = usePracticeStore((s) => s.session.questionId);
+  const status = usePracticeStore((s) => s.session.status);
+  const feedback = usePracticeStore((s) => s.session.feedback);
   const hasHydrated = usePracticeStore((s) => s.hasHydrated);
   const showKeyboard = usePracticeStore((s) => s.settings.showKeyboard);
   const startSession = usePracticeStore((s) => s.startSession);
   const submit = usePracticeStore((s) => s.submit);
-  const next = usePracticeStore((s) => s.next);
-  const pause = usePracticeStore((s) => s.pause);
-  const resume = usePracticeStore((s) => s.resume);
 
   const [input, setInput] = useState("");
   const [lastInput, setLastInput] = useState("");
+  const inputRef = useRef(input);
+  useEffect(() => {
+    inputRef.current = input;
+  }, [input]);
 
   // hydration 完成后若仍为 ready，则开始会话（使用已恢复的设置）。
   useEffect(() => {
@@ -52,6 +56,50 @@ export function PracticeWorkspace() {
   useEffect(() => {
     focusPracticeInput();
   }, [resetKey]);
+
+  // 练习级全局键盘监听（Enter/Space/Escape）。
+  useEffect(() => {
+    const inOverlay = (el: HTMLElement | null) =>
+      !!el?.closest(
+        "[data-slot='select-trigger'],[data-slot='select-content'],[data-slot='popover-content'],[data-slot='drawer-popup'],[role='dialog'],[role='option']",
+      );
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      // 覆盖层（Select/Popover/Drawer/Dialog）内交由它们自己处理。
+      if (inOverlay(target)) return;
+      const { session, next, pause, resume } = usePracticeStore.getState();
+      const curInput = inputRef.current;
+
+      if (e.key === "Enter") {
+        // Button/链接自身的 Enter 激活不重复处理。
+        if (target?.closest("button, a")) return;
+        if (session.status === "wrong" || session.feedback === "correct" || session.status === "completed") {
+          e.preventDefault();
+          next();
+        }
+        return;
+      }
+      if (e.key === " ") {
+        if (target?.closest("button, a")) return;
+        if (session.status === "answering" && session.feedback === "none") {
+          e.preventDefault();
+          if (curInput === "") pause();
+        } else if (session.status === "paused") {
+          e.preventDefault();
+          resume();
+        }
+        return;
+      }
+      if (e.key === "Escape") {
+        if (session.status === "answering" && session.feedback === "none" && curInput !== "") {
+          e.preventDefault();
+          setInput("");
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const expectedLength = question?.kind === "mapping" ? 1 : 2;
   const inputDisabled = status !== "answering" || feedback !== "none";
@@ -91,12 +139,6 @@ export function PracticeWorkspace() {
             setLastInput(v);
             submit(v);
             setInput("");
-          }}
-          onEnter={() => next()}
-          onEsc={() => setInput("")}
-          onSpace={() => {
-            if (status === "answering") pause();
-            else if (status === "paused") resume();
           }}
         />
       </section>
