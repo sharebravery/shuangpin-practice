@@ -52,7 +52,9 @@ export function PracticePrompt() {
     return (
       <div className="flex flex-col items-center gap-3 py-12">
         <p className="text-lg font-medium">已暂停</p>
-        <Button onClick={() => resume()}>继续</Button>
+        <Button id="practice-action" onClick={() => resume()}>
+          继续
+        </Button>
       </div>
     );
   }
@@ -135,14 +137,18 @@ export function PracticePrompt() {
               <span className="font-mono text-foreground">{question.answer}</span>
             </span>
           )}
-          <Button onClick={() => next()}>下一题</Button>
+          <Button id="practice-action" onClick={() => next()}>
+            下一题
+          </Button>
         </div>
       )}
 
       {!wrong && correctFeedback && (
         <div className="flex flex-col items-center gap-3">
           <span className="text-sm font-medium text-primary">正确</span>
-          <Button onClick={() => next()}>下一题</Button>
+          <Button id="practice-action" onClick={() => next()}>
+            下一题
+          </Button>
         </div>
       )}
     </div>

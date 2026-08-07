@@ -43,8 +43,8 @@ export function PracticeWorkspace() {
     }
   }, [hasHydrated, startSession]);
 
-  // 题目/字索引/状态变化时清空输入（渲染期调整 state，避免 effect 内 setState）。
-  const resetKey = `${questionId}:${phraseIndex}:${status}`;
+  // 题目/字索引/状态/反馈变化时清空输入（渲染期调整 state，避免 effect 内 setState）。
+  const resetKey = `${questionId}:${phraseIndex}:${status}:${feedback}`;
   const [lastResetKey, setLastResetKey] = useState(resetKey);
   if (lastResetKey !== resetKey) {
     setLastResetKey(resetKey);
@@ -52,10 +52,15 @@ export function PracticeWorkspace() {
     setLastInput("");
   }
 
-  // 变化后重新聚焦（仅 DOM 副作用，不涉及 setState）。
+  // 变化后重新聚焦：答题中聚焦输入框，否则聚焦操作按钮（下一题/继续），
+  // 使 Enter/Space 在禁用输入框状态下仍可由按钮原生触发。
   useEffect(() => {
-    focusPracticeInput();
-  }, [resetKey]);
+    if (status === "answering" && feedback === "none") {
+      focusPracticeInput();
+    } else {
+      document.getElementById("practice-action")?.focus();
+    }
+  }, [resetKey, status, feedback]);
 
   // 练习级全局键盘监听（Enter/Space/Escape）。
   useEffect(() => {
