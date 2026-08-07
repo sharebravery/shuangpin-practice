@@ -419,4 +419,44 @@ describe("错题机制（实现细则 §14）", () => {
     expect(s.pool).toBe("main");
     expect(s.status).toBe("answering");
   });
+
+  it("错题专项固定错题池，连续答对 3 题全部来自该池直到完成", () => {
+    const pool = ["c001", "c002", "c003"];
+    usePracticeStore.getState().setMode("character");
+    usePracticeStore.setState((s) => ({ session: { ...s.session, sessionMistakes: pool } }));
+    usePracticeStore.getState().startMistakeSession();
+
+    const seen = new Set<string>();
+    for (let i = 0; i < 3; i++) {
+      const s = usePracticeStore.getState().session;
+      expect(s.pool).toBe("mistakes");
+      expect(s.mistakePool).toEqual(pool); // 固定不变
+      expect(pool).toContain(s.questionId);
+      seen.add(s.questionId);
+      const q = s.question;
+      expect(q?.kind).toBe("character");
+      if (q?.kind === "character") {
+        usePracticeStore.getState().submit(q.answer); // 答对
+      }
+    }
+    expect(usePracticeStore.getState().session.status).toBe("completed");
+    expect(usePracticeStore.getState().session.correct).toBe(3);
+    expect(seen.size).toBe(3); // 三题互不重复，均来自 A/B/C
+  });
+
+  it("错题专项中答错也不扩展错题池，下一题仍来自固定池", () => {
+    const pool = ["c001", "c002"];
+    usePracticeStore.getState().setMode("character");
+    usePracticeStore.setState((s) => ({ session: { ...s.session, sessionMistakes: pool } }));
+    usePracticeStore.getState().startMistakeSession();
+
+    usePracticeStore.getState().submit("zz"); // 答错
+    expect(usePracticeStore.getState().session.status).toBe("wrong");
+    expect(usePracticeStore.getState().session.mistakePool).toEqual(pool); // 仍固定
+
+    usePracticeStore.getState().next(); // 下一题
+    const s = usePracticeStore.getState().session;
+    expect(s.pool).toBe("mistakes");
+    expect(pool).toContain(s.questionId);
+  });
 });

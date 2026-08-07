@@ -60,6 +60,8 @@ export interface PracticeSession {
   forcedReappear: Record<string, number>;
   /** 当前题池：主池或错题池。 */
   pool: "main" | "mistakes";
+  /** 进入错题专项时固定的错题池快照（直到完成前只从该池出题）。 */
+  mistakePool: string[];
   feedback: Feedback;
 }
 
@@ -93,6 +95,7 @@ const DEFAULT_SESSION: PracticeSession = {
   replayQueue: [],
   forcedReappear: {},
   pool: "main",
+  mistakePool: [],
   feedback: "none",
 };
 
@@ -504,12 +507,13 @@ export const usePracticeStore = create<PracticeStoreState>()(
           get().restart();
           return;
         }
-        const picked = pickMistake(settings, session.sessionMistakes, []);
+        const picked = pickMistake(settings, keys, []);
         set({
           session: picked
             ? {
                 ...DEFAULT_SESSION,
                 total: keys.length,
+                mistakePool: keys,
                 status: "answering",
                 question: picked.question,
                 questionId: picked.id,
@@ -591,14 +595,17 @@ function resolveCorrect(
   }
 
   if (settings.autoNext) {
-    const picked = pickNextMain(
-      settings,
-      mistakes,
-      session.recentIds,
-      session.replayQueue,
-      session.forcedReappear,
-      completed,
-    );
+    const picked =
+      session.pool === "mistakes"
+        ? pickMistake(settings, session.mistakePool, session.recentIds)
+        : pickNextMain(
+            settings,
+            mistakes,
+            session.recentIds,
+            session.replayQueue,
+            session.forcedReappear,
+            completed,
+          );
     if (picked) {
       const forced = consumeForced(session.replayQueue, session.forcedReappear, picked.forcedKey);
       set((state) => ({
@@ -701,7 +708,7 @@ function advance(
   }
   const picked =
     session.pool === "mistakes"
-      ? pickMistake(settings, session.sessionMistakes, session.recentIds)
+      ? pickMistake(settings, session.mistakePool, session.recentIds)
       : pickNextMain(
           settings,
           mistakes,
