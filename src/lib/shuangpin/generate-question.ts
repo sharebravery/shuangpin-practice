@@ -1,0 +1,224 @@
+/**
+ * 出题逻辑（对应架构文档第 7 节 generateQuestion / selectWeightedQuestion）。
+ *
+ * - 纯函数，不依赖 React / Zustand / DOM。
+ * - 允许注入随机函数，便于测试。
+ * - 支持连续去重（excludeIds）与简单错题权重（按错误次数加权）。
+ */
+
+import type {
+  CharacterQuestion,
+  MistakeRecord,
+  PhraseQuestion,
+  PracticeMode,
+  ShuangpinScheme,
+} from "./types";
+import { encodePhrase, encodeSyllableDetailed } from "./encode";
+
+/** 键位练习题目。 */
+export interface MappingQuestion {
+  kind: "mapping";
+  /** 显示的声母或韵母，如 "uang"。 */
+  display: string;
+  /** 对应键位，如 "d"。 */
+  answer: string;
+  /** 提示：声母 / 韵母。 */
+  hint: string;
+  /** 可接受答案（键位练习无兼容码，即为 [answer]）。 */
+  accepted: string[];
+}
+
+/** 单字练习题目（含编码拆解，供错误时展示）。 */
+export interface CharacterGeneratedQuestion {
+  kind: "character";
+  character: string;
+  pinyin: string;
+  answer: string;
+  /** 可接受答案（含标准答案与方案兼容码）。 */
+  accepted: string[];
+  breakdown: { initial: string; final: string; initialKey: string; finalKey: string };
+}
+
+/** 词组练习题目。 */
+export interface PhraseGeneratedQuestion {
+  kind: "phrase";
+  text: string;
+  syllables: string[];
+  /** 各字标准编码（逐字输入）。 */
+  charCodes: string[];
+  /** 各字可接受答案（逐字校验，含兼容码）。 */
+  charAccepted: string[][];
+  /** 拼接标准答案（统计/展示用）。 */
+  answer: string;
+}
+
+export type GeneratedQuestion =
+  | MappingQuestion
+  | CharacterGeneratedQuestion
+  | PhraseGeneratedQuestion;
+
+export interface GenerateOptions {
+  scheme: ShuangpinScheme;
+  mode: PracticeMode;
+  characters: CharacterQuestion[];
+  phrases: PhraseQuestion[];
+  /** 最近若干题的 id，用于连续去重（同一题不会连续出现）。 */
+  recentIds: string[];
+  /** 错题记录，用于加权。 */
+  mistakes: Record<string, MistakeRecord>;
+  /** 是否开启错题优先（关闭则等概率出题）。 */
+  mistakePriority: boolean;
+  /** 注入的随机函数，返回 [0,1)。 */
+  random: () => number;
+}
+
+export type GenerateResult =
+  | { ok: true; question: GeneratedQuestion; id: string }
+  | { ok: false; reason: string };
+
+interface PoolItem {
+  id: string;
+  display: string;
+  answer: string;
+  hint: string;
+}
+
+/** 由方案生成键位练习候选池（声母 + 韵母）。 */
+function buildMappingPool(scheme: ShuangpinScheme): PoolItem[] {
+  const items: PoolItem[] = [];
+  for (const [initial, key] of Object.entries(scheme.initials)) {
+    items.push({ id: `i:${initial}`, display: initial, answer: key, hint: "声母" });
+  }
+  for (const [final, key] of Object.entries(scheme.finals)) {
+    items.push({ id: `f:${final}`, display: final, answer: key, hint: "韵母" });
+  }
+  return items;
+}
+
+/**
+ * 从候选池中按权重选取一题。
+ * - excludeIds 中的题目会被跳过（连续去重）。
+ * - weighted 为 true 时，错误次数越多被选中概率越高（权重 = 1 + 错误次数）。
+ * - 池子过小导致全部被排除时，退回到「排除最后一个」或整池。
+ */
+export function selectWeightedQuestion<T extends { id: string }>(
+  pool: T[],
+  mistakes: Record<string, MistakeRecord>,
+  excludeIds: string[],
+  random: () => number,
+  weighted: boolean,
+): T | null {
+  if (pool.length === 0) return null;
+
+  const exclude = new Set(excludeIds);
+  let candidates = pool.filter((q) => !exclude.has(q.id));
+  if (candidates.length === 0) {
+    const last = excludeIds[excludeIds.length - 1];
+    candidates = last ? pool.filter((q) => q.id !== last) : pool.slice();
+    if (candidates.length === 0) candidates = pool.slice();
+  }
+
+  if (!weighted) {
+    return candidates[Math.floor(random() * candidates.length)] ?? candidates[0]!;
+  }
+
+  const weights = candidates.map((q) => 1 + 3 * (mistakes[q.id]?.count ?? 0));
+  const total = weights.reduce((sum, w) => sum + w, 0);
+  let r = random() * total;
+  for (let i = 0; i < candidates.length; i++) {
+    r -= weights[i]!;
+    if (r <= 0) return candidates[i]!;
+  }
+  return candidates[candidates.length - 1]!;
+}
+
+/** 生成下一道题目。 */
+export function generateQuestion(options: GenerateOptions): GenerateResult {
+  const {
+    scheme,
+    mode,
+    characters,
+    phrases,
+    recentIds,
+    mistakes,
+    mistakePriority,
+    random,
+  } = options;
+
+  if (mode === "mapping") {
+    const pool = buildMappingPool(scheme);
+    const selected = selectWeightedQuestion(
+      pool,
+      mistakes,
+      recentIds,
+      random,
+      mistakePriority,
+    );
+    if (!selected) return { ok: false, reason: "无可用的键位题目" };
+    return {
+      ok: true,
+      id: selected.id,
+      question: {
+        kind: "mapping",
+        display: selected.display,
+        answer: selected.answer,
+        hint: selected.hint,
+        accepted: [selected.answer],
+      },
+    };
+  }
+
+  if (mode === "character") {
+    const selected = selectWeightedQuestion(
+      characters,
+      mistakes,
+      recentIds,
+      random,
+      mistakePriority,
+    );
+    if (!selected) return { ok: false, reason: "无可用的单字" };
+    const enc = encodeSyllableDetailed(selected.pinyin, scheme);
+    if (!enc.ok) return { ok: false, reason: `${selected.pinyin}: ${enc.reason}` };
+    return {
+      ok: true,
+      id: selected.id,
+      question: {
+        kind: "character",
+        character: selected.character,
+        pinyin: selected.pinyin,
+        answer: enc.code,
+        accepted: enc.accepted,
+        breakdown: {
+          initial: enc.initial,
+          final: enc.final,
+          initialKey: enc.initialKey,
+          finalKey: enc.finalKey,
+        },
+      },
+    };
+  }
+
+  // phrase
+  const selected = selectWeightedQuestion(
+    phrases,
+    mistakes,
+    recentIds,
+    random,
+    mistakePriority,
+  );
+  if (!selected) return { ok: false, reason: "无可用的词组" };
+  const enc = encodePhrase(selected.syllables, scheme);
+  if (!enc.ok) return { ok: false, reason: enc.reason };
+  return {
+    ok: true,
+    id: selected.id,
+    question: {
+      kind: "phrase",
+      text: selected.text,
+      syllables: selected.syllables,
+      charCodes: enc.charCodes,
+      charAccepted: enc.charAccepted,
+      answer: enc.code,
+    },
+  };
+}
