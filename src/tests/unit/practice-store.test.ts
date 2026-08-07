@@ -103,6 +103,22 @@ describe("practice-store", () => {
     expect(session.sessionMistakes).toContain("c-test");
   });
 
+  it("答对增加 totals.completed 与 totals.correct", () => {
+    setQuestion(CHAR_QUESTION, "c-test");
+    usePracticeStore.getState().submit("il");
+    const { totals } = usePracticeStore.getState();
+    expect(totals.completed).toBe(1);
+    expect(totals.correct).toBe(1);
+  });
+
+  it("答错增加 totals.completed，totals.correct 不变", () => {
+    setQuestion(CHAR_QUESTION, "c-test");
+    usePracticeStore.getState().submit("xx");
+    const { totals } = usePracticeStore.getState();
+    expect(totals.completed).toBe(1);
+    expect(totals.correct).toBe(0);
+  });
+
   it("next 从 wrong 进入下一题", () => {
     setQuestion(CHAR_QUESTION, "c-test");
     usePracticeStore.getState().submit("xx");

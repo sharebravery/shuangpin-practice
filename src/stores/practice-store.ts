@@ -490,6 +490,7 @@ function resolveWrong(
 
   set((state) => ({
     mistakes: { ...state.mistakes, [id]: mistake },
+    totals: { ...state.totals, completed: state.totals.completed + 1 },
     session: {
       ...state.session,
       status: "wrong",
