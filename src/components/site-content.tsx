@@ -64,8 +64,9 @@ export function SiteContent() {
           <AccordionContent>
             <p>
               <strong>为什么有的字显示分号？</strong>
-              小鹤、搜狗、微软双拼的 <code>ing</code> 韵母使用分号键，例如「名」对应{" "}
-              <code>m</code> + <code>;</code>。请使用英文键盘输入。
+              搜狗、微软双拼的 <code>ing</code> 韵母使用分号键，例如「名」对应{" "}
+              <code>m</code> + <code>;</code>；小鹤双拼的 <code>ing</code> 使用{" "}
+              <code>k</code> 键，例如「名」对应 <code>m</code> + <code>k</code>。请使用英文键盘输入。
             </p>
             <p>
               <strong>刷新后设置还在吗？</strong>

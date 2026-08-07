@@ -7,7 +7,7 @@ export const SITE = {
   author: "云北",
   description:
     "打开即用的双拼练习工具，支持小鹤、微软、自然码、搜狗四种双拼方案，提供键位图、单字与词组练习。",
-  // TODO(release): 发布前替换为真实域名。
-  url: "https://shuangpin.yunbei.dev",
+  // 正式地址
+  url: "https://shuangpin.sharebravery.com",
   github: "https://github.com/sharebravery/shuangpin-practice",
 } as const;
