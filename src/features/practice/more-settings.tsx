@@ -38,6 +38,7 @@ import {
 import { SettingsIcon } from "lucide-react";
 
 import { usePracticeStore } from "@/stores/practice-store";
+import { focusPracticeInput } from "./practice-input";
 
 const QUESTION_COUNTS = [10, 15, 20, 30, 50];
 
@@ -138,8 +139,21 @@ function SettingsPanel() {
 
 /**
  * 更多设置：桌面端 Popover，移动端 Drawer（实现细则 §10.2）。
+ * 关闭后恢复焦点到练习输入框（实现细则 §13）。
  */
 export function MoreSettings() {
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const handleOpenChange =
+    (setter: (open: boolean) => void) => (open: boolean) => {
+      setter(open);
+      if (!open) {
+        // 关闭后重新聚焦练习输入框
+        focusPracticeInput();
+      }
+    };
+
   const trigger = (open: boolean) => (
     <Button
       variant="outline"
@@ -154,16 +168,16 @@ export function MoreSettings() {
   return (
     <>
       <div className="hidden md:block">
-        <Popover>
-          <PopoverTrigger render={trigger(false)} />
+        <Popover open={popoverOpen} onOpenChange={handleOpenChange(setPopoverOpen)}>
+          <PopoverTrigger render={trigger(popoverOpen)} />
           <PopoverContent align="end" className="w-72">
             <SettingsPanel />
           </PopoverContent>
         </Popover>
       </div>
       <div className="md:hidden">
-        <Drawer>
-          <DrawerTrigger render={trigger(false)} />
+        <Drawer open={drawerOpen} onOpenChange={handleOpenChange(setDrawerOpen)}>
+          <DrawerTrigger render={trigger(drawerOpen)} />
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>更多设置</DrawerTitle>

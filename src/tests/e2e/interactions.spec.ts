@@ -99,3 +99,24 @@ test("wrong + Space 不操作，wrong + Enter 进入下一题", async ({ page })
   await expect(nextBtn).toBeHidden();
   await expect(page.locator("#practice-input")).toBeEnabled();
 });
+
+/** 关闭桌面 Popover 后重新聚焦练习输入框（无需点击即可输入）。 */
+test("关闭 Popover 后重新聚焦输入框", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
+  await page.goto("/");
+  await page.locator("#practice-input").waitFor({ timeout: 10_000 });
+
+  // 打开并关闭 Popover
+  await page.locator("[data-slot='popover-trigger']").click();
+  await expect(page.getByLabel("显示拼音")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByLabel("显示拼音")).toBeHidden();
+
+  // 不点击输入框，直接键盘输入（验证焦点已恢复）
+  const pinyin = (await page.locator("span.text-lg.text-muted-foreground").first().textContent()) ?? "";
+  const res = encodeSyllable(pinyin, getScheme("xiaohe")!);
+  expect(res.ok).toBe(true);
+  if (!res.ok) return;
+  await page.keyboard.type(res.code);
+  await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
+});
