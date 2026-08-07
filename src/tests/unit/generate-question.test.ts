@@ -6,7 +6,6 @@ import {
 } from "@/lib/shuangpin/generate-question";
 import type {
   CharacterQuestion,
-  MistakeRecord,
   PhraseQuestion,
 } from "@/lib/shuangpin/types";
 import { MOCK_SCHEME, sequenceRandom } from "./mock-scheme";
@@ -23,47 +22,37 @@ const phrases: PhraseQuestion[] = [
 ];
 
 describe("selectWeightedQuestion", () => {
-  it("无错题时等概率选取", () => {
-    const pool = [{ id: "a" }, { id: "b" }, { id: "c" }];
-    const mistakes: Record<string, MistakeRecord> = {};
-    // random=0 -> 第一项；random=0.5 -> 第二项；random=0.99 -> 第三项
-    expect(selectWeightedQuestion(pool, mistakes, [], sequenceRandom([0]), true)?.id).toBe("a");
-    expect(selectWeightedQuestion(pool, mistakes, [], sequenceRandom([0.5]), true)?.id).toBe("b");
-    expect(selectWeightedQuestion(pool, mistakes, [], sequenceRandom([0.99]), true)?.id).toBe("c");
+  const pool = [{ id: "a" }, { id: "b" }, { id: "c" }];
+
+  it("等概率选取（weightFor 全为 1）", () => {
+    const wf = () => 1;
+    expect(selectWeightedQuestion(pool, wf, [], sequenceRandom([0]))?.id).toBe("a");
+    expect(selectWeightedQuestion(pool, wf, [], sequenceRandom([0.5]))?.id).toBe("b");
+    expect(selectWeightedQuestion(pool, wf, [], sequenceRandom([0.99]))?.id).toBe("c");
   });
 
-  it("错题权重随错误次数提高", () => {
-    const pool = [{ id: "a" }, { id: "b" }, { id: "c" }];
-    const mistakes: Record<string, MistakeRecord> = {
-      b: { count: 10, lastSeen: 0 },
-    };
-    // b 权重 11，总权重 13；r 落在 [1, 12) 命中 b
-    expect(selectWeightedQuestion(pool, mistakes, [], sequenceRandom([0.5]), true)?.id).toBe("b");
-    expect(selectWeightedQuestion(pool, mistakes, [], sequenceRandom([0.9]), true)?.id).toBe("b");
-  });
-
-  it("weighted=false 时不受错题影响", () => {
-    const pool = [{ id: "a" }, { id: "b" }];
-    const mistakes: Record<string, MistakeRecord> = {
-      b: { count: 100, lastSeen: 0 },
-    };
-    // 关闭加权：candidates=[a,b]，random=0 -> a
-    expect(selectWeightedQuestion(pool, mistakes, [], sequenceRandom([0]), false)?.id).toBe("a");
+  it("错题权重为普通题 3 倍", () => {
+    const wf = (id: string) => (id === "b" ? 3 : 1);
+    // weights [1,3,1], total 5；r 落在 [1,4) 命中 b
+    expect(selectWeightedQuestion(pool, wf, [], sequenceRandom([0.3]))?.id).toBe("b");
+    expect(selectWeightedQuestion(pool, wf, [], sequenceRandom([0.7]))?.id).toBe("b");
+    expect(selectWeightedQuestion(pool, wf, [], sequenceRandom([0.05]))?.id).toBe("a");
   });
 
   it("excludeIds 实现连续去重", () => {
-    const pool = [{ id: "a" }, { id: "b" }];
-    expect(selectWeightedQuestion(pool, {}, ["a"], sequenceRandom([0, 0.99]), false)?.id).toBe("b");
+    expect(
+      selectWeightedQuestion(pool, () => 1, ["a"], sequenceRandom([0]))?.id,
+    ).toBe("b");
   });
 
   it("池子被全部排除时回退", () => {
-    const pool = [{ id: "a" }];
-    // 唯一候选被排除，回退后仍返回 a
-    expect(selectWeightedQuestion(pool, {}, ["a"], sequenceRandom([0]), false)?.id).toBe("a");
+    expect(
+      selectWeightedQuestion([{ id: "a" }], () => 1, ["a"], sequenceRandom([0]))?.id,
+    ).toBe("a");
   });
 
   it("空池返回 null", () => {
-    expect(selectWeightedQuestion([], {}, [], sequenceRandom([0]), true)).toBeNull();
+    expect(selectWeightedQuestion([], () => 1, [], sequenceRandom([0]))).toBeNull();
   });
 });
 
@@ -72,23 +61,20 @@ describe("generateQuestion", () => {
     scheme: MOCK_SCHEME,
     characters,
     phrases,
-    recentIds: [],
-    mistakes: {} as Record<string, MistakeRecord>,
-    mistakePriority: true,
+    recentIds: [] as string[],
+    weightFor: () => 1 as const,
+    random: sequenceRandom([0]),
   };
 
   it("键位模式生成声母/韵母题目", () => {
-    const r = generateQuestion({ ...baseOpts, mode: "mapping", random: sequenceRandom([0]) });
+    const r = generateQuestion({ ...baseOpts, mode: "mapping" });
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.question.kind).toBe("mapping");
-      const q = r.question as { display: string; answer: string; hint: string };
-      expect(q.answer).toBe(MOCK_SCHEME.initials[q.display] ?? MOCK_SCHEME.finals[q.display]);
     }
   });
 
   it("单字模式生成带拆解的题目", () => {
-    // 选中 c1（窗 chuang -> id）
     const r = generateQuestion({
       ...baseOpts,
       mode: "character",

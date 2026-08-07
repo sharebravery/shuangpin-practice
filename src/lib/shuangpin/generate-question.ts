@@ -2,13 +2,13 @@
  * 出题逻辑（对应架构文档第 7 节 generateQuestion / selectWeightedQuestion）。
  *
  * - 纯函数，不依赖 React / Zustand / DOM。
- * - 允许注入随机函数，便于测试。
- * - 支持连续去重（excludeIds）与简单错题权重（按错误次数加权）。
+ * - 允许注入随机函数与权重函数，便于测试。
+ * - 支持连续去重（excludeIds）。
+ * - 权重由调用方通过 weightFor 提供（错题优先时错题为普通题 3 倍，非无限增长）。
  */
 
 import type {
   CharacterQuestion,
-  MistakeRecord,
   PhraseQuestion,
   PracticeMode,
   ShuangpinScheme,
@@ -64,10 +64,8 @@ export interface GenerateOptions {
   phrases: PhraseQuestion[];
   /** 最近若干题的 id，用于连续去重（同一题不会连续出现）。 */
   recentIds: string[];
-  /** 错题记录，用于加权。 */
-  mistakes: Record<string, MistakeRecord>;
-  /** 是否开启错题优先（关闭则等概率出题）。 */
-  mistakePriority: boolean;
+  /** 权重函数：返回该题权重（>=1）。错题优先时错题返回 3，普通题返回 1。 */
+  weightFor: (id: string) => number;
   /** 注入的随机函数，返回 [0,1)。 */
   random: () => number;
 }
@@ -98,15 +96,14 @@ function buildMappingPool(scheme: ShuangpinScheme): PoolItem[] {
 /**
  * 从候选池中按权重选取一题。
  * - excludeIds 中的题目会被跳过（连续去重）。
- * - weighted 为 true 时，错误次数越多被选中概率越高（权重 = 1 + 错误次数）。
+ * - 权重由 weightFor 提供（>=1）；全部为 1 时即等概率。
  * - 池子过小导致全部被排除时，退回到「排除最后一个」或整池。
  */
 export function selectWeightedQuestion<T extends { id: string }>(
   pool: T[],
-  mistakes: Record<string, MistakeRecord>,
+  weightFor: (id: string) => number,
   excludeIds: string[],
   random: () => number,
-  weighted: boolean,
 ): T | null {
   if (pool.length === 0) return null;
 
@@ -118,11 +115,7 @@ export function selectWeightedQuestion<T extends { id: string }>(
     if (candidates.length === 0) candidates = pool.slice();
   }
 
-  if (!weighted) {
-    return candidates[Math.floor(random() * candidates.length)] ?? candidates[0]!;
-  }
-
-  const weights = candidates.map((q) => 1 + 3 * (mistakes[q.id]?.count ?? 0));
+  const weights = candidates.map((q) => Math.max(1, weightFor(q.id) ?? 1));
   const total = weights.reduce((sum, w) => sum + w, 0);
   let r = random() * total;
   for (let i = 0; i < candidates.length; i++) {
@@ -132,28 +125,13 @@ export function selectWeightedQuestion<T extends { id: string }>(
   return candidates[candidates.length - 1]!;
 }
 
-/** 生成下一道题目。 */
+/** 生成下一道题目（随机选取，不含强制重现逻辑）。 */
 export function generateQuestion(options: GenerateOptions): GenerateResult {
-  const {
-    scheme,
-    mode,
-    characters,
-    phrases,
-    recentIds,
-    mistakes,
-    mistakePriority,
-    random,
-  } = options;
+  const { scheme, mode, characters, phrases, recentIds, weightFor, random } = options;
 
   if (mode === "mapping") {
     const pool = buildMappingPool(scheme);
-    const selected = selectWeightedQuestion(
-      pool,
-      mistakes,
-      recentIds,
-      random,
-      mistakePriority,
-    );
+    const selected = selectWeightedQuestion(pool, weightFor, recentIds, random);
     if (!selected) return { ok: false, reason: "无可用的键位题目" };
     return {
       ok: true,
@@ -169,13 +147,7 @@ export function generateQuestion(options: GenerateOptions): GenerateResult {
   }
 
   if (mode === "character") {
-    const selected = selectWeightedQuestion(
-      characters,
-      mistakes,
-      recentIds,
-      random,
-      mistakePriority,
-    );
+    const selected = selectWeightedQuestion(characters, weightFor, recentIds, random);
     if (!selected) return { ok: false, reason: "无可用的单字" };
     const enc = encodeSyllableDetailed(selected.pinyin, scheme);
     if (!enc.ok) return { ok: false, reason: `${selected.pinyin}: ${enc.reason}` };
@@ -199,13 +171,7 @@ export function generateQuestion(options: GenerateOptions): GenerateResult {
   }
 
   // phrase
-  const selected = selectWeightedQuestion(
-    phrases,
-    mistakes,
-    recentIds,
-    random,
-    mistakePriority,
-  );
+  const selected = selectWeightedQuestion(phrases, weightFor, recentIds, random);
   if (!selected) return { ok: false, reason: "无可用的词组" };
   const enc = encodePhrase(selected.syllables, scheme);
   if (!enc.ok) return { ok: false, reason: enc.reason };
