@@ -53,13 +53,13 @@ export function PracticeWorkspace() {
     setLastInput("");
   }
 
-  // 变化后重新聚焦：答题中聚焦输入框，否则聚焦操作按钮（下一题/继续），
-  // 使 Enter/Space 在禁用输入框状态下仍可由按钮原生触发。
+  // 变化后重新聚焦：答题中聚焦输入框；否则聚焦 body（不聚焦操作按钮，
+  // 避免 wrong 态按 Space 原生触发按钮 click）。Enter/Space 由全局监听处理。
   useEffect(() => {
     if (status === "answering" && feedback === "none") {
       focusPracticeInput();
-    } else {
-      document.getElementById("practice-action")?.focus();
+    } else if (typeof document !== "undefined") {
+      document.body.focus();
     }
   }, [questionResetKey, status, feedback]);
 
@@ -93,6 +93,9 @@ export function PracticeWorkspace() {
         } else if (session.status === "paused") {
           e.preventDefault();
           resume();
+        } else {
+          // wrong / correct / completed：Space 不做任何操作，阻止默认滚动。
+          e.preventDefault();
         }
         return;
       }

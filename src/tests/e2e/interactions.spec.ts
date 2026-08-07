@@ -78,3 +78,24 @@ test("autoNext=false -> 答对 -> Enter -> 下一题", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
 });
+
+/** wrong + Space 不触发下一题，wrong + Enter 才进入下一题。 */
+test("wrong + Space 不操作，wrong + Enter 进入下一题", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#practice-input").waitFor({ timeout: 10_000 });
+
+  await page.locator("#practice-input").click();
+  await page.keyboard.type("zz");
+  const nextBtn = page.getByRole("button", { name: "下一题" });
+  await nextBtn.waitFor({ timeout: 5_000 });
+
+  // Space 不触发下一题：仍处于 wrong（下一题按钮仍在、输入框仍禁用）
+  await page.keyboard.press("Space");
+  await expect(nextBtn).toBeVisible();
+  await expect(page.locator("#practice-input")).toBeDisabled();
+
+  // Enter 进入下一题：wrong 结束（下一题按钮消失、输入框可用）
+  await page.keyboard.press("Enter");
+  await expect(nextBtn).toBeHidden();
+  await expect(page.locator("#practice-input")).toBeEnabled();
+});
