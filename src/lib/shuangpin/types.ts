@@ -54,7 +54,6 @@ export interface PracticeSettings {
   showKeyboard: boolean;
   autoNext: boolean;
   mistakePriority: boolean;
-  sound: boolean;
 }
 
 /** 错题记录（简单错题机制，非完整间隔重复）。 */

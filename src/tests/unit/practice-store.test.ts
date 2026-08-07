@@ -219,7 +219,7 @@ describe("practice-store", () => {
     expect(parsed.state.totals).toBeDefined();
     expect(parsed.state.mistakes).toBeDefined();
     expect(parsed.state.session).toBeUndefined();
-    expect(parsed.version).toBe(1);
+    expect(parsed.version).toBe(2);
 
     // 直接写 storage 模拟上次会话（避免 setState 回写干扰），rehydrate 应读取。
     localStorage.setItem(
@@ -243,5 +243,22 @@ describe("practice-store", () => {
     expect(() => usePracticeStore.persist.rehydrate()).not.toThrow();
     expect(usePracticeStore.getState().hasHydrated).toBe(true);
     expect(usePracticeStore.getState().settings.scheme).toBe(DEFAULT_SETTINGS.scheme);
+  });
+
+  it("v1 持久化数据迁移到 v2 时移除 sound 字段", () => {
+    localStorage.setItem(
+      "shuangpin-practice",
+      JSON.stringify({
+        state: {
+          settings: { ...DEFAULT_SETTINGS, sound: false },
+          mistakes: {},
+          totals: { completed: 0, correct: 0 },
+        },
+        version: 1,
+      }),
+    );
+    usePracticeStore.persist.rehydrate();
+    const settings = usePracticeStore.getState().settings;
+    expect("sound" in settings).toBe(false);
   });
 });

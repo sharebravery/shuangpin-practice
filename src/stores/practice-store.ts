@@ -62,7 +62,6 @@ export const DEFAULT_SETTINGS: PracticeSettings = {
   showKeyboard: true,
   autoNext: true,
   mistakePriority: true,
-  sound: false,
 };
 
 const DEFAULT_SESSION: PracticeSession = {
@@ -372,8 +371,18 @@ export const usePracticeStore = create<PracticeStoreState>()(
     }),
     {
       name: "shuangpin-practice",
-      version: 1,
+      version: 2,
       storage: safeJsonStorage,
+      // v2: 移除未实现的 sound 设置字段。
+      migrate: (persisted: unknown, version: number): PersistedState => {
+        const s = persisted as PersistedState;
+        if (version < 2 && s?.settings && "sound" in s.settings) {
+          const { sound, ...rest } = s.settings;
+          void sound;
+          return { ...s, settings: rest };
+        }
+        return s;
+      },
       partialize: (state) => ({
         version: state.version,
         settings: state.settings,

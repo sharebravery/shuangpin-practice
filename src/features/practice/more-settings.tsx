@@ -86,13 +86,6 @@ function SettingsPanel() {
           aria-label="答对自动下一题"
         />
       </SettingRow>
-      <SettingRow label="音效">
-        <Switch
-          checked={settings.sound}
-          onCheckedChange={(c) => updateSettings({ sound: c })}
-          aria-label="音效"
-        />
-      </SettingRow>
       <SettingRow label="每组题数">
         <Select
           value={String(settings.questionsPerSession)}

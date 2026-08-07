@@ -428,7 +428,6 @@ Zustand 从 localStorage 恢复数据时，可能与构建时的默认 HTML 不�
 - 显示拼音：Switch。
 - 错题优先：Switch。
 - 自动下一题：Switch。
-- 音效：Switch。
 - 每组题数：Select。
 - 清空记录：Button + Alert Dialog。
 
