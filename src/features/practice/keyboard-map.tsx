@@ -14,7 +14,7 @@ const KEYBOARD_ROWS = [
 ] as const;
 
 const KEYBOARD_ROW_OFFSETS = ["0px", "28px", "62px"] as const;
-const SCORE_ROW_PADDING = [
+const GRID_ROW_PADDING = [
   { left: "0px", right: "0px" },
   { left: "42px", right: "42px" },
   { left: "112px", right: "164px" },
@@ -141,7 +141,10 @@ export function KeyboardMap({
       const firstElement = field.querySelector<HTMLElement>(
         `[data-keycap="${CSS.escape(firstKey ?? "")}"]`,
       );
-      const loop = Math.max(28, (firstElement?.getBoundingClientRect().width ?? 72) * 0.38);
+      const loop = Math.max(
+        24,
+        (firstElement?.getBoundingClientRect().width ?? 72) * 0.34,
+      );
       setTraceGeometry({
         points,
         path: `M ${first.x} ${first.y} C ${first.x + loop} ${first.y - loop}, ${first.x - loop} ${first.y - loop}, ${first.x} ${first.y}`,
@@ -150,7 +153,7 @@ export function KeyboardMap({
     }
 
     const dx = second.x - first.x;
-    const bend = Math.max(28, Math.abs(dx) * 0.14);
+    const bend = Math.max(24, Math.abs(dx) * 0.13);
     setTraceGeometry({
       points,
       path: `M ${first.x} ${first.y} C ${first.x + dx * 0.28} ${first.y - bend}, ${second.x - dx * 0.2} ${second.y + bend * 0.45}, ${second.x} ${second.y}`,
@@ -167,6 +170,7 @@ export function KeyboardMap({
   }, [layout, updateTrace]);
 
   const traceHasError = traceErrorIndexes.length > 0;
+  const isGridLayout = layout === "score" || layout === "minimal";
 
   return (
     <div className="w-full overflow-x-auto pb-1" role="group" aria-label="双拼键位图">
@@ -175,6 +179,7 @@ export function KeyboardMap({
         className={cn(
           "relative mx-auto min-w-[820px] lg:min-w-0",
           layout === "score" && "py-4 sm:py-[18px]",
+          layout === "minimal" && "py-2 sm:py-3",
         )}
       >
         {layout === "score" && (
@@ -186,10 +191,7 @@ export function KeyboardMap({
 
         {showTrace && traceGeometry.points.length > 0 && (
           <svg
-            className={cn(
-              "pointer-events-none absolute inset-0 h-full w-full overflow-visible",
-              layout === "score" ? "z-20" : "z-0",
-            )}
+            className="pointer-events-none absolute inset-0 z-[70] h-full w-full overflow-visible"
             aria-hidden="true"
             data-input-trace
           >
@@ -198,8 +200,10 @@ export function KeyboardMap({
                 d={traceGeometry.path}
                 pathLength="1"
                 className={cn(
-                  "animate-[trace-draw_260ms_cubic-bezier(.22,.8,.2,1)_both] fill-none stroke-[2] opacity-80 [filter:drop-shadow(0_0_5px_color-mix(in_srgb,currentColor_28%,transparent))] [stroke-dasharray:1] [stroke-dashoffset:1]",
-                  traceHasError ? "stroke-[var(--error)] text-[var(--error)]" : "stroke-[var(--brand)] text-[var(--brand)]",
+                  "animate-[trace-draw_260ms_cubic-bezier(.22,.8,.2,1)_both] fill-none stroke-[1.8] opacity-85 [filter:drop-shadow(0_0_5px_color-mix(in_srgb,currentColor_28%,transparent))] [stroke-dasharray:1] [stroke-dashoffset:1]",
+                  traceHasError
+                    ? "stroke-[var(--error)] text-[var(--error)]"
+                    : "stroke-[var(--brand)] text-[var(--brand)]",
                 )}
               />
             )}
@@ -208,21 +212,26 @@ export function KeyboardMap({
               const error = traceErrorSet.has(point.index);
               const tone = error ? "var(--error)" : "var(--brand)";
               return (
-                <g key={`${point.index}-${point.x}-${point.y}`} data-trace-point data-trace-error={error ? "true" : "false"}>
+                <g
+                  key={`${point.index}-${point.x}-${point.y}`}
+                  data-trace-point
+                  data-trace-error={error ? "true" : "false"}
+                >
                   <circle
                     cx={point.x}
                     cy={point.y}
-                    r="12"
+                    r="7"
                     fill={tone}
-                    opacity="0.12"
-                    className="animate-[trace-point_420ms_ease-out_both]"
+                    opacity="0.11"
+                    className="animate-[trace-breathe_900ms_ease-in-out_infinite]"
                   />
                   <circle
                     cx={point.x}
                     cy={point.y}
-                    r="4.5"
+                    r="3.25"
                     fill={tone}
-                    className="animate-[trace-point_420ms_ease-out_both]"
+                    className="animate-[trace-point_260ms_ease-out_both] [filter:drop-shadow(0_0_4px_color-mix(in_srgb,currentColor_35%,transparent))]"
+                    style={{ color: tone }}
                   />
                 </g>
               );
@@ -233,23 +242,25 @@ export function KeyboardMap({
         <div
           className={cn(
             "relative z-10 flex flex-col",
-            layout === "score" ? "gap-2 sm:gap-[9px]" : "items-center gap-1.5 sm:gap-2 lg:gap-2.5",
+            isGridLayout
+              ? "gap-2 sm:gap-[9px]"
+              : "items-center gap-1.5 sm:gap-2 lg:gap-2.5",
           )}
         >
           {KEYBOARD_ROWS.map((row, rowIndex) => (
             <div
               key={rowIndex}
               className={cn(
-                layout === "score"
+                isGridLayout
                   ? "grid gap-2"
                   : "flex gap-1.5 sm:gap-2 lg:gap-2.5",
               )}
               style={
-                layout === "score"
+                isGridLayout
                   ? {
                       gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))`,
-                      paddingLeft: SCORE_ROW_PADDING[rowIndex].left,
-                      paddingRight: SCORE_ROW_PADDING[rowIndex].right,
+                      paddingLeft: GRID_ROW_PADDING[rowIndex].left,
+                      paddingRight: GRID_ROW_PADDING[rowIndex].right,
                     }
                   : {
                       paddingLeft: KEYBOARD_ROW_OFFSETS[rowIndex],
@@ -274,13 +285,42 @@ export function KeyboardMap({
                     aria-label={`键位 ${key}${keyContent ? `: ${[...keyContent.initials, ...keyContent.finals.map(displayFinal)].join(", ")}` : ""}`}
                     data-keycap={key}
                     data-active={isActive ? "true" : undefined}
-                    data-feedback={isError ? "error" : isCorrect ? "correct" : isTyped ? "typed" : undefined}
+                    data-feedback={
+                      isError
+                        ? "error"
+                        : isCorrect
+                          ? "correct"
+                          : isTyped
+                            ? "typed"
+                            : undefined
+                    }
                     className={cn(
                       "group relative shrink-0 select-none border transition-[transform,background-color,border-color,box-shadow] duration-100",
-                      layout === "score"
-                        ? "h-[82px] w-full rounded-xl border-transparent bg-transparent sm:h-[92px] lg:h-[96px]"
-                        : "flex h-14 w-10 flex-col items-center justify-center rounded-lg border-b-[3px] border-[var(--border)] bg-[var(--key)] shadow-sm sm:h-[88px] sm:w-[72px] sm:rounded-xl lg:h-[102px] lg:w-[86px] lg:rounded-[14px]",
-                      layout === "score" && !disabled && "hover:bg-[var(--brand-soft)]/35",
+                      layout === "score" &&
+                        "h-[82px] w-full rounded-xl border-transparent bg-transparent sm:h-[92px] lg:h-[96px]",
+                      layout === "keyboard" &&
+                        "flex h-14 w-10 flex-col items-center justify-center rounded-lg border-b-[3px] border-[var(--border)] bg-[var(--key)] shadow-sm sm:h-[88px] sm:w-[72px] sm:rounded-xl lg:h-[102px] lg:w-[86px] lg:rounded-[14px]",
+                      layout === "minimal" &&
+                        "h-[76px] w-full rounded-2xl border-transparent bg-transparent sm:h-[82px] lg:h-[86px]",
+
+                      layout === "score" &&
+                        !disabled &&
+                        !isCorrect &&
+                        !isError &&
+                        "hover:bg-[var(--brand-soft)]/55",
+                      layout === "score" &&
+                        isTyped &&
+                        !isCorrect &&
+                        !isError &&
+                        "border-[var(--brand)]/35 bg-[var(--brand-soft)]/45",
+                      layout === "score" &&
+                        isCorrect &&
+                        "border-[var(--brand)] bg-[var(--brand-soft)]",
+                      layout === "score" &&
+                        isError &&
+                        "border-[var(--error)] bg-[var(--error-soft)]",
+                      layout === "score" && isActive && "translate-y-px",
+
                       layout === "keyboard" &&
                         !disabled &&
                         !isCorrect &&
@@ -300,31 +340,56 @@ export function KeyboardMap({
                       layout === "keyboard" &&
                         isActive &&
                         "translate-y-[3px] scale-[0.975] shadow-none ring-2 ring-[var(--brand)]/35 ring-offset-1 ring-offset-background",
+
+                      layout === "minimal" &&
+                        !disabled &&
+                        "hover:bg-[var(--brand-soft)]/35",
                     )}
                   >
                     {layout === "score" && (
-                      <span className="pointer-events-none absolute bottom-2 left-3 right-3 h-px origin-center scale-x-[0.38] bg-border/70 opacity-0 transition-all duration-150 group-hover:scale-x-100 group-hover:opacity-100" />
-                    )}
-
-                    {keyContent && keyContent.initials.length > 0 && (
                       <span
                         className={cn(
-                          "absolute font-semibold leading-none text-[var(--brand)]/75",
-                          layout === "score"
-                            ? "right-3 top-3 text-[0.62rem] lg:right-4 lg:text-[0.68rem]"
-                            : "right-1 top-1 text-[0.55rem] sm:right-2 sm:top-2 sm:text-[0.65rem] lg:text-[0.7rem]",
+                          "pointer-events-none absolute bottom-2 left-3 right-3 h-px origin-center scale-x-[0.38] bg-border/70 opacity-0 transition-all duration-150",
+                          !disabled && "group-hover:scale-x-100 group-hover:opacity-100",
+                          (isTyped || isCorrect || isActive) &&
+                            "scale-x-100 bg-[var(--brand)] opacity-100",
+                          isError &&
+                            "scale-x-100 bg-[var(--error)] opacity-100",
                         )}
-                      >
-                        {keyContent.initials.join("/")}
-                      </span>
+                      />
                     )}
+
+                    {layout === "minimal" && (
+                      <span
+                        className="pointer-events-none absolute left-1/2 top-1/2 size-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-border"
+                        aria-hidden="true"
+                      />
+                    )}
+
+                    {layout !== "minimal" &&
+                      keyContent &&
+                      keyContent.initials.length > 0 && (
+                        <span
+                          className={cn(
+                            "absolute font-semibold leading-none text-[var(--brand)]/75",
+                            layout === "score"
+                              ? "right-3 top-3 text-[0.62rem] lg:right-4 lg:text-[0.68rem]"
+                              : "right-1 top-1 text-[0.55rem] sm:right-2 sm:top-2 sm:text-[0.65rem] lg:text-[0.7rem]",
+                          )}
+                        >
+                          {keyContent.initials.join("/")}
+                        </span>
+                      )}
 
                     <span
                       className={cn(
                         "font-bold leading-none text-foreground",
-                        layout === "score"
-                          ? "absolute left-3 top-3 text-2xl tracking-tight sm:text-[1.7rem] lg:left-4 lg:text-[1.9rem]"
-                          : "text-base sm:text-2xl lg:text-[1.75rem]",
+                        layout === "score" &&
+                          "absolute left-3 top-3 text-2xl tracking-tight sm:text-[1.7rem] lg:left-4 lg:text-[1.9rem]",
+                        layout === "keyboard" &&
+                          "text-base sm:text-2xl lg:text-[1.75rem]",
+                        layout === "minimal" &&
+                          "absolute left-1/2 top-1 -translate-x-1/2 text-lg font-semibold tracking-tight",
                       )}
                     >
                       {key}
@@ -334,9 +399,12 @@ export function KeyboardMap({
                       <span
                         className={cn(
                           "font-medium leading-none text-muted-foreground",
-                          layout === "score"
-                            ? "absolute bottom-[18px] left-3 right-2 truncate text-[0.62rem] sm:text-[0.7rem] lg:left-4 lg:text-xs"
-                            : "mt-1 max-w-[90%] truncate text-[0.55rem] sm:mt-2 sm:text-[0.7rem] lg:text-xs",
+                          layout === "score" &&
+                            "absolute bottom-[18px] left-3 right-2 truncate text-[0.62rem] sm:text-[0.7rem] lg:left-4 lg:text-xs",
+                          layout === "keyboard" &&
+                            "mt-1 max-w-[90%] truncate text-[0.55rem] sm:mt-2 sm:text-[0.7rem] lg:text-xs",
+                          layout === "minimal" &&
+                            "absolute bottom-1 left-1/2 max-w-[92%] -translate-x-1/2 truncate text-[0.58rem] sm:text-[0.62rem]",
                         )}
                       >
                         {keyContent.finals.map(displayFinal).join(" · ")}
