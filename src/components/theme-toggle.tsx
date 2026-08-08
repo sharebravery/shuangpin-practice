@@ -13,8 +13,8 @@ import {
 import { restorePracticeFocus } from "@/features/practice/practice-input";
 
 const THEMES = [
-  { value: "clean", label: "天青", dot: "#1677B3" },
   { value: "ink", label: "纸墨", dot: "#B93A2F" },
+  { value: "clean", label: "天青", dot: "#1677B3" },
   { value: "graphite", label: "石墨", dot: "#38BDF8" },
 ] as const;
 
@@ -29,11 +29,11 @@ export function ThemeToggle() {
   const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const current: ThemeName = THEMES.some((item) => item.value === theme)
     ? (theme as ThemeName)
-    : "clean";
+    : "ink";
 
   return (
     <Select
-      value={mounted ? current : "clean"}
+      value={mounted ? current : "ink"}
       onValueChange={(value) => setTheme(value as ThemeName)}
       onOpenChange={(open) => {
         if (!open) restorePracticeFocus();
@@ -48,7 +48,7 @@ export function ThemeToggle() {
           aria-hidden="true"
         />
         <SelectValue>
-          {(value: ThemeName) => THEMES.find((item) => item.value === value)?.label ?? "天青"}
+          {(value: ThemeName) => THEMES.find((item) => item.value === value)?.label ?? "纸墨"}
         </SelectValue>
       </SelectTrigger>
       <SelectContent align="end">
