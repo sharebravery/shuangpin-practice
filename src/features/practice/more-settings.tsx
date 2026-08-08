@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SettingsIcon } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { usePracticeStore } from "@/stores/practice-store";
 import { focusPracticeInput } from "./practice-input";
 
@@ -57,7 +58,6 @@ function SettingRow({
   );
 }
 
-/** 共享的设置面板内容。 */
 function SettingsPanel() {
   const settings = usePracticeStore((s) => s.settings);
   const updateSettings = usePracticeStore((s) => s.updateSettings);
@@ -93,9 +93,7 @@ function SettingsPanel() {
           onValueChange={(v) => updateSettings({ questionsPerSession: Number(v) })}
         >
           <SelectTrigger size="sm" className="w-24" aria-label="每组题数">
-            <SelectValue>
-              {(value: string) => `${value} 题`}
-            </SelectValue>
+            <SelectValue>{(value: string) => `${value} 题`}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {QUESTION_COUNTS.map((n) => (
@@ -109,7 +107,7 @@ function SettingsPanel() {
       <Separator />
       <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>
         <AlertDialogTrigger
-          render={<Button variant="destructive" size="sm" />}
+          className={buttonVariants({ variant: "destructive", size: "sm" })}
         >
           清空记录
         </AlertDialogTrigger>
@@ -137,10 +135,6 @@ function SettingsPanel() {
   );
 }
 
-/**
- * 更多设置：桌面端 Popover，移动端 Drawer（实现细则 §10.2）。
- * 关闭后恢复焦点到练习输入框（实现细则 §13）。
- */
 export function MoreSettings() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -148,29 +142,25 @@ export function MoreSettings() {
   const handleOpenChange =
     (setter: (open: boolean) => void) => (open: boolean) => {
       setter(open);
-      if (!open) {
-        // 关闭后重新聚焦练习输入框
-        focusPracticeInput();
-      }
+      if (!open) focusPracticeInput();
     };
 
-  const trigger = (open: boolean) => (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-7 w-7"
-      aria-label="更多设置"
-      aria-pressed={open}
-    >
-      <SettingsIcon className="size-3.5" />
-    </Button>
+  const triggerClassName = cn(
+    buttonVariants({ variant: "ghost", size: "icon" }),
+    "h-7 w-7",
   );
 
   return (
     <>
       <div className="hidden md:block">
         <Popover open={popoverOpen} onOpenChange={handleOpenChange(setPopoverOpen)}>
-          <PopoverTrigger render={trigger(popoverOpen)} />
+          <PopoverTrigger
+            className={triggerClassName}
+            aria-label="更多设置"
+            aria-pressed={popoverOpen}
+          >
+            <SettingsIcon className="size-3.5" />
+          </PopoverTrigger>
           <PopoverContent align="end" className="w-72">
             <SettingsPanel />
           </PopoverContent>
@@ -178,7 +168,13 @@ export function MoreSettings() {
       </div>
       <div className="md:hidden">
         <Drawer open={drawerOpen} onOpenChange={handleOpenChange(setDrawerOpen)}>
-          <DrawerTrigger render={trigger(drawerOpen)} />
+          <DrawerTrigger
+            className={triggerClassName}
+            aria-label="更多设置"
+            aria-pressed={drawerOpen}
+          >
+            <SettingsIcon className="size-3.5" />
+          </DrawerTrigger>
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>更多设置</DrawerTitle>
