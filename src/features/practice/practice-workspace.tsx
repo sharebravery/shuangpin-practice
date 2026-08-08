@@ -14,8 +14,12 @@ const WRONG_AUTO_ADVANCE_MS = 800;
 const CORRECT_FEEDBACK_MS = 400;
 const ACTIVE_KEY_TIMEOUT_MS = 150;
 
-function cleanKey(key: string): string {
-  return key.toLowerCase().replace(/[^a-z;]/g, "");
+function cleanSingleKey(key: string): string {
+  return /^[a-z;]$/i.test(key) ? key.toLowerCase() : "";
+}
+
+function cleanInput(value: string): string {
+  return value.toLowerCase().replace(/[^a-z;]/g, "");
 }
 
 export function PracticeWorkspace() {
@@ -29,15 +33,10 @@ export function PracticeWorkspace() {
   const submit = usePracticeStore((s) => s.submit);
   const next = usePracticeStore((s) => s.next);
 
-  // Business input state
   const [input, setInput] = useState("");
   const [lastInput, setLastInput] = useState("");
-  const inputRef = useRef(input);
-  useEffect(() => {
-    inputRef.current = input;
-  }, [input]);
+  const inputRef = useRef("");
 
-  // Visual key state: separated from business input
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [typedKeys, setTypedKeys] = useState<string[]>([]);
   const activeKeyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,11 +48,11 @@ export function PracticeWorkspace() {
     }
   }, [hasHydrated, startSession]);
 
-  // Reset on new question / new phrase char
   const questionResetKey = `${questionId}:${phraseIndex}`;
   const [lastResetKey, setLastResetKey] = useState(questionResetKey);
   if (lastResetKey !== questionResetKey) {
     setLastResetKey(questionResetKey);
+    inputRef.current = "";
     setInput("");
     setLastInput("");
     setTypedKeys([]);
@@ -68,7 +67,6 @@ export function PracticeWorkspace() {
     }
   }, [questionResetKey, status, feedback]);
 
-  // Auto-advance
   useEffect(() => {
     if (autoAdvanceRef.current) {
       clearTimeout(autoAdvanceRef.current);
@@ -84,7 +82,13 @@ export function PracticeWorkspace() {
     };
   }, [status, feedback, questionResetKey, next]);
 
-  // Global keyboard listener
+  useEffect(
+    () => () => {
+      if (activeKeyTimerRef.current) clearTimeout(activeKeyTimerRef.current);
+    },
+    [],
+  );
+
   useEffect(() => {
     const inOverlay = (el: HTMLElement | null) =>
       !!el?.closest(
@@ -93,12 +97,17 @@ export function PracticeWorkspace() {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (inOverlay(target)) return;
-      const { session, next: doNext, pause: doPause, resume: doResume } = usePracticeStore.getState();
+      const { session, next: doNext, pause: doPause, resume: doResume } =
+        usePracticeStore.getState();
       const curInput = inputRef.current;
 
       if (e.key === "Enter") {
         if (target?.closest("button, a, [data-keycap]")) return;
-        if (session.status === "wrong" || session.feedback === "correct" || session.status === "completed") {
+        if (
+          session.status === "wrong" ||
+          session.feedback === "correct" ||
+          session.status === "completed"
+        ) {
           e.preventDefault();
           doNext();
         }
@@ -118,8 +127,13 @@ export function PracticeWorkspace() {
         return;
       }
       if (e.key === "Escape") {
-        if (session.status === "answering" && session.feedback === "none" && curInput !== "") {
+        if (
+          session.status === "answering" &&
+          session.feedback === "none" &&
+          curInput !== ""
+        ) {
           e.preventDefault();
+          inputRef.current = "";
           setInput("");
           setTypedKeys([]);
         }
@@ -132,106 +146,124 @@ export function PracticeWorkspace() {
   const expectedLength = question?.kind === "mapping" ? 1 : 2;
   const inputDisabled = status !== "answering" || feedback !== "none";
 
-  // Unified key input: physical keyboard + click share this
+  const flashKey = useCallback((key: string) => {
+    setActiveKey(key);
+    if (activeKeyTimerRef.current) clearTimeout(activeKeyTimerRef.current);
+    activeKeyTimerRef.current = setTimeout(() => {
+      setActiveKey((current) => (current === key ? null : current));
+    }, ACTIVE_KEY_TIMEOUT_MS);
+  }, []);
+
   const processKey = useCallback(
     (rawKey: string) => {
       if (inputDisabled) return;
-      const cleaned = cleanKey(rawKey);
-      if (!cleaned) return;
+      const key = cleanSingleKey(rawKey);
+      if (!key) return;
 
-      // Visual: flash active key + accumulate typedKeys
-      setActiveKey(cleaned);
-      setTypedKeys((prev) => [...prev, cleaned].slice(0, expectedLength));
-      if (activeKeyTimerRef.current) clearTimeout(activeKeyTimerRef.current);
-      activeKeyTimerRef.current = setTimeout(() => setActiveKey(null), ACTIVE_KEY_TIMEOUT_MS);
+      flashKey(key);
 
-      // Business: accumulate + submit
-      const newInput = (input + cleaned).slice(0, expectedLength);
+      const newInput = (inputRef.current + key).slice(0, expectedLength);
+      inputRef.current = newInput;
       setInput(newInput);
+      setTypedKeys(newInput.split(""));
+
       if (newInput.length >= expectedLength) {
         setLastInput(newInput);
         submit(newInput);
-        // DON'T clear typedKeys here — let them persist until next question
+        inputRef.current = "";
         setInput("");
       }
     },
-    [input, expectedLength, inputDisabled, submit],
+    [expectedLength, flashKey, inputDisabled, submit],
   );
 
-  const handleKeyClick = useCallback(
-    (key: string) => processKey(key),
-    [processKey],
-  );
-
-  // Compute keyboard highlight sets
   const answerStr =
     question?.kind === "phrase"
       ? question.charCodes[phraseIndex] ?? ""
       : question?.answer ?? "";
   const answerChars = answerStr.split("");
+
   let correctKeys: string[] = [];
   let errorKeys: string[] = [];
   if (status === "wrong") {
     correctKeys = answerChars;
-    errorKeys = lastInput.split("");
+    errorKeys = lastInput
+      .split("")
+      .filter((key, index) => key !== answerChars[index]);
   } else if (feedback === "correct") {
     correctKeys = answerChars;
   }
 
-  // Echo display: typedKeys during answering, lastInput during wrong
   const echoKeys = status === "wrong" ? lastInput.split("") : typedKeys;
-  const showEcho = echoKeys.length > 0 || status === "wrong";
 
   return (
-    <div className="flex flex-col items-center gap-6 py-2">
-      {/* Toolbar: left controls, right stats */}
-      <div className="flex w-full items-center justify-between">
+    <div className="flex flex-col items-center gap-5 py-1 sm:gap-6 sm:py-2">
+      <div className="flex w-full min-h-8 items-center justify-between gap-3">
         <PracticeToolbar />
         <PracticeStats />
       </div>
 
-      {/* Display: question + echo */}
-      <div className="flex min-h-[140px] flex-col items-center justify-center gap-3">
+      <div className="relative flex w-full flex-col items-center">
         <PracticePrompt />
 
-        {/* Echo: large typed key display */}
-        {showEcho && (
-          <div className="flex items-center gap-2 font-mono text-3xl font-bold tracking-wider text-[var(--brand)] sm:text-4xl" aria-hidden="true">
-            {echoKeys.map((k, i) => (
-              <span key={i} className={status === "wrong" && i === echoKeys.length - 1 ? "text-[var(--error)]" : ""}>
-                {k}
+        <div
+          className="flex h-14 items-center justify-center gap-5 font-mono text-4xl font-bold tracking-wide text-[var(--brand)] sm:text-[2.75rem]"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {echoKeys.map((key, index) => {
+            const isWrongKey =
+              status === "wrong" && key !== answerChars[index];
+            return (
+              <span
+                key={`${index}-${key}`}
+                className={isWrongKey ? "text-[var(--error)]" : undefined}
+              >
+                {key}
               </span>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
 
-        {/* Hidden input: handles focus / IME / accessibility */}
+        <div className="flex h-6 items-center justify-center font-mono text-xs text-muted-foreground">
+          {status === "wrong" && (
+            <span>
+              正确&nbsp;
+              <span className="font-semibold text-[var(--brand)]">{answerStr}</span>
+            </span>
+          )}
+        </div>
+
         <PracticeInput
           value={input}
           expectedLength={expectedLength}
           disabled={inputDisabled}
-          onChange={(v) => {
-            setInput(v);
-            const cleaned = cleanKey(v);
-            if (cleaned.length < typedKeys.length) {
-              setTypedKeys(cleaned.split(""));
-            }
+          onKeyPress={processKey}
+          onChange={(value) => {
+            const cleaned = cleanInput(value).slice(0, expectedLength);
+            inputRef.current = cleaned;
+            setInput(cleaned);
+            setTypedKeys(cleaned.split(""));
+            const lastKey = cleaned.at(-1);
+            if (lastKey) flashKey(lastKey);
           }}
-          onSubmit={(v) => {
-            setLastInput(v);
-            submit(v);
+          onSubmit={(value) => {
+            const cleaned = cleanInput(value).slice(0, expectedLength);
+            setLastInput(cleaned);
+            setTypedKeys(cleaned.split(""));
+            submit(cleaned);
+            inputRef.current = "";
             setInput("");
           }}
         />
       </div>
 
-      {/* Keyboard: absolute main visual */}
       <KeyboardMap
         activeKey={activeKey}
         typedKeys={typedKeys}
         correctKeys={correctKeys}
         errorKeys={errorKeys}
-        onKeyClick={handleKeyClick}
+        onKeyClick={processKey}
         disabled={inputDisabled}
       />
 
@@ -240,5 +272,4 @@ export function PracticeWorkspace() {
   );
 }
 
-// Keep export for backward compat
 export { PRACTICE_INPUT_ID };
