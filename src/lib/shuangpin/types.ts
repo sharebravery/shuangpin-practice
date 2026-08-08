@@ -57,8 +57,10 @@ export interface PracticeSettings {
   showKeyboard: boolean;
   autoNext: boolean;
   mistakePriority: boolean;
-  layout: PracticeLayout;
-  showTrace: boolean;
+  /** 可选以兼容旧的本地持久化数据；缺省按 score 处理。 */
+  layout?: PracticeLayout;
+  /** 可选以兼容旧的本地持久化数据；缺省按 true 处理。 */
+  showTrace?: boolean;
 }
 
 /** 错题记录（简单错题机制，非完整间隔重复）。 */
