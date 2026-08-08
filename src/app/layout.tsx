@@ -58,11 +58,12 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <body className="bg-background text-foreground min-h-dvh antialiased">
+      <body className="min-h-dvh bg-background text-foreground antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          themes={["clean", "ink", "graphite"]}
+          defaultTheme="clean"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <TooltipProvider>
