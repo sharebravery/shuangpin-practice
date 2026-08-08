@@ -62,7 +62,7 @@ export default function RootLayout({
         <ThemeProvider
           attribute="class"
           themes={["clean", "ink", "graphite"]}
-          defaultTheme="ink"
+          defaultTheme="clean"
           enableSystem={false}
           disableTransitionOnChange
         >
