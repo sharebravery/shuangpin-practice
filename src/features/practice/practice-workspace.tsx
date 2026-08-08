@@ -41,7 +41,9 @@ export function PracticeWorkspace() {
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [typedKeys, setTypedKeys] = useState<string[]>([]);
+  const [traceKeys, setTraceKeys] = useState<string[]>([]);
   const activeKeyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const traceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -61,7 +63,6 @@ export function PracticeWorkspace() {
     setInput("");
     setLastInput("");
     setTypedKeys([]);
-    setActiveKey(null);
   }
 
   useEffect(() => {
@@ -90,6 +91,7 @@ export function PracticeWorkspace() {
   useEffect(
     () => () => {
       if (activeKeyTimerRef.current) clearTimeout(activeKeyTimerRef.current);
+      if (traceTimerRef.current) clearTimeout(traceTimerRef.current);
     },
     [],
   );
@@ -159,6 +161,16 @@ export function PracticeWorkspace() {
     }, ACTIVE_KEY_TIMEOUT_MS);
   }, []);
 
+  const holdSubmittedTrace = useCallback((keys: string[]) => {
+    if (keys.length < 2) return;
+    setTraceKeys(keys);
+    if (traceTimerRef.current) clearTimeout(traceTimerRef.current);
+
+    const session = usePracticeStore.getState().session;
+    const delay = session.status === "wrong" ? WRONG_AUTO_ADVANCE_MS : CORRECT_FEEDBACK_MS;
+    traceTimerRef.current = setTimeout(() => setTraceKeys([]), delay);
+  }, []);
+
   const processKey = useCallback(
     (rawKey: string) => {
       if (inputDisabled) return;
@@ -171,15 +183,18 @@ export function PracticeWorkspace() {
       inputRef.current = newInput;
       setInput(newInput);
       setTypedKeys(newInput.split(""));
+      if (newInput.length === 1) setTraceKeys([]);
 
       if (newInput.length >= expectedLength) {
+        const submittedKeys = newInput.split("");
         setLastInput(newInput);
         submit(newInput);
+        holdSubmittedTrace(submittedKeys);
         inputRef.current = "";
         setInput("");
       }
     },
-    [expectedLength, flashKey, inputDisabled, submit],
+    [expectedLength, flashKey, holdSubmittedTrace, inputDisabled, submit],
   );
 
   const answerStr =
@@ -252,14 +267,17 @@ export function PracticeWorkspace() {
             inputRef.current = cleaned;
             setInput(cleaned);
             setTypedKeys(cleaned.split(""));
+            if (cleaned.length === 1) setTraceKeys([]);
             const lastKey = cleaned.at(-1);
             if (lastKey) flashKey(lastKey);
           }}
           onSubmit={(value) => {
             const cleaned = cleanInput(value).slice(0, expectedLength);
+            const submittedKeys = cleaned.split("");
             setLastInput(cleaned);
-            setTypedKeys(cleaned.split(""));
+            setTypedKeys(submittedKeys);
             submit(cleaned);
+            holdSubmittedTrace(submittedKeys);
             inputRef.current = "";
             setInput("");
           }}
@@ -271,6 +289,7 @@ export function PracticeWorkspace() {
         showTrace={showTrace}
         activeKey={activeKey}
         typedKeys={echoKeys}
+        traceKeys={traceKeys}
         correctKeys={correctKeys}
         errorKeys={errorKeys}
         onKeyClick={processKey}
