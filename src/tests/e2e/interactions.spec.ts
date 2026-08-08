@@ -21,6 +21,12 @@ function guaranteedWrongKey(answer: string): string {
   return PRACTICE_KEYS.find((key) => !answer.includes(key)) ?? "q";
 }
 
+/** 新访客默认使用纸墨主题。 */
+test("默认主题为纸墨", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveClass(/ink/);
+});
+
 /** 答错后自动进入下一题 */
 test("答错 -> 自动进入下一题", async ({ page }) => {
   await page.goto("/");
@@ -30,57 +36,62 @@ test("答错 -> 自动进入下一题", async ({ page }) => {
   const answer = await currentCharacterCode(page);
   const wrongKey = guaranteedWrongKey(answer);
 
-  await input.focus();
   await page.keyboard.type(wrongKey.repeat(2));
 
   await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
 });
 
-/** 答错时键位图高亮错误键与正确键 */
-test("答错时键位图高亮错误键与正确键", async ({ page }) => {
+/** 谱面模式答错时用轨迹点反馈，不让整个键位变红。 */
+test("答错时谱面显示错误轨迹点", async ({ page }) => {
   await page.goto("/");
-  const input = page.locator("#practice-input");
-  await input.waitFor({ state: "attached", timeout: 10_000 });
+  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
 
   const answer = await currentCharacterCode(page);
   const wrongKey = guaranteedWrongKey(answer);
 
-  await input.focus();
   await page.keyboard.type(wrongKey.repeat(2));
 
-  const keyboard = page.getByRole("group", { name: "双拼键位图" });
-  const wrongKeyCap = keyboard.locator(`button[data-keycap="${wrongKey}"]`);
-  await expect(wrongKeyCap).toBeVisible({ timeout: 700 });
-  const wrongClass = (await wrongKeyCap.getAttribute("class")) ?? "";
-  expect(wrongClass).toContain("border-[var(--error)]");
+  const trace = page.locator("[data-input-trace]");
+  await expect(trace).toBeVisible({ timeout: 700 });
+  await expect(trace.locator("[data-trace-point][data-trace-error='true']")).toHaveCount(2);
 
-  const allKeys = keyboard.locator("button[data-keycap]");
-  const keyCount = await allKeys.count();
-  let hasCorrectKey = false;
-  for (let i = 0; i < keyCount; i++) {
-    const cls = (await allKeys.nth(i).getAttribute("class")) ?? "";
-    if (cls.includes("border-[var(--brand)]") && !cls.includes("border-[var(--error)]")) {
-      hasCorrectKey = true;
-      break;
-    }
-  }
-  expect(hasCorrectKey).toBe(true);
+  const wrongKeyCap = page.locator(`button[data-keycap="${wrongKey}"]`);
+  await expect(wrongKeyCap).toHaveAttribute("data-feedback", "error");
+  const wrongClass = (await wrongKeyCap.getAttribute("class")) ?? "";
+  expect(wrongClass).not.toContain("bg-[var(--error-soft)]");
+  expect(wrongClass).not.toContain("border-[var(--error)]");
 });
 
-/** 第二键也必须有可见按压反馈，即使该键同时触发提交。 */
-test("实体键盘第二键有按压反馈", async ({ page }) => {
+/** 实体键盘第一键显示点，第二键显示完整轨迹且按压反馈仍存在。 */
+test("实体键盘输入显示点和轨迹", async ({ page }) => {
   await page.goto("/");
   const input = page.locator("#practice-input");
   await input.waitFor({ state: "attached", timeout: 10_000 });
 
   const answer = await currentCharacterCode(page);
 
-  await input.focus();
   await page.keyboard.press(answer[0]);
+  await expect(page.locator("[data-input-trace] [data-trace-point]")).toHaveCount(1);
+
   const secondKey = page.locator(`button[data-keycap="${answer[1]}"]`);
   await page.keyboard.down(answer[1]);
   await expect(secondKey).toHaveAttribute("data-active", "true");
+  await expect(page.locator("[data-input-trace] path")).toBeVisible();
   await page.keyboard.up(answer[1]);
+});
+
+/** 即使隐藏输入框失焦，实体键盘仍直接进入练习并自动下一题。 */
+test("失焦后实体键盘仍可继续练习", async ({ page }) => {
+  await page.goto("/");
+  const input = page.locator("#practice-input");
+  await input.waitFor({ state: "attached", timeout: 10_000 });
+
+  const answer = await currentCharacterCode(page);
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await expect(input).not.toBeFocused();
+
+  await page.keyboard.type(answer);
+  await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
 });
 
 /** 切换主题后应自动回到练习输入，不需要用户再点页面。 */
@@ -104,7 +115,6 @@ test("Space -> 暂停 -> Space -> 恢复", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
 
-  await page.locator("#practice-input").focus();
   await page.keyboard.press("Space");
   await expect(page.getByText("已暂停")).toBeVisible();
 
@@ -125,7 +135,6 @@ test("autoNext=false -> 答对 -> 自动进入下一题", async ({ page }) => {
 
   const answer = await currentCharacterCode(page);
 
-  await page.locator("#practice-input").focus();
   await page.keyboard.type(answer);
 
   await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
