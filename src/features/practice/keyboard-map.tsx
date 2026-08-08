@@ -59,6 +59,7 @@ interface KeyboardMapProps {
   showTrace: boolean;
   activeKey: string | null;
   typedKeys: string[];
+  traceKeys: string[];
   correctKeys: string[];
   errorKeys: string[];
   onKeyClick: (key: string) => void;
@@ -70,6 +71,7 @@ export function KeyboardMap({
   showTrace,
   activeKey,
   typedKeys,
+  traceKeys,
   correctKeys,
   errorKeys,
   onKeyClick,
@@ -87,12 +89,12 @@ export function KeyboardMap({
   const [tracePath, setTracePath] = useState<string | null>(null);
 
   const updateTrace = useCallback(() => {
-    if (!showTrace || typedKeys.length < 2 || !fieldRef.current) {
+    if (!showTrace || traceKeys.length < 2 || !fieldRef.current) {
       setTracePath(null);
       return;
     }
 
-    const [firstKey, secondKey] = typedKeys;
+    const [firstKey, secondKey] = traceKeys;
     if (!firstKey || !secondKey) {
       setTracePath(null);
       return;
@@ -127,7 +129,7 @@ export function KeyboardMap({
     setTracePath(
       `M ${x1} ${y1} C ${x1 + dx * 0.28} ${y1 - bend}, ${x2 - dx * 0.2} ${y2 + bend * 0.45}, ${x2} ${y2}`,
     );
-  }, [showTrace, typedKeys]);
+  }, [showTrace, traceKeys]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(updateTrace);
@@ -158,6 +160,7 @@ export function KeyboardMap({
           <svg
             className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible"
             aria-hidden="true"
+            data-input-trace
           >
             <path
               d={tracePath}
@@ -197,7 +200,7 @@ export function KeyboardMap({
               {row.map((key) => {
                 const keyContent = content[key];
                 const isCorrect = correctSet.has(key);
-                const isError = errorSet.has(key);
+                const isError = errorSet.has(key) && !isCorrect;
                 const isTyped = typedSet.has(key);
                 const isActive = activeKey === key;
 
@@ -233,13 +236,11 @@ export function KeyboardMap({
                           ? "border-[var(--brand)]/35 bg-[var(--brand-soft)]/45"
                           : "border-[var(--brand)]/70 bg-[var(--brand-soft)]"),
                       isCorrect && "border-[var(--brand)] bg-[var(--brand-soft)]",
-                      isError &&
-                        !isCorrect &&
-                        "border-[var(--error)] bg-[var(--error-soft)]",
+                      isError && "border-[var(--error)] bg-[var(--error-soft)]",
+                      isActive && layout === "score" && "translate-y-px",
                       isActive &&
-                        (layout === "score"
-                          ? "translate-y-px border-[var(--brand)] bg-[var(--brand-soft)] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--brand)_10%,transparent)]"
-                          : "translate-y-[3px] scale-[0.975] shadow-none ring-2 ring-[var(--brand)]/35 ring-offset-1 ring-offset-background"),
+                        layout === "keyboard" &&
+                        "translate-y-[3px] scale-[0.975] shadow-none ring-2 ring-[var(--brand)]/35 ring-offset-1 ring-offset-background",
                     )}
                   >
                     {layout === "score" && (
@@ -249,8 +250,7 @@ export function KeyboardMap({
                           !disabled && "group-hover:scale-x-100 group-hover:opacity-100",
                           (isTyped || isCorrect || isActive) &&
                             "scale-x-100 bg-[var(--brand)] opacity-100",
-                          isError && !isCorrect &&
-                            "scale-x-100 bg-[var(--error)] opacity-100",
+                          isError && "scale-x-100 bg-[var(--error)] opacity-100",
                         )}
                       />
                     )}
