@@ -11,7 +11,7 @@ test("完成一道单字题", async ({ page }) => {
   await page.goto("/");
 
   const input = page.locator("#practice-input");
-  await expect(input).toBeVisible({ timeout: 10_000 });
+  await expect(input).toBeAttached();
 
   // 等待题目渲染（大字号汉字）。新 prompt 用 text-5xl sm:text-6xl。
   const character = page.locator("span.text-5xl, span.text-6xl").first();
@@ -29,7 +29,7 @@ test("完成一道单字题", async ({ page }) => {
   if (!res.ok) return;
 
   // 聚焦输入框并输入答案。
-  await input.click();
+  await input.focus();
   await page.keyboard.type(res.code);
 
   // 进度应增加（0/20 -> 1/20）。

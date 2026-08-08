@@ -7,7 +7,7 @@ export function SiteHeader() {
   return (
     <header className="bg-background/80 sticky top-0 z-40 backdrop-blur">
       <div className="mx-auto flex h-12 w-full max-w-4xl items-center justify-between px-4">
-        <span className="text-sm font-semibold tracking-tight">
+        <span className="text-sm font-semibold tracking-tight text-foreground">
           {SITE.name}
         </span>
         <div className="flex items-center gap-1">

@@ -16,14 +16,14 @@ export function PracticeStats() {
       <span>
         正确率 <span className="font-semibold tabular-nums text-foreground">{accuracy}%</span>
       </span>
-      <span className="text-border">/</span>
+      <span className="text-border">·</span>
       <span>
         进度 <span className="font-semibold tabular-nums text-foreground">{completed}</span>
         <span className="text-muted-foreground/50">/{total}</span>
       </span>
-      <span className="text-border">/</span>
+      <span className="text-border">·</span>
       <span>
-        连击 <span className="font-semibold tabular-nums text-[var(--vermilion)]">{streak}</span>
+        连击 <span className="font-semibold tabular-nums text-[var(--brand)]">{streak}</span>
       </span>
     </div>
   );

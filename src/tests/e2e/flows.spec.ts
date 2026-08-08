@@ -16,13 +16,13 @@ async function typeAnswer(page: import("@playwright/test").Page, schemeId: "xiao
   const res = encodeSyllable(pinyin, getScheme(schemeId)!);
   expect(res.ok).toBe(true);
   if (!res.ok) return;
-  await page.locator("#practice-input").click();
+  await page.locator("#practice-input").focus();
   await page.keyboard.type(res.code);
 }
 
 test("用例2：切换方案后使用新编码并重置本组", async ({ page }) => {
   await page.goto("/");
-  await page.locator("#practice-input").waitFor({ timeout: 10_000 });
+  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
 
   // 切换到微软双拼
   await page.getByLabel("双拼方案").click();
@@ -39,7 +39,7 @@ test("用例2：切换方案后使用新编码并重置本组", async ({ page })
 test("用例3：设置持久化，当前题目与输入不恢复", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
   await page.goto("/");
-  await page.locator("#practice-input").waitFor({ timeout: 10_000 });
+  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
 
   // 打开更多设置（桌面 Popover），关闭显示拼音
   await page.locator("[data-slot='popover-trigger']").click();
@@ -53,7 +53,7 @@ test("用例3：设置持久化，当前题目与输入不恢复", async ({ page
 
   // 刷新
   await page.reload();
-  await page.locator("#practice-input").waitFor({ timeout: 10_000 });
+  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
 
   // 方案仍为自然码
   await expect(page.getByLabel("双拼方案")).toContainText("自然码双拼");
@@ -68,7 +68,7 @@ test.describe("用例4：移动端设置 Drawer", () => {
 
   test("打开 Drawer 修改题数并完成一题", async ({ page }) => {
     await page.goto("/");
-    await page.locator("#practice-input").waitFor({ timeout: 10_000 });
+    await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
 
     // 点击更多设置（移动端 Drawer 触发器）-> Drawer 打开
     await page.locator("[data-slot='drawer-trigger']").click();

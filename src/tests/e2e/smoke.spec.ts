@@ -18,7 +18,7 @@ test("首页无控制台错误", async ({ page }) => {
   page.on("pageerror", (err) => errors.push(err.message));
 
   await page.goto("/");
-  await page.locator("#practice-input").waitFor({ timeout: 10_000 });
+  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
   await page.waitForTimeout(500);
 
   expect(errors, errors.join("\n")).toEqual([]);

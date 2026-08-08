@@ -3,7 +3,6 @@
 import { usePracticeStore } from "@/stores/practice-store";
 import { SCHEMES } from "@/data/schemes";
 import { cn } from "@/lib/utils";
-import { CheckIcon, XIcon } from "lucide-react";
 
 const KEYBOARD_ROWS = [
   ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
@@ -11,14 +10,14 @@ const KEYBOARD_ROWS = [
   ["z", "x", "c", "v", "b", "n", "m"],
 ] as const;
 
-// Row offsets for staggered layout (real keyboard alignment)
-const ROW_OFFSETS = ["0px", "18px", "42px"] as const;
+// Row offsets for staggered layout
+const ROW_OFFSETS = ["0px", "20px", "46px"] as const;
 
 const SCHEME_DATA: Record<
   string,
-  { name: string; initials: Record<string, string>; finals: Record<string, string> }
+  { initials: Record<string, string>; finals: Record<string, string> }
 > = Object.fromEntries(
-  SCHEMES.map((s) => [s.id, { name: s.name, initials: s.initials, finals: s.finals }]),
+  SCHEMES.map((s) => [s.id, { initials: s.initials, finals: s.finals }]),
 );
 
 function displayFinal(f: string): string {
@@ -49,7 +48,8 @@ function buildKeyContent(scheme: {
 }
 
 interface KeyboardMapProps {
-  pressedKeys: string[];
+  activeKey: string | null;
+  typedKeys: string[];
   correctKeys: string[];
   errorKeys: string[];
   onKeyClick: (key: string) => void;
@@ -57,38 +57,37 @@ interface KeyboardMapProps {
 }
 
 export function KeyboardMap({
-  pressedKeys,
+  activeKey,
+  typedKeys,
   correctKeys,
   errorKeys,
   onKeyClick,
   disabled,
 }: KeyboardMapProps) {
   const schemeId = usePracticeStore((s) => s.settings.scheme);
-  const data = SCHEME_DATA[schemeId] ?? { name: "", initials: {}, finals: {} };
+  const data = SCHEME_DATA[schemeId] ?? { initials: {}, finals: {} };
   const content = buildKeyContent(data);
 
-  const pressed = new Set(pressedKeys);
-  const correct = new Set(correctKeys);
-  const error = new Set(errorKeys);
+  const typedSet = new Set(typedKeys);
+  const correctSet = new Set(correctKeys);
+  const errorSet = new Set(errorKeys);
 
   return (
-    <div
-      className="overflow-x-auto"
-      role="group"
-      aria-label="双拼键位图"
-    >
-      <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-[3px] sm:gap-[5px]">
+    <div className="w-full overflow-x-auto" role="group" aria-label="双拼键位图">
+      <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-1 sm:gap-1.5">
         {KEYBOARD_ROWS.map((row, ri) => (
           <div
             key={ri}
-            className="flex gap-[3px] sm:gap-[5px]"
+            className="flex gap-1 sm:gap-1.5"
             style={{ paddingLeft: ROW_OFFSETS[ri], paddingRight: ROW_OFFSETS[2 - ri] }}
           >
             {row.map((key) => {
               const c = content[key];
-              const isCorrect = correct.has(key);
-              const isError = error.has(key);
-              const isPressed = pressed.has(key);
+              const isCorrect = correctSet.has(key);
+              const isError = errorSet.has(key);
+              const isTyped = typedSet.has(key);
+              const isActive = activeKey === key;
+
               return (
                 <button
                   key={key}
@@ -99,40 +98,39 @@ export function KeyboardMap({
                   aria-label={`键位 ${key}${c ? `: ${[...c.initials, ...c.finals.map(displayFinal)].join(", ")}` : ""}`}
                   data-keycap={key}
                   className={cn(
-                    "group relative flex h-12 w-8 shrink-0 select-none flex-col items-center justify-center rounded-[5px] border-b-2 transition-all sm:h-[68px] sm:w-[52px] sm:rounded-[7px] sm:border-b-[3px]",
-                    "border-t-[var(--keycap-border)] border-x-[var(--keycap-border)] border-b-[var(--keycap-shadow)]",
-                    "bg-[var(--keycap)]",
-                    !disabled && "hover:brightness-95 active:translate-y-px active:border-b-[1px] sm:active:border-b-[2px]",
-                    !disabled && !isCorrect && !isError && !isPressed && "hover:border-t-[var(--vermilion)] hover:border-x-[var(--vermilion)]",
-                    isPressed && !isCorrect && !isError && "border-t-[var(--vermilion)] border-x-[var(--vermilion)] border-b-[var(--vermilion)] bg-[var(--vermilion)]/8",
-                    isCorrect && "border-t-emerald-500 border-x-emerald-500 border-b-emerald-600 bg-emerald-500/8",
-                    isError && !isCorrect && "border-t-[var(--vermilion)] border-x-[var(--vermilion)] border-b-[var(--vermilion)] bg-[var(--vermilion)]/10",
+                    // Base keycap
+                    "group relative flex h-14 w-10 shrink-0 select-none flex-col items-center justify-center rounded-lg transition-all sm:h-[72px] sm:w-[56px] sm:rounded-xl",
+                    // Clean surface
+                    "bg-[var(--surface)]",
+                    // Bottom border = mechanical depth
+                    "border border-b-2 border-[var(--border)]",
+                    // Hover
+                    !disabled && !isCorrect && !isError && "hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]",
+                    // Active press (150ms flash)
+                    isActive && !isCorrect && !isError && "border-[var(--brand)] bg-[var(--brand-soft)] scale-95",
+                    // Typed keys (persist during question)
+                    isTyped && !isActive && !isCorrect && !isError && "border-[var(--brand)] bg-[var(--brand-soft)]",
+                    // Correct (green-blue brand)
+                    isCorrect && "border-[var(--brand)] bg-[var(--brand-soft)]",
+                    // Error
+                    isError && !isCorrect && "border-[var(--error)] bg-[var(--error)]/8",
                   )}
                 >
-                  {isCorrect && (
-                    <CheckIcon className="absolute right-0.5 top-0.5 size-2 text-emerald-600 dark:text-emerald-400 sm:right-1 sm:top-1 sm:size-3" />
-                  )}
-                  {isError && !isCorrect && (
-                    <XIcon className="absolute right-0.5 top-0.5 size-2 text-[var(--vermilion)] sm:right-1 sm:top-1 sm:size-3" />
-                  )}
-
-                  {/* 声母角标（右上） */}
+                  {/* Initial badge (top-right) */}
                   {c && c.initials.length > 0 && (
-                    <span
-                      className="absolute right-0.5 top-0.5 text-[0.5rem] font-semibold leading-none text-[var(--vermilion)]/70 sm:right-1 sm:top-1 sm:text-[0.6rem]"
-                    >
+                    <span className="absolute right-0.5 top-0.5 text-[0.55rem] font-semibold leading-none text-[var(--brand)]/60 sm:right-1 sm:top-1 sm:text-[0.6rem]">
                       {c.initials.join("/")}
                     </span>
                   )}
 
-                  {/* 键名字母 */}
-                  <span className="text-sm font-bold leading-none text-foreground sm:text-xl">
+                  {/* Key letter (largest) */}
+                  <span className="text-base font-bold leading-none text-foreground sm:text-2xl">
                     {key}
                   </span>
 
-                  {/* 韵母 */}
+                  {/* Finals (second tier) */}
                   {c && c.finals.length > 0 && (
-                    <span className="mt-px text-[0.5rem] leading-none text-muted-foreground sm:mt-0.5 sm:text-[0.65rem]">
+                    <span className="mt-0.5 text-[0.55rem] leading-none text-muted-foreground sm:mt-1 sm:text-[0.65rem]">
                       {c.finals.map(displayFinal).join(" · ")}
                     </span>
                   )}

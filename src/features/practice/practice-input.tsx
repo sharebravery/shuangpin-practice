@@ -23,6 +23,10 @@ interface PracticeInputProps {
   onSubmit: (value: string) => void;
 }
 
+/**
+ * Invisible input: handles focus, IME, accessibility.
+ * No visible border, placeholder, or styling.
+ */
 export function PracticeInput({
   value,
   expectedLength,
@@ -52,8 +56,7 @@ export function PracticeInput({
       spellCheck={false}
       inputMode="text"
       aria-label="请输入双拼编码"
-      placeholder="—"
-      className="w-24 border-none bg-transparent text-center font-mono text-lg tracking-[0.3em] text-foreground caret-[var(--vermilion)] placeholder:text-muted-foreground/20 focus-visible:ring-0 sm:w-28 sm:text-xl"
+      className="h-8 w-8 border-none bg-transparent p-0 opacity-0 focus-visible:ring-0"
       onChange={(e) => {
         if (composing) {
           onChange(e.target.value);
