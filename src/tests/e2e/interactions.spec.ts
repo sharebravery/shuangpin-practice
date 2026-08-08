@@ -21,10 +21,10 @@ function guaranteedWrongKey(answer: string): string {
   return PRACTICE_KEYS.find((key) => !answer.includes(key)) ?? "q";
 }
 
-/** 新访客默认使用纸墨主题。 */
-test("默认主题为纸墨", async ({ page }) => {
+/** 新访客默认使用天青主题。 */
+test("默认主题为天青", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("html")).toHaveClass(/ink/);
+  await expect(page.locator("html")).toHaveClass(/clean/);
 });
 
 /** 答错后自动进入下一题 */
@@ -41,8 +41,8 @@ test("答错 -> 自动进入下一题", async ({ page }) => {
   await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
 });
 
-/** 谱面模式答错时用轨迹点反馈，不让整个键位变红。 */
-test("答错时谱面显示错误轨迹点", async ({ page }) => {
+/** 谱面模式保留键位错误反馈，同时显示最高层轨迹点。 */
+test("答错时谱面保留按钮反馈和轨迹点", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
 
@@ -54,16 +54,18 @@ test("答错时谱面显示错误轨迹点", async ({ page }) => {
   const trace = page.locator("[data-input-trace]");
   await expect(trace).toBeVisible({ timeout: 700 });
   await expect(trace.locator("[data-trace-point][data-trace-error='true']")).toHaveCount(2);
+  const traceClass = (await trace.getAttribute("class")) ?? "";
+  expect(traceClass).toContain("z-[70]");
 
   const wrongKeyCap = page.locator(`button[data-keycap="${wrongKey}"]`);
   await expect(wrongKeyCap).toHaveAttribute("data-feedback", "error");
   const wrongClass = (await wrongKeyCap.getAttribute("class")) ?? "";
-  expect(wrongClass).not.toContain("bg-[var(--error-soft)]");
-  expect(wrongClass).not.toContain("border-[var(--error)]");
+  expect(wrongClass).toContain("bg-[var(--error-soft)]");
+  expect(wrongClass).toContain("border-[var(--error)]");
 });
 
-/** 实体键盘第一键显示点，第二键显示完整轨迹且按压反馈仍存在。 */
-test("实体键盘输入显示点和轨迹", async ({ page }) => {
+/** 实体键盘第一键显示呼吸点，第二键显示完整轨迹且按压反馈仍存在。 */
+test("实体键盘输入显示呼吸点和轨迹", async ({ page }) => {
   await page.goto("/");
   const input = page.locator("#practice-input");
   await input.waitFor({ state: "attached", timeout: 10_000 });
@@ -71,13 +73,31 @@ test("实体键盘输入显示点和轨迹", async ({ page }) => {
   const answer = await currentCharacterCode(page);
 
   await page.keyboard.press(answer[0]);
-  await expect(page.locator("[data-input-trace] [data-trace-point]")).toHaveCount(1);
+  const firstPoint = page.locator("[data-input-trace] [data-trace-point]");
+  await expect(firstPoint).toHaveCount(1);
+  await expect(firstPoint.locator("circle")).toHaveCount(2);
 
   const secondKey = page.locator(`button[data-keycap="${answer[1]}"]`);
   await page.keyboard.down(answer[1]);
   await expect(secondKey).toHaveAttribute("data-active", "true");
   await expect(page.locator("[data-input-trace] path")).toBeVisible();
   await page.keyboard.up(answer[1]);
+});
+
+/** 极简布局可通过设置选择，并保留完整键位交互。 */
+test("可切换到极简布局", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
+  await page.goto("/");
+  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
+
+  await page.locator("[data-slot='popover-trigger']").click();
+  await page.getByLabel("界面布局").click();
+  await page.getByRole("option", { name: "极简" }).click();
+  await page.keyboard.press("Escape");
+
+  const keyboard = page.getByRole("group", { name: "双拼键位图" });
+  await expect(keyboard.locator("button[data-keycap]")).toHaveCount(27);
+  await expect(keyboard.locator("button[data-keycap] span.size-\[5px\]").first()).toBeVisible();
 });
 
 /** 即使隐藏输入框失焦，实体键盘仍直接进入练习并自动下一题。 */
