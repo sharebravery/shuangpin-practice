@@ -99,6 +99,7 @@ export function KeyboardMap({
                   onClick={() => onKeyClick(key)}
                   aria-label={`键位 ${key}${keyContent ? `: ${[...keyContent.initials, ...keyContent.finals.map(displayFinal)].join(", ")}` : ""}`}
                   data-keycap={key}
+                  data-active={isActive ? "true" : undefined}
                   className={cn(
                     "group relative flex h-14 w-10 shrink-0 select-none flex-col items-center justify-center rounded-lg border border-b-[3px] border-[var(--border)] bg-[var(--key)] shadow-sm transition-[transform,background-color,border-color,box-shadow] duration-100",
                     "sm:h-[88px] sm:w-[72px] sm:rounded-xl lg:h-[102px] lg:w-[86px] lg:rounded-[14px]",
@@ -106,12 +107,7 @@ export function KeyboardMap({
                       !isCorrect &&
                       !isError &&
                       "hover:border-[var(--brand)]/55 hover:bg-[var(--key-hover)] hover:shadow-md",
-                    isActive &&
-                      !isCorrect &&
-                      !isError &&
-                      "translate-y-[2px] scale-[0.985] border-[var(--brand)] bg-[var(--brand-soft)] shadow-none",
                     isTyped &&
-                      !isActive &&
                       !isCorrect &&
                       !isError &&
                       "border-[var(--brand)]/70 bg-[var(--brand-soft)]",
@@ -120,6 +116,8 @@ export function KeyboardMap({
                     isError &&
                       !isCorrect &&
                       "border-[var(--error)] bg-[var(--error-soft)]",
+                    isActive &&
+                      "translate-y-[3px] scale-[0.975] shadow-none ring-2 ring-[var(--brand)]/35 ring-offset-1 ring-offset-background",
                   )}
                 >
                   {keyContent && keyContent.initials.length > 0 && (
