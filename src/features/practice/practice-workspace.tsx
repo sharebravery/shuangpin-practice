@@ -43,6 +43,10 @@ export function PracticeWorkspace() {
   const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    inputRef.current = input;
+  }, [input]);
+
+  useEffect(() => {
     if (hasHydrated && usePracticeStore.getState().session.status === "ready") {
       startSession();
     }
@@ -52,7 +56,6 @@ export function PracticeWorkspace() {
   const [lastResetKey, setLastResetKey] = useState(questionResetKey);
   if (lastResetKey !== questionResetKey) {
     setLastResetKey(questionResetKey);
-    inputRef.current = "";
     setInput("");
     setLastInput("");
     setTypedKeys([]);
@@ -198,7 +201,7 @@ export function PracticeWorkspace() {
 
   return (
     <div className="flex flex-col items-center gap-5 py-1 sm:gap-6 sm:py-2">
-      <div className="flex w-full min-h-8 items-center justify-between gap-3">
+      <div className="flex min-h-8 w-full items-center justify-between gap-3">
         <PracticeToolbar />
         <PracticeStats />
       </div>
@@ -212,8 +215,7 @@ export function PracticeWorkspace() {
           aria-atomic="true"
         >
           {echoKeys.map((key, index) => {
-            const isWrongKey =
-              status === "wrong" && key !== answerChars[index];
+            const isWrongKey = status === "wrong" && key !== answerChars[index];
             return (
               <span
                 key={`${index}-${key}`}
