@@ -96,8 +96,11 @@ test("可切换到极简布局", async ({ page }) => {
   await page.keyboard.press("Escape");
 
   const keyboard = page.getByRole("group", { name: "双拼键位图" });
-  await expect(keyboard.locator("button[data-keycap]")).toHaveCount(27);
-  await expect(keyboard.locator("button[data-keycap] span.size-\[5px\]").first()).toBeVisible();
+  const keys = keyboard.locator("button[data-keycap]");
+  await expect(keys).toHaveCount(27);
+  const firstKeyClass = (await keys.first().getAttribute("class")) ?? "";
+  expect(firstKeyClass).toContain("h-[76px]");
+  expect(firstKeyClass).toContain("border-transparent");
 });
 
 /** 即使隐藏输入框失焦，实体键盘仍直接进入练习并自动下一题。 */
@@ -143,18 +146,21 @@ test("Space -> 暂停 -> Space -> 恢复", async ({ page }) => {
   await expect(page.locator("#practice-input")).toBeAttached();
 });
 
-/** autoNext=false 时答对后自动进入下一题 */
+/** autoNext=false 时答对后短暂反馈，再自动进入下一题 */
 test("autoNext=false -> 答对 -> 自动进入下一题", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
   await page.goto("/");
-  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
+  const input = page.locator("#practice-input");
+  await input.waitFor({ state: "attached", timeout: 10_000 });
 
   await page.locator("[data-slot='popover-trigger']").click();
-  await page.getByLabel("答对自动下一题").click();
+  const autoNextSwitch = page.getByLabel("答对自动下一题");
+  await autoNextSwitch.click();
+  await expect(autoNextSwitch).not.toBeChecked();
   await page.keyboard.press("Escape");
+  await expect(input).toBeFocused();
 
   const answer = await currentCharacterCode(page);
-
   await page.keyboard.type(answer);
 
   await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
