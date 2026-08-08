@@ -10,16 +10,15 @@ import { getScheme } from "../../data/schemes";
 test("完成一道单字题", async ({ page }) => {
   await page.goto("/");
 
-  // 等待输入框出现（确认工作区已挂载）。
   const input = page.locator("#practice-input");
   await expect(input).toBeVisible({ timeout: 10_000 });
 
-  // 等待题目渲染（大字号汉字）。
-  const character = page.locator("span.text-6xl").first();
+  // 等待题目渲染（大字号汉字）。新 prompt 用 text-5xl sm:text-6xl。
+  const character = page.locator("span.text-5xl, span.text-6xl").first();
   await expect(character).toBeVisible({ timeout: 10_000 });
 
   // 读取拼音（默认显示拼音）。
-  const pinyinEl = page.locator("span.text-base.text-muted-foreground").first();
+  const pinyinEl = page.locator("span.text-sm.text-muted-foreground").first();
   await expect(pinyinEl).toBeVisible();
   const pinyin = (await pinyinEl.textContent()) ?? "";
 

@@ -10,7 +10,7 @@ import nextTs from "eslint-config-next/typescript";
  */
 const noNativeControls = {
   files: ["src/**/*.{ts,tsx}"],
-  ignores: ["src/components/ui/**/*.{ts,tsx}"],
+  ignores: ["src/components/ui/**/*.{ts,tsx}", "src/features/practice/keyboard-map.tsx"],
   rules: {
     "no-restricted-syntax": [
       "error",

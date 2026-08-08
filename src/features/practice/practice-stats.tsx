@@ -12,12 +12,19 @@ export function PracticeStats() {
   const accuracy = Math.round(calculateAccuracy(correct, completed) * 100);
 
   return (
-    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-      <span>正确率 <span className="font-semibold text-foreground tabular-nums">{accuracy}%</span></span>
-      <span className="text-border">·</span>
-      <span>进度 <span className="font-semibold text-foreground tabular-nums">{completed}</span>/{total}</span>
-      <span className="text-border">·</span>
-      <span>连击 <span className="font-semibold text-foreground tabular-nums">{streak}</span></span>
+    <div className="flex items-center gap-2 text-xs text-muted-foreground sm:gap-3 sm:text-sm">
+      <span>
+        正确率 <span className="font-semibold tabular-nums text-foreground">{accuracy}%</span>
+      </span>
+      <span className="text-border">/</span>
+      <span>
+        进度 <span className="font-semibold tabular-nums text-foreground">{completed}</span>
+        <span className="text-muted-foreground/50">/{total}</span>
+      </span>
+      <span className="text-border">/</span>
+      <span>
+        连击 <span className="font-semibold tabular-nums text-[var(--vermilion)]">{streak}</span>
+      </span>
     </div>
   );
 }

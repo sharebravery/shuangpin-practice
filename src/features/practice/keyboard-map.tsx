@@ -1,17 +1,18 @@
 "use client";
 
-import { CheckIcon, XIcon } from "lucide-react";
-
 import { usePracticeStore } from "@/stores/practice-store";
 import { SCHEMES } from "@/data/schemes";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CheckIcon, XIcon } from "lucide-react";
 
 const KEYBOARD_ROWS = [
   ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
   ["a", "s", "d", "f", "g", "h", "j", "k", "l", ";"],
   ["z", "x", "c", "v", "b", "n", "m"],
 ] as const;
+
+// Row offsets for staggered layout (real keyboard alignment)
+const ROW_OFFSETS = ["0px", "18px", "42px"] as const;
 
 const SCHEME_DATA: Record<
   string,
@@ -63,11 +64,7 @@ export function KeyboardMap({
   disabled,
 }: KeyboardMapProps) {
   const schemeId = usePracticeStore((s) => s.settings.scheme);
-  const data = SCHEME_DATA[schemeId] ?? {
-    name: "键位图",
-    initials: {},
-    finals: {},
-  };
+  const data = SCHEME_DATA[schemeId] ?? { name: "", initials: {}, finals: {} };
   const content = buildKeyContent(data);
 
   const pressed = new Set(pressedKeys);
@@ -75,60 +72,75 @@ export function KeyboardMap({
   const error = new Set(errorKeys);
 
   return (
-    <div className="relative z-10 flex flex-col items-center gap-3">
-      <p className="text-sm font-medium text-muted-foreground">
-        {data.name} · 键位图
-      </p>
-      <div className="overflow-x-auto pb-2" role="group" aria-label="双拼键位图">
-        <div className="mx-auto flex w-fit flex-col gap-1 sm:gap-1.5">
-          {KEYBOARD_ROWS.map((row, ri) => (
-            <div key={ri} className="flex gap-1 sm:gap-1.5">
-              {row.map((key) => {
-                const c = content[key];
-                const isCorrect = correct.has(key);
-                const isError = error.has(key);
-                const isPressed = pressed.has(key);
-                return (
-                  <Button
-                    key={key}
-                    variant="ghost"
-                    disabled={disabled}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => onKeyClick(key)}
-                    aria-label={`键位 ${key}${c ? `: ${[...c.initials, ...c.finals.map(displayFinal)].join(", ")}` : ""}`}
-                    className={cn(
-                      "group relative flex h-14 w-9 shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg border bg-muted/30 p-0.5 transition-all sm:h-20 sm:w-16 sm:rounded-xl sm:p-1",
-                      "hover:bg-muted/60 hover:scale-[1.03] active:scale-[0.97]",
-                      isCorrect && "border-emerald-500 bg-emerald-500/10 dark:border-emerald-400",
-                      !isCorrect && isError && "border-destructive bg-destructive/10",
-                      !isCorrect && !isError && isPressed && "border-primary bg-primary/10 scale-[1.03]",
-                    )}
-                  >
-                    {isCorrect && (
-                      <CheckIcon className="absolute right-0.5 top-0.5 size-2.5 text-emerald-600 dark:text-emerald-400 sm:right-1 sm:top-1 sm:size-3" />
-                    )}
-                    {isError && !isCorrect && (
-                      <XIcon className="absolute right-0.5 top-0.5 size-2.5 text-destructive sm:right-1 sm:top-1 sm:size-3" />
-                    )}
-                    <span className="text-base font-bold leading-none sm:text-2xl">
-                      {key}
+    <div
+      className="overflow-x-auto"
+      role="group"
+      aria-label="双拼键位图"
+    >
+      <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-[3px] sm:gap-[5px]">
+        {KEYBOARD_ROWS.map((row, ri) => (
+          <div
+            key={ri}
+            className="flex gap-[3px] sm:gap-[5px]"
+            style={{ paddingLeft: ROW_OFFSETS[ri], paddingRight: ROW_OFFSETS[2 - ri] }}
+          >
+            {row.map((key) => {
+              const c = content[key];
+              const isCorrect = correct.has(key);
+              const isError = error.has(key);
+              const isPressed = pressed.has(key);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={disabled}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => onKeyClick(key)}
+                  aria-label={`键位 ${key}${c ? `: ${[...c.initials, ...c.finals.map(displayFinal)].join(", ")}` : ""}`}
+                  data-keycap={key}
+                  className={cn(
+                    "group relative flex h-12 w-8 shrink-0 select-none flex-col items-center justify-center rounded-[5px] border-b-2 transition-all sm:h-[68px] sm:w-[52px] sm:rounded-[7px] sm:border-b-[3px]",
+                    "border-t-[var(--keycap-border)] border-x-[var(--keycap-border)] border-b-[var(--keycap-shadow)]",
+                    "bg-[var(--keycap)]",
+                    !disabled && "hover:brightness-95 active:translate-y-px active:border-b-[1px] sm:active:border-b-[2px]",
+                    !disabled && !isCorrect && !isError && !isPressed && "hover:border-t-[var(--vermilion)] hover:border-x-[var(--vermilion)]",
+                    isPressed && !isCorrect && !isError && "border-t-[var(--vermilion)] border-x-[var(--vermilion)] border-b-[var(--vermilion)] bg-[var(--vermilion)]/8",
+                    isCorrect && "border-t-emerald-500 border-x-emerald-500 border-b-emerald-600 bg-emerald-500/8",
+                    isError && !isCorrect && "border-t-[var(--vermilion)] border-x-[var(--vermilion)] border-b-[var(--vermilion)] bg-[var(--vermilion)]/10",
+                  )}
+                >
+                  {isCorrect && (
+                    <CheckIcon className="absolute right-0.5 top-0.5 size-2 text-emerald-600 dark:text-emerald-400 sm:right-1 sm:top-1 sm:size-3" />
+                  )}
+                  {isError && !isCorrect && (
+                    <XIcon className="absolute right-0.5 top-0.5 size-2 text-[var(--vermilion)] sm:right-1 sm:top-1 sm:size-3" />
+                  )}
+
+                  {/* 声母角标（右上） */}
+                  {c && c.initials.length > 0 && (
+                    <span
+                      className="absolute right-0.5 top-0.5 text-[0.5rem] font-semibold leading-none text-[var(--vermilion)]/70 sm:right-1 sm:top-1 sm:text-[0.6rem]"
+                    >
+                      {c.initials.join("/")}
                     </span>
-                    {c && c.finals.length > 0 && (
-                      <span className="hidden text-[0.65rem] leading-tight text-muted-foreground sm:block">
-                        {c.finals.map(displayFinal).join(" · ")}
-                      </span>
-                    )}
-                    {c && c.initials.length > 0 && (
-                      <span className="hidden text-[0.65rem] font-semibold leading-tight text-primary/70 sm:block">
-                        {c.initials.join("/")}
-                      </span>
-                    )}
-                  </Button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+                  )}
+
+                  {/* 键名字母 */}
+                  <span className="text-sm font-bold leading-none text-foreground sm:text-xl">
+                    {key}
+                  </span>
+
+                  {/* 韵母 */}
+                  {c && c.finals.length > 0 && (
+                    <span className="mt-px text-[0.5rem] leading-none text-muted-foreground sm:mt-0.5 sm:text-[0.65rem]">
+                      {c.finals.map(displayFinal).join(" · ")}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );

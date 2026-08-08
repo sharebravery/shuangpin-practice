@@ -156,12 +156,13 @@ export function MoreSettings() {
 
   const trigger = (open: boolean) => (
     <Button
-      variant="outline"
+      variant="ghost"
       size="icon"
+      className="h-7 w-7"
       aria-label="更多设置"
       aria-pressed={open}
     >
-      <SettingsIcon className="size-4" />
+      <SettingsIcon className="size-3.5" />
     </Button>
   );
 

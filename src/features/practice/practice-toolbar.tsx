@@ -25,10 +25,10 @@ export function PracticeToolbar() {
   const setMode = usePracticeStore((s) => s.setMode);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5">
       <Select value={scheme} onValueChange={(v) => setScheme(v as SchemeId)}>
-        <SelectTrigger aria-label="双拼方案" className="h-8 min-w-28">
-          <SelectValue placeholder="选择方案">
+        <SelectTrigger aria-label="双拼方案" className="h-7 min-w-24 border-none bg-transparent px-1.5 text-xs hover:bg-[var(--keycap)]/50">
+          <SelectValue placeholder="方案">
             {(value: SchemeId) => SCHEMES.find((s) => s.id === value)?.name ?? value}
           </SelectValue>
         </SelectTrigger>
@@ -42,8 +42,8 @@ export function PracticeToolbar() {
       </Select>
 
       <Select value={mode} onValueChange={(v) => setMode(v as PracticeMode)}>
-        <SelectTrigger aria-label="练习模式" className="h-8 min-w-20">
-          <SelectValue placeholder="选择模式">
+        <SelectTrigger aria-label="练习模式" className="h-7 min-w-16 border-none bg-transparent px-1.5 text-xs hover:bg-[var(--keycap)]/50">
+          <SelectValue placeholder="模式">
             {(value: PracticeMode) => MODES.find((m) => m.value === value)?.label ?? value}
           </SelectValue>
         </SelectTrigger>

@@ -5,9 +5,9 @@ import { SITE } from "@/lib/site";
 
 export function SiteHeader() {
   return (
-    <header className="bg-background/80 sticky top-0 z-40 border-b backdrop-blur">
-      <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between px-4">
-        <span className="text-base font-semibold tracking-tight">
+    <header className="bg-background/80 sticky top-0 z-40 backdrop-blur">
+      <div className="mx-auto flex h-12 w-full max-w-4xl items-center justify-between px-4">
+        <span className="text-sm font-semibold tracking-tight">
           {SITE.name}
         </span>
         <div className="flex items-center gap-1">

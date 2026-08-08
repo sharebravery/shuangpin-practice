@@ -5,7 +5,7 @@ import { getScheme } from "../../data/schemes";
 
 /** 读取当前题目拼音。 */
 async function readPinyin(page: import("@playwright/test").Page): Promise<string> {
-  const el = page.locator("span.text-base.text-muted-foreground").first();
+  const el = page.locator("span.text-sm.text-muted-foreground").first();
   await expect(el).toBeVisible();
   return (await el.textContent()) ?? "";
 }
@@ -58,7 +58,7 @@ test("用例3：设置持久化，当前题目与输入不恢复", async ({ page
   // 方案仍为自然码
   await expect(page.getByLabel("双拼方案")).toContainText("自然码双拼");
   // 拼音仍隐藏
-  await expect(page.locator("span.text-base.text-muted-foreground")).toHaveCount(0);
+  await expect(page.locator("span.text-sm.text-muted-foreground")).toHaveCount(0);
   // 当前输入未恢复
   await expect(page.locator("#practice-input")).toHaveValue("");
 });

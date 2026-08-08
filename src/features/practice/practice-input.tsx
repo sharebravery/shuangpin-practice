@@ -52,8 +52,8 @@ export function PracticeInput({
       spellCheck={false}
       inputMode="text"
       aria-label="请输入双拼编码"
-      placeholder="·"
-      className="w-32 border-none bg-transparent text-center font-mono text-2xl tracking-widest text-foreground caret-primary placeholder:text-muted-foreground/30 focus-visible:ring-0"
+      placeholder="—"
+      className="w-24 border-none bg-transparent text-center font-mono text-lg tracking-[0.3em] text-foreground caret-[var(--vermilion)] placeholder:text-muted-foreground/20 focus-visible:ring-0 sm:w-28 sm:text-xl"
       onChange={(e) => {
         if (composing) {
           onChange(e.target.value);

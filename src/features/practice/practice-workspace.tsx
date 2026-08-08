@@ -36,14 +36,12 @@ export function PracticeWorkspace() {
     inputRef.current = input;
   }, [input]);
 
-  // hydration 后开始会话
   useEffect(() => {
     if (hasHydrated && usePracticeStore.getState().session.status === "ready") {
       startSession();
     }
   }, [hasHydrated, startSession]);
 
-  // 新题目/新字时清空输入
   const questionResetKey = `${questionId}:${phraseIndex}`;
   const [lastResetKey, setLastResetKey] = useState(questionResetKey);
   if (lastResetKey !== questionResetKey) {
@@ -52,7 +50,6 @@ export function PracticeWorkspace() {
     setLastInput("");
   }
 
-  // 聚焦：答题中聚焦输入框，否则聚焦 body
   useEffect(() => {
     if (status === "answering" && feedback === "none") {
       focusPracticeInput();
@@ -61,7 +58,6 @@ export function PracticeWorkspace() {
     }
   }, [questionResetKey, status, feedback]);
 
-  // 自动继续：wrong 800ms / correct 400ms 后自动进入下一题
   useEffect(() => {
     if (autoAdvanceRef.current) {
       clearTimeout(autoAdvanceRef.current);
@@ -77,7 +73,6 @@ export function PracticeWorkspace() {
     };
   }, [status, feedback, questionResetKey, next]);
 
-  // 全局键盘监听
   useEffect(() => {
     const inOverlay = (el: HTMLElement | null) =>
       !!el?.closest(
@@ -90,7 +85,7 @@ export function PracticeWorkspace() {
       const curInput = inputRef.current;
 
       if (e.key === "Enter") {
-        if (target?.closest("button, a")) return;
+        if (target?.closest("button, a, [data-keycap]")) return;
         if (session.status === "wrong" || session.feedback === "correct" || session.status === "completed") {
           e.preventDefault();
           doNext();
@@ -98,7 +93,7 @@ export function PracticeWorkspace() {
         return;
       }
       if (e.key === " ") {
-        if (target?.closest("button, a")) return;
+        if (target?.closest("button, a, [data-keycap]")) return;
         if (session.status === "answering" && session.feedback === "none") {
           e.preventDefault();
           if (curInput === "") doPause();
@@ -124,7 +119,6 @@ export function PracticeWorkspace() {
   const expectedLength = question?.kind === "mapping" ? 1 : 2;
   const inputDisabled = status !== "answering" || feedback !== "none";
 
-  // 点击键盘输入（与实体键盘共用 input + submit 逻辑）
   const handleKeyClick = useCallback(
     (key: string) => {
       if (inputDisabled) return;
@@ -141,7 +135,6 @@ export function PracticeWorkspace() {
     [input, expectedLength, inputDisabled, submit],
   );
 
-  // 键位高亮
   const answerStr =
     question?.kind === "phrase"
       ? question.charCodes[phraseIndex] ?? ""
@@ -160,36 +153,40 @@ export function PracticeWorkspace() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <PracticeToolbar />
+    <div className="flex flex-col items-center gap-4">
+      {/* Keyboard Chassis */}
+      <div className="w-full rounded-2xl border border-[var(--chassis-border)] bg-[var(--chassis)] p-3 sm:rounded-3xl sm:p-5">
+        {/* Function Row */}
+        <div className="mb-3 flex items-center justify-between gap-2 border-b border-[var(--chassis-border)] pb-2 sm:mb-4 sm:pb-3">
+          <PracticeToolbar />
+          <PracticeStats />
+        </div>
 
-      {/* 题目 + 输入 */}
-      <div className="flex w-full flex-col items-center gap-3">
-        <PracticePrompt />
-        <PracticeInput
-          value={input}
-          expectedLength={expectedLength}
+        {/* Display */}
+        <div className="mb-3 flex flex-col items-center gap-1 sm:mb-4">
+          <PracticePrompt />
+          <PracticeInput
+            value={input}
+            expectedLength={expectedLength}
+            disabled={inputDisabled}
+            onChange={setInput}
+            onSubmit={(v) => {
+              setLastInput(v);
+              submit(v);
+              setInput("");
+            }}
+          />
+        </div>
+
+        {/* Key Bed */}
+        <KeyboardMap
+          pressedKeys={pressedKeys}
+          correctKeys={correctKeys}
+          errorKeys={errorKeys}
+          onKeyClick={handleKeyClick}
           disabled={inputDisabled}
-          onChange={setInput}
-          onSubmit={(v) => {
-            setLastInput(v);
-            submit(v);
-            setInput("");
-          }}
         />
       </div>
-
-      {/* 键盘（核心视觉） */}
-      <KeyboardMap
-        pressedKeys={pressedKeys}
-        correctKeys={correctKeys}
-        errorKeys={errorKeys}
-        onKeyClick={handleKeyClick}
-        disabled={inputDisabled}
-      />
-
-      {/* 统计 */}
-      <PracticeStats />
 
       <ResultDialog />
     </div>
