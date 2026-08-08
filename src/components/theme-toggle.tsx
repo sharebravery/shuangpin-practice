@@ -2,7 +2,6 @@
 
 import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
-import { PaletteIcon } from "lucide-react";
 
 import {
   Select,
@@ -42,9 +41,12 @@ export function ThemeToggle() {
     >
       <SelectTrigger
         aria-label="界面主题"
-        className="h-8 w-[104px] gap-1.5 border-border/70 bg-card px-2 text-xs shadow-none hover:bg-muted/70"
+        className="h-8 w-auto gap-1.5 border-none bg-transparent px-1.5 text-xs text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground"
       >
-        <PaletteIcon className="size-3.5 text-muted-foreground" />
+        <span
+          className="size-1.5 rounded-full bg-[var(--brand)] ring-4 ring-[var(--brand-soft)]"
+          aria-hidden="true"
+        />
         <SelectValue>
           {(value: ThemeName) => THEMES.find((item) => item.value === value)?.label ?? "天青"}
         </SelectValue>
