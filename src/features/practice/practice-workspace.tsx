@@ -28,6 +28,8 @@ export function PracticeWorkspace() {
   const questionId = usePracticeStore((s) => s.session.questionId);
   const status = usePracticeStore((s) => s.session.status);
   const feedback = usePracticeStore((s) => s.session.feedback);
+  const layout = usePracticeStore((s) => s.settings.layout ?? "score");
+  const showTrace = usePracticeStore((s) => s.settings.showTrace ?? true);
   const hasHydrated = usePracticeStore((s) => s.hasHydrated);
   const startSession = usePracticeStore((s) => s.startSession);
   const submit = usePracticeStore((s) => s.submit);
@@ -200,17 +202,17 @@ export function PracticeWorkspace() {
   const echoKeys = status === "wrong" ? lastInput.split("") : typedKeys;
 
   return (
-    <div className="flex flex-col items-center gap-5 py-1 sm:gap-6 sm:py-2">
+    <div className="flex flex-col items-center py-1 sm:py-2">
       <div className="flex min-h-8 w-full items-center justify-between gap-3">
         <PracticeToolbar />
         <PracticeStats />
       </div>
 
-      <div className="relative flex w-full flex-col items-center">
+      <div className="relative flex min-h-[280px] w-full flex-col items-center justify-center py-7 sm:min-h-[320px] sm:py-9">
         <PracticePrompt />
 
         <div
-          className="flex h-14 items-center justify-center gap-5 font-mono text-4xl font-bold tracking-wide text-[var(--brand)] sm:text-[2.75rem]"
+          className="flex h-[76px] items-center justify-center gap-7 font-mono text-[2.6rem] font-bold tracking-wide text-[var(--brand)] sm:h-20 sm:text-[2.9rem]"
           aria-live="polite"
           aria-atomic="true"
         >
@@ -219,7 +221,11 @@ export function PracticeWorkspace() {
             return (
               <span
                 key={`${index}-${key}`}
-                className={isWrongKey ? "text-[var(--error)]" : undefined}
+                className={
+                  isWrongKey
+                    ? "animate-in fade-in slide-in-from-bottom-1 text-[var(--error)] duration-150"
+                    : "animate-in fade-in slide-in-from-bottom-1 duration-150"
+                }
               >
                 {key}
               </span>
@@ -227,7 +233,7 @@ export function PracticeWorkspace() {
           })}
         </div>
 
-        <div className="flex h-6 items-center justify-center font-mono text-xs text-muted-foreground">
+        <div className="flex h-5 items-center justify-center font-mono text-[0.68rem] text-muted-foreground">
           {status === "wrong" && (
             <span>
               正确&nbsp;
@@ -261,8 +267,10 @@ export function PracticeWorkspace() {
       </div>
 
       <KeyboardMap
+        layout={layout}
+        showTrace={showTrace}
         activeKey={activeKey}
-        typedKeys={typedKeys}
+        typedKeys={echoKeys}
         correctKeys={correctKeys}
         errorKeys={errorKeys}
         onKeyClick={processKey}
