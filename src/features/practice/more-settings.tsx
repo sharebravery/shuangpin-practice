@@ -37,11 +37,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SettingsIcon } from "lucide-react";
 
+import type { PracticeLayout } from "@/lib/shuangpin/types";
 import { cn } from "@/lib/utils";
 import { usePracticeStore } from "@/stores/practice-store";
 import { restorePracticeFocus } from "./practice-input";
 
 const QUESTION_COUNTS = [10, 15, 20, 30, 50];
+const LAYOUTS: { value: PracticeLayout; label: string }[] = [
+  { value: "score", label: "谱面" },
+  { value: "keyboard", label: "键盘" },
+];
 
 function SettingRow({
   label,
@@ -64,8 +69,40 @@ function SettingsPanel() {
   const clearHistory = usePracticeStore((s) => s.clearHistory);
   const [clearOpen, setClearOpen] = useState(false);
 
+  const layout = settings.layout ?? "score";
+  const showTrace = settings.showTrace ?? true;
+
   return (
     <div className="flex flex-col gap-4">
+      <SettingRow label="界面布局">
+        <Select
+          value={layout}
+          onValueChange={(value) => updateSettings({ layout: value as PracticeLayout })}
+        >
+          <SelectTrigger size="sm" className="w-24" aria-label="界面布局">
+            <SelectValue>
+              {(value: PracticeLayout) =>
+                LAYOUTS.find((item) => item.value === value)?.label ?? value
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {LAYOUTS.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </SettingRow>
+      <SettingRow label="输入轨迹">
+        <Switch
+          checked={showTrace}
+          onCheckedChange={(checked) => updateSettings({ showTrace: checked })}
+          aria-label="输入轨迹"
+        />
+      </SettingRow>
+      <Separator />
       <SettingRow label="显示拼音">
         <Switch
           checked={settings.showPinyin}
