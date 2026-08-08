@@ -11,7 +11,7 @@ export function PracticePrompt() {
 
   if (status === "ready" || !question) {
     return (
-      <div className="flex h-24 items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-28 items-center justify-center text-sm text-muted-foreground">
         准备开始…
       </div>
     );
@@ -19,7 +19,7 @@ export function PracticePrompt() {
 
   if (status === "paused") {
     return (
-      <div className="flex h-24 flex-col items-center justify-center text-center">
+      <div className="flex h-28 flex-col items-center justify-center text-center">
         <p className="text-lg font-medium">已暂停</p>
         <p className="mt-1 text-xs text-muted-foreground">按 Space 继续</p>
       </div>
@@ -28,7 +28,7 @@ export function PracticePrompt() {
 
   if (status === "completed") {
     return (
-      <div className="flex h-24 items-center justify-center text-center">
+      <div className="flex h-28 items-center justify-center text-center">
         <p className="text-lg font-medium">本组完成 🎉</p>
       </div>
     );
@@ -37,7 +37,7 @@ export function PracticePrompt() {
   const wrong = status === "wrong";
 
   return (
-    <div className="flex h-24 w-full flex-col items-center justify-center">
+    <div className="flex h-28 w-full flex-col items-center justify-center">
       {question.kind === "mapping" && (
         <>
           <span className="h-4 text-[0.65rem] uppercase tracking-widest text-muted-foreground">
@@ -51,12 +51,12 @@ export function PracticePrompt() {
 
       {question.kind === "character" && (
         <>
-          <span className="text-6xl font-bold leading-none sm:text-7xl">
+          <span className="text-7xl font-semibold leading-none tracking-[-0.06em] sm:text-8xl">
             {question.character}
           </span>
           <span
             className={cn(
-              "mt-2 h-5 text-sm text-muted-foreground",
+              "mt-4 h-5 text-sm text-muted-foreground sm:text-base",
               (!showPinyin || wrong) && "invisible",
             )}
           >
@@ -67,7 +67,7 @@ export function PracticePrompt() {
 
       {question.kind === "phrase" && (
         <div className="flex h-full flex-col items-center justify-center">
-          <span className="text-4xl font-bold leading-none tracking-wide sm:text-5xl">
+          <span className="text-4xl font-semibold leading-none tracking-wide sm:text-5xl">
             {[...question.text].map((ch, i) => (
               <span
                 key={i}
@@ -87,7 +87,7 @@ export function PracticePrompt() {
           </span>
           <span
             className={cn(
-              "mt-2 h-5 text-xs text-muted-foreground",
+              "mt-3 h-5 text-xs text-muted-foreground sm:text-sm",
               (!showPinyin || wrong) && "invisible",
             )}
           >
