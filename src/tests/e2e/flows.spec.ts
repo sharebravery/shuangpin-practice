@@ -57,8 +57,8 @@ test("用例3：设置持久化，当前题目与输入不恢复", async ({ page
 
   // 方案仍为自然码
   await expect(page.getByLabel("双拼方案")).toContainText("自然码双拼");
-  // 拼音仍隐藏
-  await expect(page.locator("span.text-sm.text-muted-foreground")).toHaveCount(0);
+  // 拼音仍隐藏；元素保留占位，避免练习区在显示/隐藏反馈时发生布局跳动。
+  await expect(page.locator("span.text-sm.text-muted-foreground").first()).toBeHidden();
   // 当前输入未恢复
   await expect(page.locator("#practice-input")).toHaveValue("");
 });
