@@ -36,6 +36,17 @@ interface KeyContent {
   finals: string[];
 }
 
+interface TracePoint {
+  x: number;
+  y: number;
+  index: number;
+}
+
+interface TraceGeometry {
+  path: string | null;
+  points: TracePoint[];
+}
+
 function buildKeyContent(scheme: {
   initials: Record<string, string>;
   finals: Record<string, string>;
@@ -60,6 +71,7 @@ interface KeyboardMapProps {
   activeKey: string | null;
   typedKeys: string[];
   traceKeys: string[];
+  traceErrorIndexes: number[];
   correctKeys: string[];
   errorKeys: string[];
   onKeyClick: (key: string) => void;
@@ -72,6 +84,7 @@ export function KeyboardMap({
   activeKey,
   typedKeys,
   traceKeys,
+  traceErrorIndexes,
   correctKeys,
   errorKeys,
   onKeyClick,
@@ -84,51 +97,64 @@ export function KeyboardMap({
   const typedSet = new Set(typedKeys);
   const correctSet = new Set(correctKeys);
   const errorSet = new Set(errorKeys);
+  const traceErrorSet = new Set(traceErrorIndexes);
 
   const fieldRef = useRef<HTMLDivElement>(null);
-  const [tracePath, setTracePath] = useState<string | null>(null);
+  const [traceGeometry, setTraceGeometry] = useState<TraceGeometry>({
+    path: null,
+    points: [],
+  });
 
   const updateTrace = useCallback(() => {
-    if (!showTrace || traceKeys.length < 2 || !fieldRef.current) {
-      setTracePath(null);
-      return;
-    }
-
-    const [firstKey, secondKey] = traceKeys;
-    if (!firstKey || !secondKey) {
-      setTracePath(null);
+    if (!showTrace || traceKeys.length === 0 || !fieldRef.current) {
+      setTraceGeometry({ path: null, points: [] });
       return;
     }
 
     const field = fieldRef.current;
-    const first = field.querySelector<HTMLElement>(`[data-keycap="${CSS.escape(firstKey)}"]`);
-    const second = field.querySelector<HTMLElement>(`[data-keycap="${CSS.escape(secondKey)}"]`);
-    if (!first || !second) {
-      setTracePath(null);
+    const fieldRect = field.getBoundingClientRect();
+    const points: TracePoint[] = [];
+
+    for (const [index, key] of traceKeys.slice(0, 2).entries()) {
+      const element = field.querySelector<HTMLElement>(
+        `[data-keycap="${CSS.escape(key)}"]`,
+      );
+      if (!element) continue;
+      const rect = element.getBoundingClientRect();
+      points.push({
+        x: rect.left - fieldRect.left + rect.width / 2,
+        y: rect.top - fieldRect.top + rect.height / 2,
+        index,
+      });
+    }
+
+    if (points.length < 2) {
+      setTraceGeometry({ path: null, points });
       return;
     }
 
-    const fieldRect = field.getBoundingClientRect();
-    const firstRect = first.getBoundingClientRect();
-    const secondRect = second.getBoundingClientRect();
-    const x1 = firstRect.left - fieldRect.left + firstRect.width / 2;
-    const y1 = firstRect.top - fieldRect.top + firstRect.height / 2;
-    const x2 = secondRect.left - fieldRect.left + secondRect.width / 2;
-    const y2 = secondRect.top - fieldRect.top + secondRect.height / 2;
+    const [first, second] = points;
+    const firstKey = traceKeys[0];
+    const secondKey = traceKeys[1];
 
     if (firstKey === secondKey) {
-      const loop = Math.max(28, firstRect.width * 0.38);
-      setTracePath(
-        `M ${x1} ${y1} C ${x1 + loop} ${y1 - loop}, ${x1 - loop} ${y1 - loop}, ${x1} ${y1}`,
+      const firstElement = field.querySelector<HTMLElement>(
+        `[data-keycap="${CSS.escape(firstKey ?? "")}"]`,
       );
+      const loop = Math.max(28, (firstElement?.getBoundingClientRect().width ?? 72) * 0.38);
+      setTraceGeometry({
+        points,
+        path: `M ${first.x} ${first.y} C ${first.x + loop} ${first.y - loop}, ${first.x - loop} ${first.y - loop}, ${first.x} ${first.y}`,
+      });
       return;
     }
 
-    const dx = x2 - x1;
+    const dx = second.x - first.x;
     const bend = Math.max(28, Math.abs(dx) * 0.14);
-    setTracePath(
-      `M ${x1} ${y1} C ${x1 + dx * 0.28} ${y1 - bend}, ${x2 - dx * 0.2} ${y2 + bend * 0.45}, ${x2} ${y2}`,
-    );
+    setTraceGeometry({
+      points,
+      path: `M ${first.x} ${first.y} C ${first.x + dx * 0.28} ${first.y - bend}, ${second.x - dx * 0.2} ${second.y + bend * 0.45}, ${second.x} ${second.y}`,
+    });
   }, [showTrace, traceKeys]);
 
   useEffect(() => {
@@ -139,6 +165,8 @@ export function KeyboardMap({
       window.removeEventListener("resize", updateTrace);
     };
   }, [layout, updateTrace]);
+
+  const traceHasError = traceErrorIndexes.length > 0;
 
   return (
     <div className="w-full overflow-x-auto pb-1" role="group" aria-label="双拼键位图">
@@ -156,17 +184,49 @@ export function KeyboardMap({
           </>
         )}
 
-        {showTrace && tracePath && (
+        {showTrace && traceGeometry.points.length > 0 && (
           <svg
-            className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible"
+            className={cn(
+              "pointer-events-none absolute inset-0 h-full w-full overflow-visible",
+              layout === "score" ? "z-20" : "z-0",
+            )}
             aria-hidden="true"
             data-input-trace
           >
-            <path
-              d={tracePath}
-              pathLength="1"
-              className="animate-[trace-draw_320ms_cubic-bezier(.22,.8,.2,1)_both] fill-none stroke-[var(--brand)] stroke-[2] opacity-80 [filter:drop-shadow(0_0_6px_color-mix(in_srgb,var(--brand)_35%,transparent))] [stroke-dasharray:1] [stroke-dashoffset:1]"
-            />
+            {traceGeometry.path && (
+              <path
+                d={traceGeometry.path}
+                pathLength="1"
+                className={cn(
+                  "animate-[trace-draw_260ms_cubic-bezier(.22,.8,.2,1)_both] fill-none stroke-[2] opacity-80 [filter:drop-shadow(0_0_5px_color-mix(in_srgb,currentColor_28%,transparent))] [stroke-dasharray:1] [stroke-dashoffset:1]",
+                  traceHasError ? "stroke-[var(--error)] text-[var(--error)]" : "stroke-[var(--brand)] text-[var(--brand)]",
+                )}
+              />
+            )}
+
+            {traceGeometry.points.map((point) => {
+              const error = traceErrorSet.has(point.index);
+              const tone = error ? "var(--error)" : "var(--brand)";
+              return (
+                <g key={`${point.index}-${point.x}-${point.y}`} data-trace-point data-trace-error={error ? "true" : "false"}>
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r="12"
+                    fill={tone}
+                    opacity="0.12"
+                    className="animate-[trace-point_420ms_ease-out_both]"
+                  />
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r="4.5"
+                    fill={tone}
+                    className="animate-[trace-point_420ms_ease-out_both]"
+                  />
+                </g>
+              );
+            })}
           </svg>
         )}
 
@@ -214,45 +274,36 @@ export function KeyboardMap({
                     aria-label={`键位 ${key}${keyContent ? `: ${[...keyContent.initials, ...keyContent.finals.map(displayFinal)].join(", ")}` : ""}`}
                     data-keycap={key}
                     data-active={isActive ? "true" : undefined}
+                    data-feedback={isError ? "error" : isCorrect ? "correct" : isTyped ? "typed" : undefined}
                     className={cn(
                       "group relative shrink-0 select-none border transition-[transform,background-color,border-color,box-shadow] duration-100",
                       layout === "score"
                         ? "h-[82px] w-full rounded-xl border-transparent bg-transparent sm:h-[92px] lg:h-[96px]"
                         : "flex h-14 w-10 flex-col items-center justify-center rounded-lg border-b-[3px] border-[var(--border)] bg-[var(--key)] shadow-sm sm:h-[88px] sm:w-[72px] sm:rounded-xl lg:h-[102px] lg:w-[86px] lg:rounded-[14px]",
-                      layout === "score" &&
-                        !disabled &&
-                        !isCorrect &&
-                        !isError &&
-                        "hover:bg-[var(--brand-soft)]/55",
+                      layout === "score" && !disabled && "hover:bg-[var(--brand-soft)]/35",
                       layout === "keyboard" &&
                         !disabled &&
                         !isCorrect &&
                         !isError &&
                         "hover:border-[var(--brand)]/55 hover:bg-[var(--key-hover)] hover:shadow-md",
-                      isTyped &&
+                      layout === "keyboard" &&
+                        isTyped &&
                         !isCorrect &&
                         !isError &&
-                        (layout === "score"
-                          ? "border-[var(--brand)]/35 bg-[var(--brand-soft)]/45"
-                          : "border-[var(--brand)]/70 bg-[var(--brand-soft)]"),
-                      isCorrect && "border-[var(--brand)] bg-[var(--brand-soft)]",
-                      isError && "border-[var(--error)] bg-[var(--error-soft)]",
-                      isActive && layout === "score" && "translate-y-px",
-                      isActive &&
-                        layout === "keyboard" &&
+                        "border-[var(--brand)]/70 bg-[var(--brand-soft)]",
+                      layout === "keyboard" &&
+                        isCorrect &&
+                        "border-[var(--brand)] bg-[var(--brand-soft)]",
+                      layout === "keyboard" &&
+                        isError &&
+                        "border-[var(--error)] bg-[var(--error-soft)]",
+                      layout === "keyboard" &&
+                        isActive &&
                         "translate-y-[3px] scale-[0.975] shadow-none ring-2 ring-[var(--brand)]/35 ring-offset-1 ring-offset-background",
                     )}
                   >
                     {layout === "score" && (
-                      <span
-                        className={cn(
-                          "pointer-events-none absolute bottom-2 left-3 right-3 h-px origin-center scale-x-[0.38] bg-border/70 opacity-0 transition-all duration-150",
-                          !disabled && "group-hover:scale-x-100 group-hover:opacity-100",
-                          (isTyped || isCorrect || isActive) &&
-                            "scale-x-100 bg-[var(--brand)] opacity-100",
-                          isError && "scale-x-100 bg-[var(--error)] opacity-100",
-                        )}
-                      />
+                      <span className="pointer-events-none absolute bottom-2 left-3 right-3 h-px origin-center scale-x-[0.38] bg-border/70 opacity-0 transition-all duration-150 group-hover:scale-x-100 group-hover:opacity-100" />
                     )}
 
                     {keyContent && keyContent.initials.length > 0 && (
