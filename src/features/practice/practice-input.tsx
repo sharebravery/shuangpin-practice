@@ -11,6 +11,18 @@ export function focusPracticeInput() {
   }
 }
 
+/**
+ * Overlay controls (Select / Popover / Drawer) restore focus after their close
+ * animation/focus management has completed. A frame delay avoids Base UI
+ * immediately taking focus back to the trigger.
+ */
+export function restorePracticeFocus() {
+  if (typeof window === "undefined") return;
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => focusPracticeInput());
+  });
+}
+
 function clean(s: string): string {
   return s.toLowerCase().replace(/[^a-z;]/g, "");
 }
