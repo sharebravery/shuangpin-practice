@@ -4,6 +4,7 @@ import { CheckIcon, XIcon } from "lucide-react";
 
 import { usePracticeStore } from "@/stores/practice-store";
 import { SCHEMES } from "@/data/schemes";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const KEYBOARD_ROWS = [
@@ -14,12 +15,11 @@ const KEYBOARD_ROWS = [
 
 const SCHEME_DATA: Record<
   string,
-  { initials: Record<string, string>; finals: Record<string, string> }
+  { name: string; initials: Record<string, string>; finals: Record<string, string> }
 > = Object.fromEntries(
-  SCHEMES.map((s) => [s.id, { initials: s.initials, finals: s.finals }]),
+  SCHEMES.map((s) => [s.id, { name: s.name, initials: s.initials, finals: s.finals }]),
 );
 
-/** 将内部 v 表示还原为 ü 用于展示。 */
 function displayFinal(f: string): string {
   return f.replaceAll("v", "ü");
 }
@@ -51,67 +51,84 @@ interface KeyboardMapProps {
   pressedKeys: string[];
   correctKeys: string[];
   errorKeys: string[];
+  onKeyClick: (key: string) => void;
+  disabled: boolean;
 }
 
-/**
- * 双拼键位图（实现细则 §16，业务专用组件，自行实现）。
- * 三行字母 + 分号；每个键显示键名、韵母、声母。
- * 状态：已输入（强调）、正确答案（成功）、错误输入（错误），正确优先。
- */
-export function KeyboardMap({ pressedKeys, correctKeys, errorKeys }: KeyboardMapProps) {
+export function KeyboardMap({
+  pressedKeys,
+  correctKeys,
+  errorKeys,
+  onKeyClick,
+  disabled,
+}: KeyboardMapProps) {
   const schemeId = usePracticeStore((s) => s.settings.scheme);
-  const content = buildKeyContent(
-    SCHEME_DATA[schemeId] ?? { initials: {}, finals: {} },
-  );
+  const data = SCHEME_DATA[schemeId] ?? {
+    name: "键位图",
+    initials: {},
+    finals: {},
+  };
+  const content = buildKeyContent(data);
 
   const pressed = new Set(pressedKeys);
   const correct = new Set(correctKeys);
   const error = new Set(errorKeys);
 
   return (
-    <div className="overflow-x-auto" aria-label="双拼键位图" role="group">
-      <div className="mx-auto flex w-fit flex-col gap-1.5">
-        {KEYBOARD_ROWS.map((row, ri) => (
-          <div key={ri} className="flex gap-1.5">
-            {row.map((key) => {
-              const c = content[key];
-              const isCorrect = correct.has(key);
-              const isError = error.has(key);
-              const isPressed = pressed.has(key);
-              return (
-                <div
-                  key={key}
-                  className={cn(
-                    "relative flex h-16 w-12 shrink-0 flex-col items-center justify-center rounded-md border bg-card text-card-foreground",
-                    isCorrect && "border-emerald-500 bg-emerald-500/10 dark:border-emerald-400",
-                    !isCorrect && isError && "border-destructive bg-destructive/10",
-                    !isCorrect && !isError && isPressed && "border-primary bg-primary/10",
-                  )}
-                >
-                  <span className="absolute right-1 top-1">
+    <div className="relative z-10 flex flex-col items-center gap-3">
+      <p className="text-sm font-medium text-muted-foreground">
+        {data.name} · 键位图
+      </p>
+      <div className="overflow-x-auto pb-2" role="group" aria-label="双拼键位图">
+        <div className="mx-auto flex w-fit flex-col gap-1 sm:gap-1.5">
+          {KEYBOARD_ROWS.map((row, ri) => (
+            <div key={ri} className="flex gap-1 sm:gap-1.5">
+              {row.map((key) => {
+                const c = content[key];
+                const isCorrect = correct.has(key);
+                const isError = error.has(key);
+                const isPressed = pressed.has(key);
+                return (
+                  <Button
+                    key={key}
+                    variant="ghost"
+                    disabled={disabled}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => onKeyClick(key)}
+                    aria-label={`键位 ${key}${c ? `: ${[...c.initials, ...c.finals.map(displayFinal)].join(", ")}` : ""}`}
+                    className={cn(
+                      "group relative flex h-14 w-9 shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg border bg-muted/30 p-0.5 transition-all sm:h-20 sm:w-16 sm:rounded-xl sm:p-1",
+                      "hover:bg-muted/60 hover:scale-[1.03] active:scale-[0.97]",
+                      isCorrect && "border-emerald-500 bg-emerald-500/10 dark:border-emerald-400",
+                      !isCorrect && isError && "border-destructive bg-destructive/10",
+                      !isCorrect && !isError && isPressed && "border-primary bg-primary/10 scale-[1.03]",
+                    )}
+                  >
                     {isCorrect && (
-                      <CheckIcon className="size-3 text-emerald-600 dark:text-emerald-400" />
+                      <CheckIcon className="absolute right-0.5 top-0.5 size-2.5 text-emerald-600 dark:text-emerald-400 sm:right-1 sm:top-1 sm:size-3" />
                     )}
                     {isError && !isCorrect && (
-                      <XIcon className="size-3 text-destructive" />
+                      <XIcon className="absolute right-0.5 top-0.5 size-2.5 text-destructive sm:right-1 sm:top-1 sm:size-3" />
                     )}
-                  </span>
-                  <span className="text-sm font-semibold uppercase">{key}</span>
-                  {c && c.finals.length > 0 && (
-                    <span className="text-[0.65rem] text-muted-foreground">
-                      {c.finals.map(displayFinal).join("/")}
+                    <span className="text-base font-bold leading-none sm:text-2xl">
+                      {key}
                     </span>
-                  )}
-                  {c && c.initials.length > 0 && (
-                    <span className="text-[0.65rem] font-medium">
-                      {c.initials.join("/")}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                    {c && c.finals.length > 0 && (
+                      <span className="hidden text-[0.65rem] leading-tight text-muted-foreground sm:block">
+                        {c.finals.map(displayFinal).join(" · ")}
+                      </span>
+                    )}
+                    {c && c.initials.length > 0 && (
+                      <span className="hidden text-[0.65rem] font-semibold leading-tight text-primary/70 sm:block">
+                        {c.initials.join("/")}
+                      </span>
+                    )}
+                  </Button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

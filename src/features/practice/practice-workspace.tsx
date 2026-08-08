@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { usePracticeStore } from "@/stores/practice-store";
 import { PracticeToolbar } from "./practice-toolbar";
@@ -10,14 +10,13 @@ import { PracticeStats } from "./practice-stats";
 import { KeyboardMap } from "./keyboard-map";
 import { ResultDialog } from "./result-dialog";
 
-/**
- * 练习工作区（Client Component）。
- * 持有输入框本地状态，串联 Toolbar / Prompt / Input / Stats / KeyboardMap，
- * 处理自动聚焦、点击聚焦与练习级键盘交互。
- *
- * 练习级快捷键（Enter/Space/Escape）通过 window 全局监听处理，
- * 这样在 wrong / paused / 正确反馈状态下（输入框被禁用）仍可触发。
- */
+const WRONG_AUTO_ADVANCE_MS = 800;
+const CORRECT_FEEDBACK_MS = 400;
+
+function cleanKey(key: string): string {
+  return key.toLowerCase().replace(/[^a-z;]/g, "");
+}
+
 export function PracticeWorkspace() {
   const question = usePracticeStore((s) => s.session.question);
   const phraseIndex = usePracticeStore((s) => s.session.phraseIndex);
@@ -25,26 +24,26 @@ export function PracticeWorkspace() {
   const status = usePracticeStore((s) => s.session.status);
   const feedback = usePracticeStore((s) => s.session.feedback);
   const hasHydrated = usePracticeStore((s) => s.hasHydrated);
-  const showKeyboard = usePracticeStore((s) => s.settings.showKeyboard);
   const startSession = usePracticeStore((s) => s.startSession);
   const submit = usePracticeStore((s) => s.submit);
+  const next = usePracticeStore((s) => s.next);
 
   const [input, setInput] = useState("");
   const [lastInput, setLastInput] = useState("");
   const inputRef = useRef(input);
+  const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     inputRef.current = input;
   }, [input]);
 
-  // hydration 完成后若仍为 ready，则开始会话（使用已恢复的设置）。
+  // hydration 后开始会话
   useEffect(() => {
     if (hasHydrated && usePracticeStore.getState().session.status === "ready") {
       startSession();
     }
   }, [hasHydrated, startSession]);
 
-  // 仅在「新题目 / 新字」时清空输入与 lastInput；状态变化（如 wrong）不清空
-  // lastInput，以便键位图高亮错误输入。输入本身在 onSubmit 时已清空。
+  // 新题目/新字时清空输入
   const questionResetKey = `${questionId}:${phraseIndex}`;
   const [lastResetKey, setLastResetKey] = useState(questionResetKey);
   if (lastResetKey !== questionResetKey) {
@@ -53,8 +52,7 @@ export function PracticeWorkspace() {
     setLastInput("");
   }
 
-  // 变化后重新聚焦：答题中聚焦输入框；否则聚焦 body（不聚焦操作按钮，
-  // 避免 wrong 态按 Space 原生触发按钮 click）。Enter/Space 由全局监听处理。
+  // 聚焦：答题中聚焦输入框，否则聚焦 body
   useEffect(() => {
     if (status === "answering" && feedback === "none") {
       focusPracticeInput();
@@ -63,7 +61,23 @@ export function PracticeWorkspace() {
     }
   }, [questionResetKey, status, feedback]);
 
-  // 练习级全局键盘监听（Enter/Space/Escape）。
+  // 自动继续：wrong 800ms / correct 400ms 后自动进入下一题
+  useEffect(() => {
+    if (autoAdvanceRef.current) {
+      clearTimeout(autoAdvanceRef.current);
+      autoAdvanceRef.current = null;
+    }
+    if (status === "wrong") {
+      autoAdvanceRef.current = setTimeout(() => next(), WRONG_AUTO_ADVANCE_MS);
+    } else if (feedback === "correct") {
+      autoAdvanceRef.current = setTimeout(() => next(), CORRECT_FEEDBACK_MS);
+    }
+    return () => {
+      if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+    };
+  }, [status, feedback, questionResetKey, next]);
+
+  // 全局键盘监听
   useEffect(() => {
     const inOverlay = (el: HTMLElement | null) =>
       !!el?.closest(
@@ -71,17 +85,15 @@ export function PracticeWorkspace() {
       );
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      // 覆盖层（Select/Popover/Drawer/Dialog）内交由它们自己处理。
       if (inOverlay(target)) return;
-      const { session, next, pause, resume } = usePracticeStore.getState();
+      const { session, next: doNext, pause: doPause, resume: doResume } = usePracticeStore.getState();
       const curInput = inputRef.current;
 
       if (e.key === "Enter") {
-        // Button/链接自身的 Enter 激活不重复处理。
         if (target?.closest("button, a")) return;
         if (session.status === "wrong" || session.feedback === "correct" || session.status === "completed") {
           e.preventDefault();
-          next();
+          doNext();
         }
         return;
       }
@@ -89,12 +101,11 @@ export function PracticeWorkspace() {
         if (target?.closest("button, a")) return;
         if (session.status === "answering" && session.feedback === "none") {
           e.preventDefault();
-          if (curInput === "") pause();
+          if (curInput === "") doPause();
         } else if (session.status === "paused") {
           e.preventDefault();
-          resume();
+          doResume();
         } else {
-          // wrong / correct / completed：Space 不做任何操作，阻止默认滚动。
           e.preventDefault();
         }
         return;
@@ -113,7 +124,24 @@ export function PracticeWorkspace() {
   const expectedLength = question?.kind === "mapping" ? 1 : 2;
   const inputDisabled = status !== "answering" || feedback !== "none";
 
-  // 键位图高亮键。
+  // 点击键盘输入（与实体键盘共用 input + submit 逻辑）
+  const handleKeyClick = useCallback(
+    (key: string) => {
+      if (inputDisabled) return;
+      const cleaned = cleanKey(key);
+      if (!cleaned) return;
+      const newInput = (input + cleaned).slice(0, expectedLength);
+      setInput(newInput);
+      if (newInput.length >= expectedLength) {
+        setLastInput(newInput);
+        submit(newInput);
+        setInput("");
+      }
+    },
+    [input, expectedLength, inputDisabled, submit],
+  );
+
+  // 键位高亮
   const answerStr =
     question?.kind === "phrase"
       ? question.charCodes[phraseIndex] ?? ""
@@ -132,12 +160,11 @@ export function PracticeWorkspace() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col items-center gap-6">
       <PracticeToolbar />
-      <section
-        className="flex flex-col gap-6"
-        onClick={() => focusPracticeInput()}
-      >
+
+      {/* 题目 + 输入 */}
+      <div className="flex w-full flex-col items-center gap-3">
         <PracticePrompt />
         <PracticeInput
           value={input}
@@ -150,15 +177,20 @@ export function PracticeWorkspace() {
             setInput("");
           }}
         />
-      </section>
+      </div>
+
+      {/* 键盘（核心视觉） */}
+      <KeyboardMap
+        pressedKeys={pressedKeys}
+        correctKeys={correctKeys}
+        errorKeys={errorKeys}
+        onKeyClick={handleKeyClick}
+        disabled={inputDisabled}
+      />
+
+      {/* 统计 */}
       <PracticeStats />
-      {showKeyboard && (
-        <KeyboardMap
-          pressedKeys={pressedKeys}
-          correctKeys={correctKeys}
-          errorKeys={errorKeys}
-        />
-      )}
+
       <ResultDialog />
     </div>
   );

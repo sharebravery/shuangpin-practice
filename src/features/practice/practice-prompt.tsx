@@ -1,10 +1,8 @@
 "use client";
 
 import { usePracticeStore } from "@/stores/practice-store";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-/** 单字错误拆解：ch -> i, uang -> d。 */
 function Breakdown({
   breakdown,
   answer,
@@ -15,17 +13,14 @@ function Breakdown({
   return (
     <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">
       <span>
-        正确编码：<span className="font-mono text-foreground">{answer}</span>
+        正确编码：<span className="font-mono text-base font-semibold text-foreground">{answer}</span>
       </span>
       {breakdown.initial ? (
-        <span className="font-mono">
-          {breakdown.initial} -&gt; {breakdown.initialKey}　{breakdown.final} -&gt;{" "}
-          {breakdown.finalKey}
+        <span className="font-mono text-xs">
+          {breakdown.initial} → {breakdown.initialKey}　{breakdown.final} → {breakdown.finalKey}
         </span>
       ) : (
-        <span className="font-mono">
-          {breakdown.final} -&gt; {answer}
-        </span>
+        <span className="font-mono text-xs">{breakdown.final} → {answer}</span>
       )}
     </div>
   );
@@ -37,33 +32,24 @@ export function PracticePrompt() {
   const phraseIndex = usePracticeStore((s) => s.session.phraseIndex);
   const feedback = usePracticeStore((s) => s.session.feedback);
   const showPinyin = usePracticeStore((s) => s.settings.showPinyin);
-  const next = usePracticeStore((s) => s.next);
-  const resume = usePracticeStore((s) => s.resume);
 
   if (status === "ready" || !question) {
-    return (
-      <div className="py-12 text-center text-sm text-muted-foreground">
-        准备开始练习…
-      </div>
-    );
+    return <div className="py-8 text-sm text-muted-foreground">准备开始练习…</div>;
   }
 
   if (status === "paused") {
     return (
-      <div className="flex flex-col items-center gap-3 py-12">
+      <div className="py-8 text-center">
         <p className="text-lg font-medium">已暂停</p>
-        <Button id="practice-action" onClick={() => resume()}>
-          继续
-        </Button>
+        <p className="mt-1 text-xs text-muted-foreground">按 Space 继续</p>
       </div>
     );
   }
 
   if (status === "completed") {
     return (
-      <div className="py-12 text-center">
+      <div className="py-8 text-center">
         <p className="text-lg font-medium">本组完成 🎉</p>
-        <p className="mt-1 text-sm text-muted-foreground">结果见弹窗</p>
       </div>
     );
   }
@@ -72,11 +58,11 @@ export function PracticePrompt() {
   const correctFeedback = feedback === "correct";
 
   return (
-    <div className="flex flex-col items-center gap-4 py-8">
+    <div className="flex flex-col items-center gap-2">
       {question.kind === "mapping" && (
         <>
           <span className="text-xs text-muted-foreground">{question.hint}</span>
-          <span className="font-mono text-5xl font-semibold tracking-tight">
+          <span className="font-mono text-5xl font-bold tracking-tight">
             {question.display}
           </span>
         </>
@@ -84,33 +70,34 @@ export function PracticePrompt() {
 
       {question.kind === "character" && (
         <>
-          <span className="text-6xl font-semibold leading-none">
+          <span className="text-6xl font-bold leading-none sm:text-7xl">
             {question.character}
           </span>
-          {showPinyin && (
-            <span className="text-lg text-muted-foreground">{question.pinyin}</span>
+          {showPinyin && !wrong && (
+            <span className="text-base text-muted-foreground">{question.pinyin}</span>
           )}
         </>
       )}
 
       {question.kind === "phrase" && (
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-4xl font-semibold leading-none tracking-wide">
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-4xl font-bold leading-none tracking-wide sm:text-5xl">
             {[...question.text].map((ch, i) => (
               <span
                 key={i}
                 className={cn(
-                  i === phraseIndex && "rounded px-0.5",
+                  "transition-colors",
+                  i === phraseIndex && "rounded px-1",
                   i === phraseIndex && (wrong ? "bg-destructive/15 text-destructive" : "bg-primary/10"),
-                  i < phraseIndex && "text-muted-foreground/50"
+                  i < phraseIndex && "text-muted-foreground/40",
                 )}
               >
                 {ch}
               </span>
             ))}
           </span>
-          {showPinyin && (
-            <span className="text-sm text-muted-foreground">
+          {showPinyin && !wrong && (
+            <span className="text-xs text-muted-foreground">
               {question.syllables[phraseIndex]}
             </span>
           )}
@@ -119,37 +106,25 @@ export function PracticePrompt() {
 
       {/* 反馈区 */}
       {wrong && (
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-1 pt-2">
           {question.kind === "character" && (
             <Breakdown breakdown={question.breakdown} answer={question.answer} />
           )}
           {question.kind === "phrase" && (
             <span className="text-sm text-muted-foreground">
-              正确编码：
-              <span className="font-mono text-foreground">
-                {question.charCodes[phraseIndex]}
-              </span>
+              正确编码：<span className="font-mono text-base font-semibold text-foreground">{question.charCodes[phraseIndex]}</span>
             </span>
           )}
           {question.kind === "mapping" && (
             <span className="text-sm text-muted-foreground">
-              正确键位：
-              <span className="font-mono text-foreground">{question.answer}</span>
+              正确键位：<span className="font-mono text-base font-semibold text-foreground">{question.answer}</span>
             </span>
           )}
-          <Button id="practice-action" onClick={() => next()}>
-            下一题
-          </Button>
         </div>
       )}
 
-      {!wrong && correctFeedback && (
-        <div className="flex flex-col items-center gap-3">
-          <span className="text-sm font-medium text-primary">正确</span>
-          <Button id="practice-action" onClick={() => next()}>
-            下一题
-          </Button>
-        </div>
+      {correctFeedback && (
+        <span className="pt-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">正确</span>
       )}
     </div>
   );

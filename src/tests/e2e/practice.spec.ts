@@ -19,7 +19,7 @@ test("完成一道单字题", async ({ page }) => {
   await expect(character).toBeVisible({ timeout: 10_000 });
 
   // 读取拼音（默认显示拼音）。
-  const pinyinEl = page.locator("span.text-lg.text-muted-foreground").first();
+  const pinyinEl = page.locator("span.text-base.text-muted-foreground").first();
   await expect(pinyinEl).toBeVisible();
   const pinyin = (await pinyinEl.textContent()) ?? "";
 
