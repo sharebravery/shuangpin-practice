@@ -51,7 +51,10 @@ export function PracticePrompt() {
 
       {question.kind === "character" && (
         <>
-          <span className="text-7xl font-semibold leading-none tracking-[-0.06em] sm:text-8xl">
+          <span
+            data-practice-character
+            className="text-7xl font-semibold leading-none tracking-[-0.06em] sm:text-8xl"
+          >
             {question.character}
           </span>
           <span
