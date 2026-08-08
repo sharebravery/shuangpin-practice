@@ -46,6 +46,7 @@ const QUESTION_COUNTS = [10, 15, 20, 30, 50];
 const LAYOUTS: { value: PracticeLayout; label: string }[] = [
   { value: "score", label: "谱面" },
   { value: "keyboard", label: "键盘" },
+  { value: "minimal", label: "极简" },
 ];
 
 function SettingRow({
