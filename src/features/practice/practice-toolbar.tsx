@@ -30,7 +30,7 @@ export function PracticeToolbar() {
   };
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1">
       <Select
         value={scheme}
         onValueChange={(v) => setScheme(v as SchemeId)}
@@ -38,7 +38,7 @@ export function PracticeToolbar() {
       >
         <SelectTrigger
           aria-label="双拼方案"
-          className="h-7 min-w-24 border-border/70 bg-card px-1.5 text-xs shadow-none hover:bg-muted/70"
+          className="h-7 min-w-20 border-none bg-transparent px-1.5 text-xs font-medium shadow-none hover:bg-[var(--surface)]"
         >
           <SelectValue placeholder="方案">
             {(value: SchemeId) => SCHEMES.find((s) => s.id === value)?.name ?? value}
@@ -60,7 +60,7 @@ export function PracticeToolbar() {
       >
         <SelectTrigger
           aria-label="练习模式"
-          className="h-7 min-w-16 border-border/70 bg-card px-1.5 text-xs shadow-none hover:bg-muted/70"
+          className="h-7 min-w-14 border-none bg-transparent px-1.5 text-xs font-medium shadow-none hover:bg-[var(--surface)]"
         >
           <SelectValue placeholder="模式">
             {(value: PracticeMode) => MODES.find((m) => m.value === value)?.label ?? value}
