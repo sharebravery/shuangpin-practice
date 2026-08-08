@@ -10,21 +10,25 @@ export function PracticePrompt() {
   const showPinyin = usePracticeStore((s) => s.settings.showPinyin);
 
   if (status === "ready" || !question) {
-    return <div className="py-4 text-sm text-muted-foreground">准备开始…</div>;
+    return (
+      <div className="flex h-24 items-center justify-center text-sm text-muted-foreground">
+        准备开始…
+      </div>
+    );
   }
 
   if (status === "paused") {
     return (
-      <div className="py-4 text-center">
+      <div className="flex h-24 flex-col items-center justify-center text-center">
         <p className="text-lg font-medium">已暂停</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">按 Space 继续</p>
+        <p className="mt-1 text-xs text-muted-foreground">按 Space 继续</p>
       </div>
     );
   }
 
   if (status === "completed") {
     return (
-      <div className="py-4 text-center">
+      <div className="flex h-24 items-center justify-center text-center">
         <p className="text-lg font-medium">本组完成 🎉</p>
       </div>
     );
@@ -33,13 +37,13 @@ export function PracticePrompt() {
   const wrong = status === "wrong";
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex h-24 w-full flex-col items-center justify-center">
       {question.kind === "mapping" && (
         <>
-          <span className="text-[0.65rem] uppercase tracking-widest text-muted-foreground">
+          <span className="h-4 text-[0.65rem] uppercase tracking-widest text-muted-foreground">
             {question.hint}
           </span>
-          <span className="font-mono text-4xl font-bold tracking-tight sm:text-5xl">
+          <span className="mt-1 font-mono text-5xl font-bold tracking-tight sm:text-6xl">
             {question.display}
           </span>
         </>
@@ -47,25 +51,33 @@ export function PracticePrompt() {
 
       {question.kind === "character" && (
         <>
-          <span className="text-5xl font-bold leading-none sm:text-6xl">
+          <span className="text-6xl font-bold leading-none sm:text-7xl">
             {question.character}
           </span>
-          {showPinyin && !wrong && (
-            <span className="text-sm text-muted-foreground">{question.pinyin}</span>
-          )}
+          <span
+            className={cn(
+              "mt-2 h-5 text-sm text-muted-foreground",
+              (!showPinyin || wrong) && "invisible",
+            )}
+          >
+            {question.pinyin}
+          </span>
         </>
       )}
 
       {question.kind === "phrase" && (
-        <div className="flex flex-col items-center gap-0.5">
-          <span className="text-3xl font-bold leading-none tracking-wide sm:text-4xl">
+        <div className="flex h-full flex-col items-center justify-center">
+          <span className="text-4xl font-bold leading-none tracking-wide sm:text-5xl">
             {[...question.text].map((ch, i) => (
               <span
                 key={i}
                 className={cn(
                   "transition-colors",
                   i === phraseIndex && "rounded px-0.5",
-                  i === phraseIndex && (wrong ? "bg-[var(--error)]/10 text-[var(--error)]" : "bg-[var(--brand-soft)]"),
+                  i === phraseIndex &&
+                    (wrong
+                      ? "bg-[var(--error-soft)] text-[var(--error)]"
+                      : "bg-[var(--brand-soft)]"),
                   i < phraseIndex && "text-muted-foreground/35",
                 )}
               >
@@ -73,34 +85,14 @@ export function PracticePrompt() {
               </span>
             ))}
           </span>
-          {showPinyin && !wrong && (
-            <span className="text-xs text-muted-foreground">
-              {question.syllables[phraseIndex]}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Wrong: show correct code below echo */}
-      {wrong && (
-        <div className="flex flex-col items-center gap-0.5 pt-1">
-          {question.kind === "character" && (
-            <span className="font-mono text-xs text-muted-foreground">
-              {question.breakdown.initial
-                ? `${question.breakdown.initial} → ${question.breakdown.initialKey}　${question.breakdown.final} → ${question.breakdown.finalKey}`
-                : `${question.breakdown.final} → ${question.answer}`}
-            </span>
-          )}
-          {question.kind === "phrase" && (
-            <span className="font-mono text-xs text-muted-foreground">
-              正确：<span className="font-semibold text-[var(--brand)]">{question.charCodes[phraseIndex]}</span>
-            </span>
-          )}
-          {question.kind === "mapping" && (
-            <span className="font-mono text-xs text-muted-foreground">
-              正确：<span className="font-semibold text-[var(--brand)]">{question.answer}</span>
-            </span>
-          )}
+          <span
+            className={cn(
+              "mt-2 h-5 text-xs text-muted-foreground",
+              (!showPinyin || wrong) && "invisible",
+            )}
+          >
+            {question.syllables[phraseIndex]}
+          </span>
         </div>
       )}
     </div>
