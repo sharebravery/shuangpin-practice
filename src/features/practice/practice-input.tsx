@@ -21,11 +21,12 @@ interface PracticeInputProps {
   disabled: boolean;
   onChange: (value: string) => void;
   onSubmit: (value: string) => void;
+  onKeyPress: (key: string) => void;
 }
 
 /**
- * Invisible input: handles focus, IME, accessibility.
- * No visible border, placeholder, or styling.
+ * Visually hidden input: keeps focus, IME and accessibility semantics while the
+ * visible interaction is rendered by the Echo display and keycaps.
  */
 export function PracticeInput({
   value,
@@ -33,15 +34,14 @@ export function PracticeInput({
   disabled,
   onChange,
   onSubmit,
+  onKeyPress,
 }: PracticeInputProps) {
   const [composing, setComposing] = useState(false);
 
   const handle = (raw: string) => {
-    const filtered = clean(raw);
+    const filtered = clean(raw).slice(0, expectedLength);
     onChange(filtered);
-    if (filtered.length >= expectedLength) {
-      onSubmit(filtered);
-    }
+    if (filtered.length >= expectedLength) onSubmit(filtered);
   };
 
   return (
@@ -56,7 +56,13 @@ export function PracticeInput({
       spellCheck={false}
       inputMode="text"
       aria-label="请输入双拼编码"
-      className="h-8 w-8 border-none bg-transparent p-0 opacity-0 focus-visible:ring-0"
+      className="sr-only"
+      onKeyDown={(e) => {
+        if (!composing && /^[a-z;]$/i.test(e.key)) {
+          e.preventDefault();
+          onKeyPress(e.key);
+        }
+      }}
       onChange={(e) => {
         if (composing) {
           onChange(e.target.value);
