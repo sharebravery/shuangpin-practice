@@ -12,6 +12,7 @@ import { ResultDialog } from "./result-dialog";
 
 const WRONG_AUTO_ADVANCE_MS = 800;
 const CORRECT_FEEDBACK_MS = 400;
+const TRACE_HOLD_MS = 560;
 const ACTIVE_KEY_TIMEOUT_MS = 150;
 
 function cleanSingleKey(key: string): string {
@@ -20,6 +21,17 @@ function cleanSingleKey(key: string): string {
 
 function cleanInput(value: string): string {
   return value.toLowerCase().replace(/[^a-z;]/g, "");
+}
+
+function inOverlay(el: HTMLElement | null): boolean {
+  return !!el?.closest(
+    "[data-slot='select-trigger'],[data-slot='select-content'],[data-slot='popover-content'],[data-slot='drawer-popup'],[role='dialog'],[role='option']",
+  );
+}
+
+function isEditableAwayFromPractice(el: HTMLElement | null): boolean {
+  if (!el || el.id === PRACTICE_INPUT_ID) return false;
+  return !!el.closest("input, textarea, [contenteditable='true']");
 }
 
 export function PracticeWorkspace() {
@@ -96,17 +108,80 @@ export function PracticeWorkspace() {
     [],
   );
 
+  const expectedLength = question?.kind === "mapping" ? 1 : 2;
+  const inputDisabled = status !== "answering" || feedback !== "none";
+
+  const flashKey = useCallback((key: string) => {
+    setActiveKey(key);
+    if (activeKeyTimerRef.current) clearTimeout(activeKeyTimerRef.current);
+    activeKeyTimerRef.current = setTimeout(() => {
+      setActiveKey((current) => (current === key ? null : current));
+    }, ACTIVE_KEY_TIMEOUT_MS);
+  }, []);
+
+  const holdSubmittedTrace = useCallback((keys: string[]) => {
+    if (keys.length === 0) return;
+    setTraceKeys(keys);
+    if (traceTimerRef.current) clearTimeout(traceTimerRef.current);
+
+    const afterSubmit = usePracticeStore.getState().session;
+    const delay = afterSubmit.status === "wrong" ? WRONG_AUTO_ADVANCE_MS : TRACE_HOLD_MS;
+    traceTimerRef.current = setTimeout(() => setTraceKeys([]), delay);
+  }, []);
+
+  const processKey = useCallback(
+    (rawKey: string) => {
+      if (inputDisabled) return;
+      const key = cleanSingleKey(rawKey);
+      if (!key) return;
+
+      flashKey(key);
+
+      if (traceTimerRef.current) {
+        clearTimeout(traceTimerRef.current);
+        traceTimerRef.current = null;
+      }
+
+      const newInput = (inputRef.current + key).slice(0, expectedLength);
+      const visualKeys = newInput.split("");
+      inputRef.current = newInput;
+      setInput(newInput);
+      setTypedKeys(visualKeys);
+      setTraceKeys(visualKeys);
+
+      if (newInput.length >= expectedLength) {
+        setLastInput(newInput);
+        submit(newInput);
+        holdSubmittedTrace(visualKeys);
+        inputRef.current = "";
+        setInput("");
+      }
+    },
+    [expectedLength, flashKey, holdSubmittedTrace, inputDisabled, submit],
+  );
+
   useEffect(() => {
-    const inOverlay = (el: HTMLElement | null) =>
-      !!el?.closest(
-        "[data-slot='select-trigger'],[data-slot='select-content'],[data-slot='popover-content'],[data-slot='drawer-popup'],[role='dialog'],[role='option']",
-      );
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      if (inOverlay(target)) return;
+      if (inOverlay(target) || isEditableAwayFromPractice(target)) return;
+
       const { session, next: doNext, pause: doPause, resume: doResume } =
         usePracticeStore.getState();
       const curInput = inputRef.current;
+
+      if (
+        !e.isComposing &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        /^[a-z;]$/i.test(e.key) &&
+        session.status === "answering" &&
+        session.feedback === "none"
+      ) {
+        e.preventDefault();
+        processKey(e.key);
+        return;
+      }
 
       if (e.key === "Enter") {
         if (target?.closest("button, a, [data-keycap]")) return;
@@ -120,6 +195,7 @@ export function PracticeWorkspace() {
         }
         return;
       }
+
       if (e.key === " ") {
         if (target?.closest("button, a, [data-keycap]")) return;
         if (session.status === "answering" && session.feedback === "none") {
@@ -133,6 +209,7 @@ export function PracticeWorkspace() {
         }
         return;
       }
+
       if (e.key === "Escape") {
         if (
           session.status === "answering" &&
@@ -143,59 +220,40 @@ export function PracticeWorkspace() {
           inputRef.current = "";
           setInput("");
           setTypedKeys([]);
+          setTraceKeys([]);
         }
       }
     };
+
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, []);
+  }, [processKey]);
 
-  const expectedLength = question?.kind === "mapping" ? 1 : 2;
-  const inputDisabled = status !== "answering" || feedback !== "none";
-
-  const flashKey = useCallback((key: string) => {
-    setActiveKey(key);
-    if (activeKeyTimerRef.current) clearTimeout(activeKeyTimerRef.current);
-    activeKeyTimerRef.current = setTimeout(() => {
-      setActiveKey((current) => (current === key ? null : current));
-    }, ACTIVE_KEY_TIMEOUT_MS);
-  }, []);
-
-  const holdSubmittedTrace = useCallback((keys: string[]) => {
-    if (keys.length < 2) return;
-    setTraceKeys(keys);
-    if (traceTimerRef.current) clearTimeout(traceTimerRef.current);
-
-    const session = usePracticeStore.getState().session;
-    const delay = session.status === "wrong" ? WRONG_AUTO_ADVANCE_MS : CORRECT_FEEDBACK_MS;
-    traceTimerRef.current = setTimeout(() => setTraceKeys([]), delay);
-  }, []);
-
-  const processKey = useCallback(
-    (rawKey: string) => {
-      if (inputDisabled) return;
-      const key = cleanSingleKey(rawKey);
-      if (!key) return;
-
-      flashKey(key);
-
-      const newInput = (inputRef.current + key).slice(0, expectedLength);
-      inputRef.current = newInput;
-      setInput(newInput);
-      setTypedKeys(newInput.split(""));
-      if (newInput.length === 1) setTraceKeys([]);
-
-      if (newInput.length >= expectedLength) {
-        const submittedKeys = newInput.split("");
-        setLastInput(newInput);
-        submit(newInput);
-        holdSubmittedTrace(submittedKeys);
-        inputRef.current = "";
-        setInput("");
+  useEffect(() => {
+    const restore = () => {
+      const session = usePracticeStore.getState().session;
+      const active = document.activeElement as HTMLElement | null;
+      if (
+        session.status === "answering" &&
+        session.feedback === "none" &&
+        !inOverlay(active) &&
+        !isEditableAwayFromPractice(active)
+      ) {
+        focusPracticeInput();
       }
-    },
-    [expectedLength, flashKey, holdSubmittedTrace, inputDisabled, submit],
-  );
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") restore();
+    };
+
+    window.addEventListener("focus", restore);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("focus", restore);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
 
   const answerStr =
     question?.kind === "phrase"
@@ -215,9 +273,29 @@ export function PracticeWorkspace() {
   }
 
   const echoKeys = status === "wrong" ? lastInput.split("") : typedKeys;
+  const traceErrorIndexes =
+    status === "wrong"
+      ? lastInput
+          .split("")
+          .map((key, index) => (key !== answerChars[index] ? index : -1))
+          .filter((index) => index >= 0)
+      : [];
 
   return (
-    <div className="flex flex-col items-center py-1 sm:py-2">
+    <div
+      className="flex flex-col items-center py-1 sm:py-2"
+      onPointerDown={(event) => {
+        const target = event.target as HTMLElement;
+        if (
+          target.closest(
+            "button, a, input, textarea, [contenteditable='true'], [data-slot='select-trigger'], [role='dialog']",
+          )
+        ) {
+          return;
+        }
+        window.requestAnimationFrame(() => focusPracticeInput());
+      }}
+    >
       <div className="flex min-h-8 w-full items-center justify-between gap-3">
         <PracticeToolbar />
         <PracticeStats />
@@ -261,13 +339,13 @@ export function PracticeWorkspace() {
           value={input}
           expectedLength={expectedLength}
           disabled={inputDisabled}
-          onKeyPress={processKey}
           onChange={(value) => {
             const cleaned = cleanInput(value).slice(0, expectedLength);
+            const visualKeys = cleaned.split("");
             inputRef.current = cleaned;
             setInput(cleaned);
-            setTypedKeys(cleaned.split(""));
-            if (cleaned.length === 1) setTraceKeys([]);
+            setTypedKeys(visualKeys);
+            setTraceKeys(visualKeys);
             const lastKey = cleaned.at(-1);
             if (lastKey) flashKey(lastKey);
           }}
@@ -290,6 +368,7 @@ export function PracticeWorkspace() {
         activeKey={activeKey}
         typedKeys={echoKeys}
         traceKeys={traceKeys}
+        traceErrorIndexes={traceErrorIndexes}
         correctKeys={correctKeys}
         errorKeys={errorKeys}
         onKeyClick={processKey}
