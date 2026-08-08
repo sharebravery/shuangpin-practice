@@ -2,57 +2,63 @@
 
 import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
+import { PaletteIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const ORDER = ["light", "dark", "system"] as const;
-type ThemeName = (typeof ORDER)[number];
-const LABEL: Record<ThemeName, string> = {
-  light: "浅色",
-  dark: "深色",
-  system: "跟随系统",
-};
+const THEMES = [
+  { value: "clean", label: "天青", dot: "#1677B3" },
+  { value: "ink", label: "纸墨", dot: "#B93A2F" },
+  { value: "graphite", label: "石墨", dot: "#38BDF8" },
+] as const;
 
-// SSR 安全的挂载检测：服务端返回 false，客户端返回 true，避免 setState-in-effect。
+type ThemeName = (typeof THEMES)[number]["value"];
+
 const subscribe = () => () => {};
 const getSnapshot = () => true;
 const getServerSnapshot = () => false;
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const mounted = useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getServerSnapshot,
-  );
-
-  const current: ThemeName = (theme as ThemeName | undefined) ?? "system";
-  const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
-  const Icon =
-    current === "dark" ? MoonIcon : current === "system" ? MonitorIcon : SunIcon;
+  const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const current: ThemeName = THEMES.some((item) => item.value === theme)
+    ? (theme as ThemeName)
+    : "clean";
 
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`切换主题，当前${LABEL[current]}`}
-            onClick={() => setTheme(next)}
-          />
-        }
+    <Select
+      value={mounted ? current : "clean"}
+      onValueChange={(value) => setTheme(value as ThemeName)}
+    >
+      <SelectTrigger
+        aria-label="界面主题"
+        className="h-8 w-[104px] gap-1.5 border-none bg-transparent px-2 text-xs shadow-none hover:bg-muted"
       >
-        {/* 未挂载时统一渲染太阳图标，避免与服务端不一致。 */}
-        {mounted ? <Icon className="size-4" /> : <SunIcon className="size-4" />}
-      </TooltipTrigger>
-      <TooltipContent>主题：{mounted ? LABEL[current] : "…"}</TooltipContent>
-    </Tooltip>
+        <PaletteIcon className="size-3.5 text-muted-foreground" />
+        <SelectValue>
+          {(value: ThemeName) => THEMES.find((item) => item.value === value)?.label ?? "天青"}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent align="end">
+        {THEMES.map((item) => (
+          <SelectItem key={item.value} value={item.value}>
+            <span className="flex items-center gap-2">
+              <span
+                className="size-2.5 rounded-full ring-1 ring-black/5"
+                style={{ backgroundColor: item.dot }}
+                aria-hidden="true"
+              />
+              {item.label}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
