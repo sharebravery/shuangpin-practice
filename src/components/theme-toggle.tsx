@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { restorePracticeFocus } from "@/features/practice/practice-input";
 
 const THEMES = [
   { value: "clean", label: "天青", dot: "#1677B3" },
@@ -35,10 +36,13 @@ export function ThemeToggle() {
     <Select
       value={mounted ? current : "clean"}
       onValueChange={(value) => setTheme(value as ThemeName)}
+      onOpenChange={(open) => {
+        if (!open) restorePracticeFocus();
+      }}
     >
       <SelectTrigger
         aria-label="界面主题"
-        className="h-8 w-[104px] gap-1.5 border-none bg-transparent px-2 text-xs shadow-none hover:bg-muted"
+        className="h-8 w-[104px] gap-1.5 border-border/70 bg-card px-2 text-xs shadow-none hover:bg-muted/70"
       >
         <PaletteIcon className="size-3.5 text-muted-foreground" />
         <SelectValue>
@@ -50,7 +54,7 @@ export function ThemeToggle() {
           <SelectItem key={item.value} value={item.value}>
             <span className="flex items-center gap-2">
               <span
-                className="size-2.5 rounded-full ring-1 ring-black/5"
+                className="size-2.5 rounded-full ring-1 ring-foreground/10"
                 style={{ backgroundColor: item.dot }}
                 aria-hidden="true"
               />
