@@ -33,12 +33,12 @@ interface PracticeInputProps {
   disabled: boolean;
   onChange: (value: string) => void;
   onSubmit: (value: string) => void;
-  onKeyPress: (key: string) => void;
 }
 
 /**
- * Visually hidden input: keeps focus, IME and accessibility semantics while the
- * visible interaction is rendered by the Echo display and keycaps.
+ * Visually hidden input: keeps mobile keyboard, IME and accessibility semantics.
+ * Desktop physical keydown is handled once at workspace/window level so focus
+ * loss does not break practice or visual feedback.
  */
 export function PracticeInput({
   value,
@@ -46,7 +46,6 @@ export function PracticeInput({
   disabled,
   onChange,
   onSubmit,
-  onKeyPress,
 }: PracticeInputProps) {
   const [composing, setComposing] = useState(false);
 
@@ -69,12 +68,6 @@ export function PracticeInput({
       inputMode="text"
       aria-label="请输入双拼编码"
       className="sr-only"
-      onKeyDown={(e) => {
-        if (!composing && /^[a-z;]$/i.test(e.key)) {
-          e.preventDefault();
-          onKeyPress(e.key);
-        }
-      }}
       onChange={(e) => {
         if (composing) {
           onChange(e.target.value);
