@@ -9,6 +9,9 @@ export type SchemeId = "xiaohe" | "microsoft" | "ziranma" | "sogou";
 /** 练习模式：键位 / 单字 / 词组。 */
 export type PracticeMode = "mapping" | "character" | "phrase";
 
+/** 视觉布局：谱面为默认，键盘保留更具实体感的呈现。 */
+export type PracticeLayout = "score" | "keyboard";
+
 /**
  * 双拼方案：声母、韵母、零声母到键位的映射。
  * 映射方向为「拼音部件 -> 键位字母」。
@@ -54,6 +57,8 @@ export interface PracticeSettings {
   showKeyboard: boolean;
   autoNext: boolean;
   mistakePriority: boolean;
+  layout: PracticeLayout;
+  showTrace: boolean;
 }
 
 /** 错题记录（简单错题机制，非完整间隔重复）。 */
