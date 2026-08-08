@@ -13,25 +13,20 @@ test("完成一道单字题", async ({ page }) => {
   const input = page.locator("#practice-input");
   await expect(input).toBeAttached();
 
-  // 等待题目渲染（大字号汉字）。新 prompt 用 text-5xl sm:text-6xl。
-  const character = page.locator("span.text-5xl, span.text-6xl").first();
+  const character = page.locator("[data-practice-character]");
   await expect(character).toBeVisible({ timeout: 10_000 });
 
-  // 读取拼音（默认显示拼音）。
   const pinyinEl = page.locator("span.text-sm.text-muted-foreground").first();
   await expect(pinyinEl).toBeVisible();
   const pinyin = (await pinyinEl.textContent()) ?? "";
 
-  // 计算小鹤双拼标准答案。
   const scheme = getScheme("xiaohe")!;
   const res = encodeSyllable(pinyin, scheme);
   expect(res.ok).toBe(true);
   if (!res.ok) return;
 
-  // 聚焦输入框并输入答案。
   await input.focus();
   await page.keyboard.type(res.code);
 
-  // 进度应增加（0/20 -> 1/20）。
   await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
 });
