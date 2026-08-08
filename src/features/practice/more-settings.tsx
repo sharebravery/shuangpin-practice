@@ -39,7 +39,7 @@ import { SettingsIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { usePracticeStore } from "@/stores/practice-store";
-import { focusPracticeInput } from "./practice-input";
+import { restorePracticeFocus } from "./practice-input";
 
 const QUESTION_COUNTS = [10, 15, 20, 30, 50];
 
@@ -52,7 +52,7 @@ function SettingRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="text-sm">{label}</span>
+      <span className="text-sm text-foreground">{label}</span>
       {children}
     </div>
   );
@@ -142,12 +142,12 @@ export function MoreSettings() {
   const handleOpenChange =
     (setter: (open: boolean) => void) => (open: boolean) => {
       setter(open);
-      if (!open) focusPracticeInput();
+      if (!open) restorePracticeFocus();
     };
 
   const triggerClassName = cn(
-    buttonVariants({ variant: "ghost", size: "icon" }),
-    "h-7 w-7",
+    buttonVariants({ variant: "outline", size: "icon" }),
+    "h-7 w-7 border-border/70 bg-card shadow-none hover:bg-muted/70",
   );
 
   return (
@@ -161,7 +161,7 @@ export function MoreSettings() {
           >
             <SettingsIcon className="size-3.5" />
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-72">
+          <PopoverContent align="end" className="w-72 border border-border bg-popover shadow-xl">
             <SettingsPanel />
           </PopoverContent>
         </Popover>
