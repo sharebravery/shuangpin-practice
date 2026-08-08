@@ -10,8 +10,7 @@ const KEYBOARD_ROWS = [
   ["z", "x", "c", "v", "b", "n", "m"],
 ] as const;
 
-// Row offsets for staggered layout
-const ROW_OFFSETS = ["0px", "20px", "46px"] as const;
+const ROW_OFFSETS = ["0px", "28px", "62px"] as const;
 
 const SCHEME_DATA: Record<
   string,
@@ -73,16 +72,19 @@ export function KeyboardMap({
   const errorSet = new Set(errorKeys);
 
   return (
-    <div className="w-full overflow-x-auto" role="group" aria-label="双拼键位图">
-      <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-1 sm:gap-1.5">
-        {KEYBOARD_ROWS.map((row, ri) => (
+    <div className="w-full overflow-x-auto pb-1" role="group" aria-label="双拼键位图">
+      <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-1.5 sm:gap-2 lg:gap-2.5">
+        {KEYBOARD_ROWS.map((row, rowIndex) => (
           <div
-            key={ri}
-            className="flex gap-1 sm:gap-1.5"
-            style={{ paddingLeft: ROW_OFFSETS[ri], paddingRight: ROW_OFFSETS[2 - ri] }}
+            key={rowIndex}
+            className="flex gap-1.5 sm:gap-2 lg:gap-2.5"
+            style={{
+              paddingLeft: ROW_OFFSETS[rowIndex],
+              paddingRight: ROW_OFFSETS[2 - rowIndex],
+            }}
           >
             {row.map((key) => {
-              const c = content[key];
+              const keyContent = content[key];
               const isCorrect = correctSet.has(key);
               const isError = errorSet.has(key);
               const isTyped = typedSet.has(key);
@@ -93,45 +95,46 @@ export function KeyboardMap({
                   key={key}
                   type="button"
                   disabled={disabled}
-                  onMouseDown={(e) => e.preventDefault()}
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => onKeyClick(key)}
-                  aria-label={`键位 ${key}${c ? `: ${[...c.initials, ...c.finals.map(displayFinal)].join(", ")}` : ""}`}
+                  aria-label={`键位 ${key}${keyContent ? `: ${[...keyContent.initials, ...keyContent.finals.map(displayFinal)].join(", ")}` : ""}`}
                   data-keycap={key}
                   className={cn(
-                    // Base keycap
-                    "group relative flex h-14 w-10 shrink-0 select-none flex-col items-center justify-center rounded-lg transition-all sm:h-[72px] sm:w-[56px] sm:rounded-xl",
-                    // Clean surface
-                    "bg-[var(--surface)]",
-                    // Bottom border = mechanical depth
-                    "border border-b-2 border-[var(--border)]",
-                    // Hover
-                    !disabled && !isCorrect && !isError && "hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]",
-                    // Active press (150ms flash)
-                    isActive && !isCorrect && !isError && "border-[var(--brand)] bg-[var(--brand-soft)] scale-95",
-                    // Typed keys (persist during question)
-                    isTyped && !isActive && !isCorrect && !isError && "border-[var(--brand)] bg-[var(--brand-soft)]",
-                    // Correct (green-blue brand)
-                    isCorrect && "border-[var(--brand)] bg-[var(--brand-soft)]",
-                    // Error
-                    isError && !isCorrect && "border-[var(--error)] bg-[var(--error)]/8",
+                    "group relative flex h-14 w-10 shrink-0 select-none flex-col items-center justify-center rounded-lg border border-b-[3px] border-[var(--border)] bg-[var(--key)] shadow-sm transition-[transform,background-color,border-color,box-shadow] duration-100",
+                    "sm:h-[88px] sm:w-[72px] sm:rounded-xl lg:h-[102px] lg:w-[86px] lg:rounded-[14px]",
+                    !disabled &&
+                      !isCorrect &&
+                      !isError &&
+                      "hover:border-[var(--brand)]/55 hover:bg-[var(--key-hover)] hover:shadow-md",
+                    isActive &&
+                      !isCorrect &&
+                      !isError &&
+                      "translate-y-[2px] scale-[0.985] border-[var(--brand)] bg-[var(--brand-soft)] shadow-none",
+                    isTyped &&
+                      !isActive &&
+                      !isCorrect &&
+                      !isError &&
+                      "border-[var(--brand)]/70 bg-[var(--brand-soft)]",
+                    isCorrect &&
+                      "border-[var(--brand)] bg-[var(--brand-soft)]",
+                    isError &&
+                      !isCorrect &&
+                      "border-[var(--error)] bg-[var(--error-soft)]",
                   )}
                 >
-                  {/* Initial badge (top-right) */}
-                  {c && c.initials.length > 0 && (
-                    <span className="absolute right-0.5 top-0.5 text-[0.55rem] font-semibold leading-none text-[var(--brand)]/60 sm:right-1 sm:top-1 sm:text-[0.6rem]">
-                      {c.initials.join("/")}
+                  {keyContent && keyContent.initials.length > 0 && (
+                    <span className="absolute right-1 top-1 text-[0.55rem] font-semibold leading-none text-[var(--brand)]/70 sm:right-2 sm:top-2 sm:text-[0.65rem] lg:text-[0.7rem]">
+                      {keyContent.initials.join("/")}
                     </span>
                   )}
 
-                  {/* Key letter (largest) */}
-                  <span className="text-base font-bold leading-none text-foreground sm:text-2xl">
+                  <span className="text-base font-bold leading-none text-foreground sm:text-2xl lg:text-[1.75rem]">
                     {key}
                   </span>
 
-                  {/* Finals (second tier) */}
-                  {c && c.finals.length > 0 && (
-                    <span className="mt-0.5 text-[0.55rem] leading-none text-muted-foreground sm:mt-1 sm:text-[0.65rem]">
-                      {c.finals.map(displayFinal).join(" · ")}
+                  {keyContent && keyContent.finals.length > 0 && (
+                    <span className="mt-1 max-w-[90%] truncate text-[0.55rem] font-medium leading-none text-muted-foreground sm:mt-2 sm:text-[0.7rem] lg:text-xs">
+                      {keyContent.finals.map(displayFinal).join(" · ")}
                     </span>
                   )}
                 </button>
