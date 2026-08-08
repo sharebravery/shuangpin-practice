@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-4xl px-3 py-4 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full max-w-6xl px-3 py-3 sm:px-6 sm:py-6">
         <PracticeWorkspace />
       </main>
       <SiteContent />
