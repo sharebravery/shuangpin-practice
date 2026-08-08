@@ -21,17 +21,12 @@ test("答错时键位图高亮错误键与正确键", async ({ page }) => {
   await page.locator("#practice-input").focus();
   await page.keyboard.type("zz");
 
-  // Wait for wrong state: error key has border-[var(--error)] class
-  // Use the data-keycap attribute and check for error border class
   const keyboard = page.getByRole("group", { name: "双拼键位图" });
-  // z key should have error styling
   const zKey = keyboard.locator("button[data-keycap='z']");
   await expect(zKey).toBeVisible({ timeout: 700 });
-  // Check that it has the error class (border-[var(--error)])
   const zClass = await zKey.getAttribute("class") ?? "";
   expect(zClass).toContain("border-[var(--error)]");
 
-  // At least one correct key should have brand border
   const allKeys = keyboard.locator("button[data-keycap]");
   const keyCount = await allKeys.count();
   let hasCorrectKey = false;
@@ -43,6 +38,44 @@ test("答错时键位图高亮错误键与正确键", async ({ page }) => {
     }
   }
   expect(hasCorrectKey).toBe(true);
+});
+
+/** 第二键也必须有可见按压反馈，即使该键同时触发提交。 */
+test("实体键盘第二键有按压反馈", async ({ page }) => {
+  await page.goto("/");
+  const input = page.locator("#practice-input");
+  await input.waitFor({ state: "attached", timeout: 10_000 });
+
+  const pinyin = (await page.locator("span.text-sm.text-muted-foreground").first().textContent()) ?? "";
+  const res = encodeSyllable(pinyin, getScheme("xiaohe")!);
+  expect(res.ok).toBe(true);
+  if (!res.ok) return;
+
+  await input.focus();
+  await page.keyboard.press(res.code[0]);
+  const secondKey = page.locator(`button[data-keycap="${res.code[1]}"]`);
+  await page.keyboard.down(res.code[1]);
+  await expect(secondKey).toHaveAttribute("data-active", "true");
+  await page.keyboard.up(res.code[1]);
+});
+
+/** 切换主题后应自动回到练习输入，不需要用户再点页面。 */
+test("切换主题后可直接继续输入", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
+
+  const pinyin = (await page.locator("span.text-sm.text-muted-foreground").first().textContent()) ?? "";
+  const res = encodeSyllable(pinyin, getScheme("xiaohe")!);
+  expect(res.ok).toBe(true);
+  if (!res.ok) return;
+
+  await page.getByLabel("界面主题").click();
+  await page.getByRole("option", { name: "石墨" }).click();
+  await expect(page.locator("html")).toHaveClass(/graphite/);
+  await expect(page.locator("#practice-input")).toBeFocused();
+
+  await page.keyboard.type(res.code);
+  await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
 });
 
 /** Space 暂停，Space 恢复 */
