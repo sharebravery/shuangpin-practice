@@ -110,7 +110,7 @@
   --muted-foreground: #706b65;
   --accent: #fff1ee;
   --accent-foreground: #202124;
-  --destructive: #c9423d;
+  --destructive: #cf3038;
   --border: #e7e0d7;
   --input: #e7e0d7;
   --ring: #b93a2f;
@@ -130,10 +130,10 @@
   --brand: #b93a2f;
   --brand-strong: #962d25;
   --brand-soft: #fff1ee;
-  --correct: #2f6f68;
-  --correct-soft: #edf6f3;
-  --error: #c9423d;
-  --error-soft: #fff0ee;
+  --correct: #b93a2f;
+  --correct-soft: #fff1ee;
+  --error: #cf3038;
+  --error-soft: #fff0f1;
   --surface: #faf7f2;
   --key: #fffefa;
   --key-hover: #faf5ee;
