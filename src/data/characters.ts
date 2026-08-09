@@ -1,212 +1,825 @@
 import type { CharacterQuestion } from "@/lib/shuangpin/types";
 
 /**
- * 常用单字题库（200 个）。
+ * 常用单字题库（800 个）。
  *
  * 约定：
+ * - 以高频现代汉字和日常常用字为主，不追求生僻字覆盖。
  * - 拼音不带声调，用 v 表示 ü（如「女」= "nv"、"绿"= "lv"）。
- * - 多音字取最常用读音并固定，避免练习时猜测。
- * - 所有拼音为合法音节，可被四种方案编码（由 schemes.test 校验）。
+ * - 多音字固定一个适合单字练习的常用读音，避免答题时猜测。
+ * - 前 200 个条目保持原顺序，保证既有错题记录的 ID 语义稳定。
+ * - 所有拼音必须可被四种双拼方案编码（由 schemes.test 校验）。
  */
-export const CHARACTERS: CharacterQuestion[] = [
-  { id: "c001", character: "人", pinyin: "ren" },
-  { id: "c002", character: "大", pinyin: "da" },
-  { id: "c003", character: "小", pinyin: "xiao" },
-  { id: "c004", character: "中", pinyin: "zhong" },
-  { id: "c005", character: "国", pinyin: "guo" },
-  { id: "c006", character: "上", pinyin: "shang" },
-  { id: "c007", character: "下", pinyin: "xia" },
-  { id: "c008", character: "不", pinyin: "bu" },
-  { id: "c009", character: "有", pinyin: "you" },
-  { id: "c010", character: "个", pinyin: "ge" },
-  { id: "c011", character: "我", pinyin: "wo" },
-  { id: "c012", character: "他", pinyin: "ta" },
-  { id: "c013", character: "这", pinyin: "zhe" },
-  { id: "c014", character: "来", pinyin: "lai" },
-  { id: "c015", character: "去", pinyin: "qu" },
-  { id: "c016", character: "你", pinyin: "ni" },
-  { id: "c017", character: "好", pinyin: "hao" },
-  { id: "c018", character: "的", pinyin: "de" },
-  { id: "c019", character: "了", pinyin: "le" },
-  { id: "c020", character: "在", pinyin: "zai" },
-  { id: "c021", character: "一", pinyin: "yi" },
-  { id: "c022", character: "二", pinyin: "er" },
-  { id: "c023", character: "三", pinyin: "san" },
-  { id: "c024", character: "四", pinyin: "si" },
-  { id: "c025", character: "五", pinyin: "wu" },
-  { id: "c026", character: "六", pinyin: "liu" },
-  { id: "c027", character: "七", pinyin: "qi" },
-  { id: "c028", character: "八", pinyin: "ba" },
-  { id: "c029", character: "九", pinyin: "jiu" },
-  { id: "c030", character: "十", pinyin: "shi" },
-  { id: "c031", character: "百", pinyin: "bai" },
-  { id: "c032", character: "千", pinyin: "qian" },
-  { id: "c033", character: "万", pinyin: "wan" },
-  { id: "c034", character: "年", pinyin: "nian" },
-  { id: "c035", character: "月", pinyin: "yue" },
-  { id: "c036", character: "日", pinyin: "ri" },
-  { id: "c037", character: "时", pinyin: "shi" },
-  { id: "c038", character: "分", pinyin: "fen" },
-  { id: "c039", character: "秒", pinyin: "miao" },
-  { id: "c040", character: "天", pinyin: "tian" },
-  { id: "c041", character: "地", pinyin: "di" },
-  { id: "c042", character: "水", pinyin: "shui" },
-  { id: "c043", character: "火", pinyin: "huo" },
-  { id: "c044", character: "土", pinyin: "tu" },
-  { id: "c045", character: "木", pinyin: "mu" },
-  { id: "c046", character: "金", pinyin: "jin" },
-  { id: "c047", character: "山", pinyin: "shan" },
-  { id: "c048", character: "河", pinyin: "he" },
-  { id: "c049", character: "海", pinyin: "hai" },
-  { id: "c050", character: "风", pinyin: "feng" },
-  { id: "c051", character: "雨", pinyin: "yu" },
-  { id: "c052", character: "云", pinyin: "yun" },
-  { id: "c053", character: "雷", pinyin: "lei" },
-  { id: "c054", character: "电", pinyin: "dian" },
-  { id: "c055", character: "光", pinyin: "guang" },
-  { id: "c056", character: "明", pinyin: "ming" },
-  { id: "c057", character: "白", pinyin: "bai" },
-  { id: "c058", character: "黑", pinyin: "hei" },
-  { id: "c059", character: "红", pinyin: "hong" },
-  { id: "c060", character: "绿", pinyin: "lv" },
-  { id: "c061", character: "黄", pinyin: "huang" },
-  { id: "c062", character: "蓝", pinyin: "lan" },
-  { id: "c063", character: "紫", pinyin: "zi" },
-  { id: "c064", character: "花", pinyin: "hua" },
-  { id: "c065", character: "草", pinyin: "cao" },
-  { id: "c066", character: "树", pinyin: "shu" },
-  { id: "c067", character: "林", pinyin: "lin" },
-  { id: "c068", character: "叶", pinyin: "ye" },
-  { id: "c069", character: "果", pinyin: "guo" },
-  { id: "c070", character: "鸟", pinyin: "niao" },
-  { id: "c071", character: "鱼", pinyin: "yu" },
-  { id: "c072", character: "虫", pinyin: "chong" },
-  { id: "c073", character: "马", pinyin: "ma" },
-  { id: "c074", character: "牛", pinyin: "niu" },
-  { id: "c075", character: "羊", pinyin: "yang" },
-  { id: "c076", character: "狗", pinyin: "gou" },
-  { id: "c077", character: "猪", pinyin: "zhu" },
-  { id: "c078", character: "鸡", pinyin: "ji" },
-  { id: "c079", character: "鸭", pinyin: "ya" },
-  { id: "c080", character: "龙", pinyin: "long" },
-  { id: "c081", character: "蛇", pinyin: "she" },
-  { id: "c082", character: "鼠", pinyin: "shu" },
-  { id: "c083", character: "兔", pinyin: "tu" },
-  { id: "c084", character: "头", pinyin: "tou" },
-  { id: "c085", character: "手", pinyin: "shou" },
-  { id: "c086", character: "脚", pinyin: "jiao" },
-  { id: "c087", character: "眼", pinyin: "yan" },
-  { id: "c088", character: "耳", pinyin: "er" },
-  { id: "c089", character: "口", pinyin: "kou" },
-  { id: "c090", character: "心", pinyin: "xin" },
-  { id: "c091", character: "牙", pinyin: "ya" },
-  { id: "c092", character: "舌", pinyin: "she" },
-  { id: "c093", character: "足", pinyin: "zu" },
-  { id: "c094", character: "身", pinyin: "shen" },
-  { id: "c095", character: "体", pinyin: "ti" },
-  { id: "c096", character: "力", pinyin: "li" },
-  { id: "c097", character: "气", pinyin: "qi" },
-  { id: "c098", character: "血", pinyin: "xue" },
-  { id: "c099", character: "肉", pinyin: "rou" },
-  { id: "c100", character: "骨", pinyin: "gu" },
-  { id: "c101", character: "皮", pinyin: "pi" },
-  { id: "c102", character: "毛", pinyin: "mao" },
-  { id: "c103", character: "家", pinyin: "jia" },
-  { id: "c104", character: "房", pinyin: "fang" },
-  { id: "c105", character: "门", pinyin: "men" },
-  { id: "c106", character: "窗", pinyin: "chuang" },
-  { id: "c107", character: "桌", pinyin: "zhuo" },
-  { id: "c108", character: "椅", pinyin: "yi" },
-  { id: "c109", character: "床", pinyin: "chuang" },
-  { id: "c110", character: "灯", pinyin: "deng" },
-  { id: "c111", character: "书", pinyin: "shu" },
-  { id: "c112", character: "笔", pinyin: "bi" },
-  { id: "c113", character: "纸", pinyin: "zhi" },
-  { id: "c114", character: "字", pinyin: "zi" },
-  { id: "c115", character: "话", pinyin: "hua" },
-  { id: "c116", character: "语", pinyin: "yu" },
-  { id: "c117", character: "文", pinyin: "wen" },
-  { id: "c118", character: "数", pinyin: "shu" },
-  { id: "c119", character: "学", pinyin: "xue" },
-  { id: "c120", character: "校", pinyin: "xiao" },
-  { id: "c121", character: "师", pinyin: "shi" },
-  { id: "c122", character: "生", pinyin: "sheng" },
-  { id: "c123", character: "朋", pinyin: "peng" },
-  { id: "c124", character: "友", pinyin: "you" },
-  { id: "c125", character: "父", pinyin: "fu" },
-  { id: "c126", character: "母", pinyin: "mu" },
-  { id: "c127", character: "儿", pinyin: "er" },
-  { id: "c128", character: "男", pinyin: "nan" },
-  { id: "c129", character: "女", pinyin: "nv" },
-  { id: "c130", character: "老", pinyin: "lao" },
-  { id: "c131", character: "少", pinyin: "shao" },
-  { id: "c132", character: "多", pinyin: "duo" },
-  { id: "c133", character: "高", pinyin: "gao" },
-  { id: "c134", character: "矮", pinyin: "ai" },
-  { id: "c135", character: "远", pinyin: "yuan" },
-  { id: "c136", character: "近", pinyin: "jin" },
-  { id: "c137", character: "快", pinyin: "kuai" },
-  { id: "c138", character: "慢", pinyin: "man" },
-  { id: "c139", character: "早", pinyin: "zao" },
-  { id: "c140", character: "晚", pinyin: "wan" },
-  { id: "c141", character: "冷", pinyin: "leng" },
-  { id: "c142", character: "热", pinyin: "re" },
-  { id: "c143", character: "新", pinyin: "xin" },
-  { id: "c144", character: "旧", pinyin: "jiu" },
-  { id: "c145", character: "买", pinyin: "mai" },
-  { id: "c146", character: "卖", pinyin: "mai" },
-  { id: "c147", character: "吃", pinyin: "chi" },
-  { id: "c148", character: "喝", pinyin: "he" },
-  { id: "c149", character: "睡", pinyin: "shui" },
-  { id: "c150", character: "走", pinyin: "zou" },
-  { id: "c151", character: "跑", pinyin: "pao" },
-  { id: "c152", character: "坐", pinyin: "zuo" },
-  { id: "c153", character: "站", pinyin: "zhan" },
-  { id: "c154", character: "看", pinyin: "kan" },
-  { id: "c155", character: "听", pinyin: "ting" },
-  { id: "c156", character: "说", pinyin: "shuo" },
-  { id: "c157", character: "读", pinyin: "du" },
-  { id: "c158", character: "写", pinyin: "xie" },
-  { id: "c159", character: "想", pinyin: "xiang" },
-  { id: "c160", character: "做", pinyin: "zuo" },
-  { id: "c161", character: "工", pinyin: "gong" },
-  { id: "c162", character: "农", pinyin: "nong" },
-  { id: "c163", character: "军", pinyin: "jun" },
-  { id: "c164", character: "民", pinyin: "min" },
-  { id: "c165", character: "王", pinyin: "wang" },
-  { id: "c166", character: "前", pinyin: "qian" },
-  { id: "c167", character: "后", pinyin: "hou" },
-  { id: "c168", character: "左", pinyin: "zuo" },
-  { id: "c169", character: "右", pinyin: "you" },
-  { id: "c170", character: "里", pinyin: "li" },
-  { id: "c171", character: "外", pinyin: "wai" },
-  { id: "c172", character: "内", pinyin: "nei" },
-  { id: "c173", character: "间", pinyin: "jian" },
-  { id: "c174", character: "旁", pinyin: "pang" },
-  { id: "c175", character: "边", pinyin: "bian" },
-  { id: "c176", character: "东", pinyin: "dong" },
-  { id: "c177", character: "南", pinyin: "nan" },
-  { id: "c178", character: "西", pinyin: "xi" },
-  { id: "c179", character: "北", pinyin: "bei" },
-  { id: "c180", character: "城", pinyin: "cheng" },
-  { id: "c181", character: "市", pinyin: "shi" },
-  { id: "c182", character: "村", pinyin: "cun" },
-  { id: "c183", character: "路", pinyin: "lu" },
-  { id: "c184", character: "桥", pinyin: "qiao" },
-  { id: "c185", character: "车", pinyin: "che" },
-  { id: "c186", character: "船", pinyin: "chuan" },
-  { id: "c187", character: "飞", pinyin: "fei" },
-  { id: "c188", character: "机", pinyin: "ji" },
-  { id: "c189", character: "票", pinyin: "piao" },
-  { id: "c190", character: "钱", pinyin: "qian" },
-  { id: "c191", character: "价", pinyin: "jia" },
-  { id: "c192", character: "饭", pinyin: "fan" },
-  { id: "c193", character: "茶", pinyin: "cha" },
-  { id: "c194", character: "糖", pinyin: "tang" },
-  { id: "c195", character: "衣", pinyin: "yi" },
-  { id: "c196", character: "鞋", pinyin: "xie" },
-  { id: "c197", character: "帽", pinyin: "mao" },
-  { id: "c198", character: "包", pinyin: "bao" },
-  { id: "c199", character: "伞", pinyin: "san" },
-  { id: "c200", character: "钟", pinyin: "zhong" },
-];
+const CHARACTER_DATA = `
+人 ren
+大 da
+小 xiao
+中 zhong
+国 guo
+上 shang
+下 xia
+不 bu
+有 you
+个 ge
+我 wo
+他 ta
+这 zhe
+来 lai
+去 qu
+你 ni
+好 hao
+的 de
+了 le
+在 zai
+一 yi
+二 er
+三 san
+四 si
+五 wu
+六 liu
+七 qi
+八 ba
+九 jiu
+十 shi
+百 bai
+千 qian
+万 wan
+年 nian
+月 yue
+日 ri
+时 shi
+分 fen
+秒 miao
+天 tian
+地 di
+水 shui
+火 huo
+土 tu
+木 mu
+金 jin
+山 shan
+河 he
+海 hai
+风 feng
+雨 yu
+云 yun
+雷 lei
+电 dian
+光 guang
+明 ming
+白 bai
+黑 hei
+红 hong
+绿 lv
+黄 huang
+蓝 lan
+紫 zi
+花 hua
+草 cao
+树 shu
+林 lin
+叶 ye
+果 guo
+鸟 niao
+鱼 yu
+虫 chong
+马 ma
+牛 niu
+羊 yang
+狗 gou
+猪 zhu
+鸡 ji
+鸭 ya
+龙 long
+蛇 she
+鼠 shu
+兔 tu
+头 tou
+手 shou
+脚 jiao
+眼 yan
+耳 er
+口 kou
+心 xin
+牙 ya
+舌 she
+足 zu
+身 shen
+体 ti
+力 li
+气 qi
+血 xue
+肉 rou
+骨 gu
+皮 pi
+毛 mao
+家 jia
+房 fang
+门 men
+窗 chuang
+桌 zhuo
+椅 yi
+床 chuang
+灯 deng
+书 shu
+笔 bi
+纸 zhi
+字 zi
+话 hua
+语 yu
+文 wen
+数 shu
+学 xue
+校 xiao
+师 shi
+生 sheng
+朋 peng
+友 you
+父 fu
+母 mu
+儿 er
+男 nan
+女 nv
+老 lao
+少 shao
+多 duo
+高 gao
+矮 ai
+远 yuan
+近 jin
+快 kuai
+慢 man
+早 zao
+晚 wan
+冷 leng
+热 re
+新 xin
+旧 jiu
+买 mai
+卖 mai
+吃 chi
+喝 he
+睡 shui
+走 zou
+跑 pao
+坐 zuo
+站 zhan
+看 kan
+听 ting
+说 shuo
+读 du
+写 xie
+想 xiang
+做 zuo
+工 gong
+农 nong
+军 jun
+民 min
+王 wang
+前 qian
+后 hou
+左 zuo
+右 you
+里 li
+外 wai
+内 nei
+间 jian
+旁 pang
+边 bian
+东 dong
+西 xi
+南 nan
+北 bei
+城 cheng
+市 shi
+村 cun
+路 lu
+桥 qiao
+车 che
+船 chuan
+飞 fei
+机 ji
+票 piao
+钱 qian
+价 jia
+饭 fan
+茶 cha
+糖 tang
+衣 yi
+鞋 xie
+帽 mao
+包 bao
+伞 san
+钟 zhong
+为 wei
+和 he
+们 men
+就 jiu
+也 ye
+对 dui
+要 yao
+点 dian
+到 dao
+会 hui
+着 zhe
+她 ta
+还 hai
+没 mei
+很 hen
+给 gei
+从 cong
+能 neng
+两 liang
+等 deng
+过 guo
+那 na
+用 yong
+出 chu
+现 xian
+次 ci
+最 zui
+什 shen
+么 me
+作 zuo
+再 zai
+些 xie
+比 bi
+太 tai
+找 zhao
+本 ben
+打 da
+跟 gen
+把 ba
+被 bei
+让 rang
+向 xiang
+而 er
+且 qie
+或 huo
+者 zhe
+因 yin
+所 suo
+以 yi
+如 ru
+但 dan
+是 shi
+已 yi
+经 jing
+正 zheng
+可 ke
+应 ying
+该 gai
+需 xu
+必 bi
+须 xu
+开 kai
+始 shi
+结 jie
+束 shu
+继 ji
+续 xu
+停 ting
+止 zhi
+完 wan
+成 cheng
+准 zhun
+备 bei
+决 jue
+定 ding
+选 xuan
+择 ze
+改 gai
+变 bian
+发 fa
+认 ren
+知 zhi
+道 dao
+解 jie
+觉 jue
+得 de
+希 xi
+望 wang
+喜 xi
+欢 huan
+愿 yuan
+意 yi
+相 xiang
+信 xin
+记 ji
+忘 wang
+告 gao
+诉 su
+回 hui
+答 da
+提 ti
+问 wen
+帮 bang
+助 zhu
+支 zhi
+持 chi
+保 bao
+护 hu
+降 jiang
+低 di
+增 zeng
+加 jia
+减 jian
+使 shi
+关 guan
+闭 bi
+进 jin
+入 ru
+离 li
+失 shi
+行 xing
+参 can
+联 lian
+系 xi
+情 qing
+况 kuang
+事 shi
+题 ti
+原 yuan
+方 fang
+法 fa
+式 shi
+程 cheng
+面 mian
+部 bu
+全 quan
+主 zhu
+重 zhong
+特 te
+别 bie
+般 ban
+简 jian
+单 dan
+复 fu
+杂 za
+容 rong
+易 yi
+困 kun
+难 nan
+确 que
+错 cuo
+误 wu
+真 zhen
+实 shi
+清 qing
+楚 chu
+直 zhi
+接 jie
+基 ji
+际 ji
+常 chang
+安 an
+自 zi
+由 you
+共 gong
+同 tong
+社 she
+活 huo
+习 xi
+教 jiao
+育 yu
+化 hua
+历 li
+史 shi
+科 ke
+技 ji
+术 shu
+济 ji
+政 zheng
+治 zhi
+律 lv
+管 guan
+理 li
+服 fu
+务 wu
+产 chan
+品 pin
+项 xiang
+目 mu
+统 tong
+息 xi
+据 ju
+网 wang
+络 luo
+软 ruan
+件 jian
+硬 ying
+器 qi
+设 she
+具 ju
+材 cai
+料 liao
+资 zi
+源 yuan
+环 huan
+境 jing
+然 ran
+空 kong
+温 wen
+度 du
+声 sheng
+音 yin
+颜 yan
+色 se
+形 xing
+状 zhuang
+长 chang
+短 duan
+附 fu
+位 wei
+置 zhi
+距 ju
+速 su
+期 qi
+星 xing
+周 zhou
+末 mo
+晨 chen
+午 wu
+傍 bang
+夜 ye
+昨 zuo
+今 jin
+份 fen
+春 chun
+夏 xia
+秋 qiu
+冬 dong
+之 zhi
+于 yu
+子 zi
+当 dang
+动 dong
+起 qi
+其 qi
+样 yang
+只 zhi
+无 wu
+它 ta
+与 yu
+第 di
+公 gong
+此 ci
+性 xing
+又 you
+业 ye
+将 jiang
+并 bing
+物 wu
+战 zhan
+美 mei
+见 jian
+利 li
+己 ji
+制 zhi
+合 he
+代 dai
+表 biao
+世 shi
+任 ren
+先 xian
+通 tong
+立 li
+及 ji
+员 yuan
+名 ming
+论 lun
+处 chu
+义 yi
+各 ge
+几 ji
+条 tiao
+平 ping
+尔 er
+更 geng
+神 shen
+总 zong
+何 he
+报 bao
+才 cai
+反 fan
+受 shou
+量 liang
+感 gan
+建 jian
+场 chang
+计 ji
+德 de
+命 ming
+指 zhi
+克 ke
+许 xu
+区 qu
+至 zhi
+队 dui
+便 bian
+展 zhan
+司 si
+非 fei
+则 ze
+却 que
+界 jie
+达 da
+放 fang
+强 qiang
+即 ji
+像 xiang
+权 quan
+思 si
+象 xiang
+住 zhu
+类 lei
+求 qiu
+死 si
+张 zhang
+交 jiao
+规 gui
+取 qu
+拉 la
+格 ge
+领 ling
+传 chuan
+观 guan
+切 qie
+院 yuan
+识 shi
+候 hou
+带 dai
+导 dao
+争 zheng
+运 yun
+笑 xiao
+步 bu
+收 shou
+根 gen
+干 gan
+造 zao
+言 yan
+组 zu
+每 mei
+亲 qin
+极 ji
+办 ban
+议 yi
+往 wang
+元 yuan
+英 ying
+士 shi
+证 zheng
+转 zhuan
+夫 fu
+令 ling
+布 bu
+怎 zen
+呢 ne
+存 cun
+未 wei
+叫 jiao
+台 tai
+影 ying
+罗 luo
+爱 ai
+击 ji
+流 liu
+兵 bing
+连 lian
+调 tiao
+深 shen
+商 shang
+算 suan
+质 zhi
+团 tuan
+集 ji
+党 dang
+华 hua
+石 shi
+级 ji
+整 zheng
+府 fu
+亚 ya
+请 qing
+约 yue
+示 shi
+病 bing
+究 jiu
+线 xian
+似 si
+官 guan
+断 duan
+精 jing
+满 man
+视 shi
+消 xiao
+越 yue
+照 zhao
+研 yan
+称 cheng
+企 qi
+功 gong
+吗 ma
+片 pian
+委 wei
+乎 hu
+查 cha
+轻 qing
+曾 ceng
+除 chu
+装 zhuang
+广 guang
+显 xian
+吧 ba
+阿 a
+李 li
+标 biao
+谈 tan
+图 tu
+念 nian
+引 yin
+首 shou
+医 yi
+局 ju
+突 tu
+专 zhuan
+费 fei
+号 hao
+尽 jin
+另 ling
+较 jiao
+注 zhu
+仅 jin
+考 kao
+落 luo
+青 qing
+随 sui
+列 lie
+武 wu
+响 xiang
+虽 sui
+推 tui
+势 shi
+古 gu
+众 zhong
+构 gou
+半 ban
+节 jie
+攻 gong
+投 tou
+某 mou
+案 an
+维 wei
+革 ge
+划 hua
+敌 di
+致 zhi
+陈 chen
+态 tai
+兴 xing
+派 pai
+孩 hai
+验 yan
+责 ze
+营 ying
+够 gou
+章 zhang
+志 zhi
+底 di
+严 yan
+巴 ba
+例 li
+防 fang
+族 zu
+供 gong
+效 xiao
+施 shi
+留 liu
+讲 jiang
+型 xing
+终 zhong
+紧 jin
+绝 jue
+奇 qi
+察 cha
+京 jing
+段 duan
+依 yi
+批 pi
+群 qun
+故 gu
+按 an
+米 mi
+围 wei
+江 jiang
+织 zhi
+害 hai
+斗 dou
+双 shuang
+客 ke
+纪 ji
+采 cai
+举 ju
+杀 sha
+苏 su
+密 mi
+朝 chao
+细 xi
+值 zhi
+仍 reng
+破 po
+倒 dao
+属 shu
+帝 di
+限 xian
+脸 lian
+职 zhi
+刻 ke
+乐 le
+否 fou
+刚 gang
+威 wei
+率 lv
+甚 shen
+独 du
+球 qiu
+普 pu
+怕 pa
+弹 dan
+苦 ku
+创 chuang
+假 jia
+久 jiu
+承 cheng
+印 yin
+兰 lan
+试 shi
+股 gu
+拿 na
+脑 nao
+预 yu
+谁 shei
+益 yi
+阳 yang
+若 ruo
+哪 na
+微 wei
+尼 ni
+送 song
+急 ji
+惊 jing
+伤 shang
+素 su
+药 yao
+适 shi
+波 bo
+省 sheng
+初 chu
+卫 wei
+食 shi
+险 xian
+待 dai
+述 shu
+陆 lu
+居 ju
+劳 lao
+财 cai
+排 pai
+福 fu
+纳 na
+警 jing
+获 huo
+模 mo
+充 chong
+负 fu
+游 you
+疑 yi
+层 ceng
+洲 zhou
+冲 chong
+射 she
+略 lve
+范 fan
+竟 jing
+句 ju
+室 shi
+异 yi
+激 ji
+汉 han
+哈 ha
+策 ce
+演 yan
+卡 ka
+`.trim();
+
+export const CHARACTERS: CharacterQuestion[] = CHARACTER_DATA.split("\n").map(
+  (line, index) => {
+    const [character = "", pinyin = ""] = line.trim().split(/\s+/);
+    return {
+      id: `c${String(index + 1).padStart(3, "0")}`,
+      character,
+      pinyin,
+    };
+  },
+);

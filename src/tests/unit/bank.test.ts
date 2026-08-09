@@ -4,8 +4,8 @@ import { CHARACTERS } from "@/data/characters";
 import { PHRASES } from "@/data/phrases";
 
 describe("单字题库完整性", () => {
-  it("数量为 200", () => {
-    expect(CHARACTERS).toHaveLength(200);
+  it("数量为 800", () => {
+    expect(CHARACTERS).toHaveLength(800);
   });
 
   it("无重复 ID", () => {
@@ -27,13 +27,18 @@ describe("单字题库完整性", () => {
 });
 
 describe("词组题库完整性", () => {
-  it("数量为 50", () => {
-    expect(PHRASES).toHaveLength(50);
+  it("数量为 300", () => {
+    expect(PHRASES).toHaveLength(300);
   });
 
   it("无重复 ID", () => {
     const ids = PHRASES.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("无重复词组", () => {
+    const texts = PHRASES.map((p) => p.text);
+    expect(new Set(texts).size).toBe(texts.length);
   });
 
   it("字数与拼音数一致", () => {

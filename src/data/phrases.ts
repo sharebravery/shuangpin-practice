@@ -1,62 +1,326 @@
 import type { PhraseQuestion } from "@/lib/shuangpin/types";
 
 /**
- * 常用词组题库（50 个）。
+ * 常用词组题库（300 个）。
  *
  * 约定：
+ * - 以日常生活、学习、工作和基础数字生活中的高频词为主。
  * - 每字拼音不带声调，用 v 表示 ü。
  * - syllables 长度必须等于 text 字数（由 bank.test 校验）。
- * - 多音字在词组语境下取固定读音（如「银行」的「行」= hang）。
+ * - 多音字按当前词组语境固定读音（如「银行」的「行」= hang）。
+ * - 前 50 个条目保持原顺序，保证既有错题记录的 ID 语义稳定。
+ * - 所有音节必须可被四种双拼方案编码（由 schemes.test 校验）。
  */
-export const PHRASES: PhraseQuestion[] = [
-  { id: "p001", text: "你好", syllables: ["ni", "hao"] },
-  { id: "p002", text: "朋友", syllables: ["peng", "you"] },
-  { id: "p003", text: "学习", syllables: ["xue", "xi"] },
-  { id: "p004", text: "工作", syllables: ["gong", "zuo"] },
-  { id: "p005", text: "时间", syllables: ["shi", "jian"] },
-  { id: "p006", text: "中国", syllables: ["zhong", "guo"] },
-  { id: "p007", text: "大家", syllables: ["da", "jia"] },
-  { id: "p008", text: "现在", syllables: ["xian", "zai"] },
-  { id: "p009", text: "今天", syllables: ["jin", "tian"] },
-  { id: "p010", text: "明天", syllables: ["ming", "tian"] },
-  { id: "p011", text: "昨天", syllables: ["zuo", "tian"] },
-  { id: "p012", text: "早上", syllables: ["zao", "shang"] },
-  { id: "p013", text: "晚上", syllables: ["wan", "shang"] },
-  { id: "p014", text: "时候", syllables: ["shi", "hou"] },
-  { id: "p015", text: "电话", syllables: ["dian", "hua"] },
-  { id: "p016", text: "电脑", syllables: ["dian", "nao"] },
-  { id: "p017", text: "手机", syllables: ["shou", "ji"] },
-  { id: "p018", text: "电视", syllables: ["dian", "shi"] },
-  { id: "p019", text: "生活", syllables: ["sheng", "huo"] },
-  { id: "p020", text: "快乐", syllables: ["kuai", "le"] },
-  { id: "p021", text: "高兴", syllables: ["gao", "xing"] },
-  { id: "p022", text: "喜欢", syllables: ["xi", "huan"] },
-  { id: "p023", text: "知道", syllables: ["zhi", "dao"] },
-  { id: "p024", text: "问题", syllables: ["wen", "ti"] },
-  { id: "p025", text: "答案", syllables: ["da", "an"] },
-  { id: "p026", text: "老师", syllables: ["lao", "shi"] },
-  { id: "p027", text: "学生", syllables: ["xue", "sheng"] },
-  { id: "p028", text: "同学", syllables: ["tong", "xue"] },
-  { id: "p029", text: "学校", syllables: ["xue", "xiao"] },
-  { id: "p030", text: "医院", syllables: ["yi", "yuan"] },
-  { id: "p031", text: "医生", syllables: ["yi", "sheng"] },
-  { id: "p032", text: "身体", syllables: ["shen", "ti"] },
-  { id: "p033", text: "名字", syllables: ["ming", "zi"] },
-  { id: "p034", text: "家人", syllables: ["jia", "ren"] },
-  { id: "p035", text: "父母", syllables: ["fu", "mu"] },
-  { id: "p036", text: "兄弟", syllables: ["xiong", "di"] },
-  { id: "p037", text: "姐妹", syllables: ["jie", "mei"] },
-  { id: "p038", text: "事情", syllables: ["shi", "qing"] },
-  { id: "p039", text: "地方", syllables: ["di", "fang"] },
-  { id: "p040", text: "世界", syllables: ["shi", "jie"] },
-  { id: "p041", text: "国家", syllables: ["guo", "jia"] },
-  { id: "p042", text: "城市", syllables: ["cheng", "shi"] },
-  { id: "p043", text: "街道", syllables: ["jie", "dao"] },
-  { id: "p044", text: "商店", syllables: ["shang", "dian"] },
-  { id: "p045", text: "超市", syllables: ["chao", "shi"] },
-  { id: "p046", text: "饭店", syllables: ["fan", "dian"] },
-  { id: "p047", text: "银行", syllables: ["yin", "hang"] },
-  { id: "p048", text: "公园", syllables: ["gong", "yuan"] },
-  { id: "p049", text: "车站", syllables: ["che", "zhan"] },
-  { id: "p050", text: "飞机场", syllables: ["fei", "ji", "chang"] },
-];
+const PHRASE_DATA = `
+你好 ni hao
+朋友 peng you
+学习 xue xi
+工作 gong zuo
+时间 shi jian
+中国 zhong guo
+大家 da jia
+现在 xian zai
+今天 jin tian
+明天 ming tian
+昨天 zuo tian
+早上 zao shang
+晚上 wan shang
+时候 shi hou
+电话 dian hua
+电脑 dian nao
+手机 shou ji
+电视 dian shi
+生活 sheng huo
+快乐 kuai le
+高兴 gao xing
+喜欢 xi huan
+知道 zhi dao
+问题 wen ti
+答案 da an
+老师 lao shi
+学生 xue sheng
+同学 tong xue
+学校 xue xiao
+医院 yi yuan
+医生 yi sheng
+身体 shen ti
+名字 ming zi
+家人 jia ren
+父母 fu mu
+兄弟 xiong di
+姐妹 jie mei
+事情 shi qing
+地方 di fang
+世界 shi jie
+国家 guo jia
+城市 cheng shi
+街道 jie dao
+商店 shang dian
+超市 chao shi
+饭店 fan dian
+银行 yin hang
+公园 gong yuan
+车站 che zhan
+飞机场 fei ji chang
+天气 tian qi
+春天 chun tian
+夏天 xia tian
+秋天 qiu tian
+冬天 dong tian
+上午 shang wu
+中午 zhong wu
+下午 xia wu
+星期 xing qi
+周末 zhou mo
+今年 jin nian
+去年 qu nian
+明年 ming nian
+小时 xiao shi
+分钟 fen zhong
+秒钟 miao zhong
+生日 sheng ri
+节日 jie ri
+春节 chun jie
+元旦 yuan dan
+中秋 zhong qiu
+国庆 guo qing
+家庭 jia ting
+爸爸 ba ba
+妈妈 ma ma
+爷爷 ye ye
+奶奶 nai nai
+哥哥 ge ge
+姐姐 jie jie
+弟弟 di di
+妹妹 mei mei
+孩子 hai zi
+儿童 er tong
+青年 qing nian
+老人 lao ren
+男人 nan ren
+女人 nv ren
+先生 xian sheng
+女士 nv shi
+同事 tong shi
+邻居 lin ju
+客人 ke ren
+主人 zhu ren
+早餐 zao can
+午餐 wu can
+晚餐 wan can
+米饭 mi fan
+面条 mian tiao
+面包 mian bao
+鸡蛋 ji dan
+牛奶 niu nai
+豆浆 dou jiang
+咖啡 ka fei
+茶水 cha shui
+水果 shui guo
+苹果 ping guo
+香蕉 xiang jiao
+橙子 cheng zi
+西瓜 xi gua
+葡萄 pu tao
+草莓 cao mei
+桃子 tao zi
+梨子 li zi
+蔬菜 shu cai
+白菜 bai cai
+青菜 qing cai
+土豆 tu dou
+番茄 fan qie
+黄瓜 huang gua
+萝卜 luo bo
+豆腐 dou fu
+猪肉 zhu rou
+牛肉 niu rou
+羊肉 yang rou
+鸡肉 ji rou
+鱼肉 yu rou
+饺子 jiao zi
+包子 bao zi
+馒头 man tou
+蛋糕 dan gao
+饼干 bing gan
+巧克力 qiao ke li
+房子 fang zi
+房间 fang jian
+客厅 ke ting
+卧室 wo shi
+厨房 chu fang
+厕所 ce suo
+阳台 yang tai
+楼房 lou fang
+门口 men kou
+窗户 chuang hu
+桌子 zhuo zi
+椅子 yi zi
+沙发 sha fa
+柜子 gui zi
+镜子 jing zi
+毛巾 mao jin
+牙刷 ya shua
+牙膏 ya gao
+杯子 bei zi
+瓶子 ping zi
+盘子 pan zi
+筷子 kuai zi
+勺子 shao zi
+冰箱 bing xiang
+空调 kong tiao
+衣服 yi fu
+裤子 ku zi
+裙子 qun zi
+外套 wai tao
+衬衫 chen shan
+毛衣 mao yi
+袜子 wa zi
+鞋子 xie zi
+帽子 mao zi
+眼镜 yan jing
+手表 shou biao
+雨伞 yu san
+书包 shu bao
+行李 xing li
+钱包 qian bao
+礼物 li wu
+照片 zhao pian
+图片 tu pian
+交通 jiao tong
+公交 gong jiao
+地铁 di tie
+出租 chu zu
+汽车 qi che
+火车 huo che
+高铁 gao tie
+飞机 fei ji
+轮船 lun chuan
+道路 dao lu
+高速 gao su
+旅行 lv xing
+旅游 lv you
+酒店 jiu dian
+餐厅 can ting
+机场 ji chang
+车票 che piao
+机票 ji piao
+地址 di zhi
+方向 fang xiang
+距离 ju li
+附近 fu jin
+课程 ke cheng
+作业 zuo ye
+考试 kao shi
+成绩 cheng ji
+课堂 ke tang
+教室 jiao shi
+图书馆 tu shu guan
+实验室 shi yan shi
+办公室 ban gong shi
+会议 hui yi
+文件 wen jian
+资料 zi liao
+计划 ji hua
+任务 ren wu
+目标 mu biao
+方法 fang fa
+内容 nei rong
+标题 biao ti
+句子 ju zi
+词语 ci yu
+拼音 pin yin
+声母 sheng mu
+韵母 yun mu
+输入 shu ru
+输出 shu chu
+练习 lian xi
+记录 ji lu
+统计 tong ji
+语言 yu yan
+汉语 han yu
+英语 ying yu
+数学 shu xue
+物理 wu li
+化学 hua xue
+生物 sheng wu
+地理 di li
+体育 ti yu
+美术 mei shu
+音乐 yin yue
+电影 dian ying
+视频 shi pin
+游戏 you xi
+新闻 xin wen
+文章 wen zhang
+小说 xiao shuo
+故事 gu shi
+诗歌 shi ge
+健康 jian kang
+疾病 ji bing
+感冒 gan mao
+发烧 fa shao
+咳嗽 ke sou
+头痛 tou tong
+肚子 du zi
+药物 yao wu
+休息 xiu xi
+运动 yun dong
+跑步 pao bu
+走路 zou lu
+游泳 you yong
+篮球 lan qiu
+足球 zu qiu
+羽毛球 yu mao qiu
+乒乓球 ping pang qiu
+骑车 qi che
+爬山 pa shan
+睡觉 shui jiao
+起床 qi chuang
+洗脸 xi lian
+刷牙 shua ya
+洗澡 xi zao
+穿衣 chuan yi
+脱衣 tuo yi
+吃饭 chi fan
+喝水 he shui
+做饭 zuo fan
+洗衣 xi yi
+打扫 da sao
+整理 zheng li
+购物 gou wu
+付款 fu kuan
+价格 jia ge
+便宜 pian yi
+现金 xian jin
+银卡 yin ka
+快递 kuai di
+包裹 bao guo
+姓名 xing ming
+号码 hao ma
+邮箱 you xiang
+密码 mi ma
+账户 zhang hu
+登录 deng lu
+注册 zhu ce
+搜索 sou suo
+下载 xia zai
+上传 shang chuan
+保存 bao cun
+删除 shan chu
+复制 fu zhi
+粘贴 zhan tie
+发送 fa song
+接收 jie shou
+`.trim();
+
+export const PHRASES: PhraseQuestion[] = PHRASE_DATA.split("\n").map(
+  (line, index) => {
+    const [text = "", ...syllables] = line.trim().split(/\s+/);
+    return {
+      id: `p${String(index + 1).padStart(3, "0")}`,
+      text,
+      syllables,
+    };
+  },
+);
