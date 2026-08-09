@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import type { PracticeMode, SchemeId } from "@/lib/shuangpin/types";
 import { MoreSettings } from "./more-settings";
+import { PracticeLayoutSwitch } from "./practice-layout-switch";
 import { SCHEMES } from "@/data/schemes";
 import { usePracticeStore } from "@/stores/practice-store";
 import { restorePracticeFocus } from "./practice-input";
@@ -30,7 +31,7 @@ export function PracticeToolbar() {
   };
 
   return (
-    <div className="flex items-center gap-1">
+    <div data-practice-toolbar className="flex min-w-0 items-center gap-0.5">
       <Select
         value={scheme}
         onValueChange={(v) => setScheme(v as SchemeId)}
@@ -75,6 +76,7 @@ export function PracticeToolbar() {
         </SelectContent>
       </Select>
 
+      <PracticeLayoutSwitch />
       <MoreSettings />
     </div>
   );

@@ -25,7 +25,7 @@ export function PracticeLayoutSwitch() {
     <div
       role="group"
       aria-label="键位布局"
-      className="inline-flex items-center rounded-lg border border-border/55 bg-[var(--surface)]/65 p-0.5"
+      className="inline-flex items-center rounded-md bg-[var(--surface)]/45 p-px"
     >
       {LAYOUTS.map((item) => {
         const active = layout === item.value;
@@ -40,8 +40,8 @@ export function PracticeLayoutSwitch() {
             onClick={() => selectLayout(item.value)}
             className={
               active
-                ? "h-6 rounded-md bg-[var(--key)] px-2.5 text-foreground shadow-sm hover:bg-[var(--key)]"
-                : "h-6 rounded-md px-2.5 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                ? "h-6 rounded-[5px] bg-[var(--key)] px-1.5 text-[0.7rem] text-foreground shadow-sm hover:bg-[var(--key)]"
+                : "h-6 rounded-[5px] px-1.5 text-[0.7rem] text-muted-foreground hover:bg-transparent hover:text-foreground"
             }
           >
             {item.label}

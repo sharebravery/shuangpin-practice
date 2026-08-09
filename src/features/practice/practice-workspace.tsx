@@ -7,7 +7,6 @@ import { PracticeToolbar } from "./practice-toolbar";
 import { PracticePrompt } from "./practice-prompt";
 import { PracticeInput, focusPracticeInput, PRACTICE_INPUT_ID } from "./practice-input";
 import { PracticeStats } from "./practice-stats";
-import { PracticeLayoutSwitch } from "./practice-layout-switch";
 import { KeyboardMap } from "./keyboard-map";
 
 const WRONG_AUTO_ADVANCE_MS = 800;
@@ -367,10 +366,12 @@ export function PracticeWorkspace() {
       </div>
 
       {showKeyboard && (
-        <>
-          <div className="-mb-1 flex h-7 w-full items-center justify-end px-1">
-            <PracticeLayoutSwitch />
-          </div>
+        <div
+          key={layout}
+          data-layout-stage
+          data-layout={layout}
+          className="w-full motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-200"
+        >
           <KeyboardMap
             layout={layout}
             showTrace={showTrace}
@@ -383,7 +384,7 @@ export function PracticeWorkspace() {
             onKeyClick={processKey}
             disabled={inputDisabled}
           />
-        </>
+        </div>
       )}
     </div>
   );
