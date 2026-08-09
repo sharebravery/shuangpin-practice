@@ -53,7 +53,7 @@
  * 东方材料体系：瓷、印、釉、纸。
  * 天青 = 汝瓷与天青釉；朱砂 = 暖白瓷与朱砂印泥；
  * 玄青 = 暮色黑釉；素笺 = 书纸与现代中文刊物。
- * 背景暗纹只负责材质提示，不参与主视觉层级。
+ * 每套主题最多两层材质暗纹；暗纹能被感知，但不进入主视觉层级。
  */
 :root,
 .clean {
@@ -107,20 +107,14 @@
   --canvas-pattern-one: radial-gradient(
     circle at 8% 76%,
     transparent 0 112px,
-    rgba(113, 156, 165, 0.026) 113px 114px,
+    rgba(113, 156, 165, 0.05) 113px 114px,
     transparent 115px
   );
   --canvas-pattern-two: radial-gradient(
     circle at 92% 20%,
     transparent 0 74px,
-    rgba(113, 156, 165, 0.02) 75px 76px,
+    rgba(113, 156, 165, 0.035) 75px 76px,
     transparent 77px
-  );
-  --canvas-pattern-three: linear-gradient(
-    122deg,
-    transparent 0 57%,
-    rgba(113, 156, 165, 0.012) 58%,
-    transparent 60%
   );
 }
 
@@ -174,20 +168,14 @@
   --canvas-pattern-one: radial-gradient(
     circle at 9% 78%,
     transparent 0 54px,
-    rgba(178, 79, 66, 0.024) 55px 56px,
+    rgba(178, 79, 66, 0.045) 55px 56px,
     transparent 57px
   );
   --canvas-pattern-two: radial-gradient(
     circle at 91% 19%,
     transparent 0 40px,
-    rgba(144, 59, 51, 0.018) 41px 42px,
+    rgba(144, 59, 51, 0.032) 41px 42px,
     transparent 43px
-  );
-  --canvas-pattern-three: radial-gradient(
-    circle at 50% 118%,
-    transparent 0 278px,
-    rgba(178, 79, 66, 0.014) 279px 280px,
-    transparent 281px
   );
 }
 
@@ -242,20 +230,14 @@
   --canvas-pattern-one: radial-gradient(
     ellipse 520px 220px at -2% 72%,
     transparent 0 74%,
-    rgba(154, 181, 175, 0.026) 74.5% 75%,
+    rgba(154, 181, 175, 0.05) 74.5% 75%,
     transparent 75.5%
   );
   --canvas-pattern-two: radial-gradient(
     ellipse 460px 190px at 103% 18%,
     transparent 0 73%,
-    rgba(198, 215, 210, 0.018) 73.5% 74%,
+    rgba(198, 215, 210, 0.032) 73.5% 74%,
     transparent 74.5%
-  );
-  --canvas-pattern-three: linear-gradient(
-    118deg,
-    transparent 42%,
-    rgba(198, 215, 210, 0.012) 50%,
-    transparent 58%
   );
 }
 
@@ -308,24 +290,18 @@
   --ceramic-rim: rgba(255, 255, 255, 0.16);
   --canvas-pattern-one: repeating-linear-gradient(
     0deg,
-    rgba(73, 67, 57, 0.013) 0,
-    rgba(73, 67, 57, 0.013) 1px,
+    rgba(73, 67, 57, 0.024) 0,
+    rgba(73, 67, 57, 0.024) 1px,
     transparent 1px,
     transparent 32px
   );
   --canvas-pattern-two: linear-gradient(
     90deg,
     transparent 0 8%,
-    rgba(73, 67, 57, 0.014) 8%,
+    rgba(73, 67, 57, 0.026) 8%,
     transparent calc(8% + 1px) 92%,
-    rgba(73, 67, 57, 0.014) 92%,
+    rgba(73, 67, 57, 0.026) 92%,
     transparent calc(92% + 1px)
-  );
-  --canvas-pattern-three: radial-gradient(
-    circle at 91% 22%,
-    transparent 0 68px,
-    rgba(73, 67, 57, 0.018) 69px 70px,
-    transparent 71px
   );
 }
 
@@ -339,8 +315,7 @@
       radial-gradient(900px 360px at 50% -170px, var(--canvas-glow), transparent 72%),
       linear-gradient(180deg, var(--canvas-sheen) 0%, transparent 34%),
       var(--canvas-pattern-one, linear-gradient(transparent, transparent)),
-      var(--canvas-pattern-two, linear-gradient(transparent, transparent)),
-      var(--canvas-pattern-three, linear-gradient(transparent, transparent));
+      var(--canvas-pattern-two, linear-gradient(transparent, transparent));
     background-attachment: fixed;
   }
   html {
