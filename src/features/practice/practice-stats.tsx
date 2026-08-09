@@ -4,9 +4,8 @@ import { usePracticeStore } from "@/stores/practice-store";
 import { calculateAccuracy } from "@/lib/shuangpin/statistics";
 
 export function PracticeStats() {
-  const completed = usePracticeStore((s) => s.session.completed);
-  const correct = usePracticeStore((s) => s.session.correct);
-  const total = usePracticeStore((s) => s.session.total);
+  const completed = usePracticeStore((s) => s.totals.completed);
+  const correct = usePracticeStore((s) => s.totals.correct);
   const streak = usePracticeStore((s) => s.session.streak);
 
   const accuracy = Math.round(calculateAccuracy(correct, completed) * 100);
@@ -18,8 +17,7 @@ export function PracticeStats() {
       </span>
       <span className="text-border">·</span>
       <span>
-        进度 <span className="font-semibold tabular-nums text-foreground">{completed}</span>
-        <span className="text-muted-foreground/50">/{total}</span>
+        已练 <span className="font-semibold tabular-nums text-foreground">{completed}</span>
       </span>
       <span className="text-border">·</span>
       <span>
