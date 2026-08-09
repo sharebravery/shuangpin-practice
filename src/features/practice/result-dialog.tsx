@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import {
@@ -27,7 +28,7 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
 
 /**
  * 练习结果弹窗（PRD §10、实现细则 §11 completed 状态）。
- * 完成本组后展示统计，支持再练一组、练习错题、复制成绩、关闭继续。
+ * 完成本组后展示统计，默认聚焦“继续下一组”，回车可无缝继续练习。
  */
 export function ResultDialog() {
   const status = usePracticeStore((s) => s.session.status);
@@ -37,9 +38,16 @@ export function ResultDialog() {
   const mistakeCount = usePracticeStore((s) => s.session.sessionMistakes.length);
   const restart = usePracticeStore((s) => s.restart);
   const startMistakeSession = usePracticeStore((s) => s.startMistakeSession);
+  const continueButtonRef = useRef<HTMLButtonElement>(null);
 
   const open = status === "completed";
   const accuracy = Math.round(calculateAccuracy(correct, completed) * 100);
+
+  useEffect(() => {
+    if (!open) return;
+    const frame = window.requestAnimationFrame(() => continueButtonRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [open]);
 
   const copyResult = async () => {
     const text = `我在${SITE.name}完成了 ${completed} 题，正确率 ${accuracy}%，最长连击 ${longestStreak} 次。${SITE.url}`;
@@ -55,14 +63,14 @@ export function ResultDialog() {
     <Dialog
       open={open}
       onOpenChange={(o) => {
-        // 关闭（Esc / 点击遮罩 / X）即继续自由练习。
+        // 关闭（Esc / 点击遮罩 / X）即开始下一组，避免打断练习流。
         if (!o) restart();
       }}
     >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>本组完成 🎉</DialogTitle>
-          <DialogDescription>继续练习，巩固双拼键位。</DialogDescription>
+          <DialogDescription>按 Enter 继续下一组。</DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-4 py-2">
           <Stat label="完成题数" value={completed} />
@@ -79,7 +87,13 @@ export function ResultDialog() {
               练习错题
             </Button>
           )}
-          <Button onClick={() => restart()}>再练一组</Button>
+          <Button
+            ref={continueButtonRef}
+            aria-keyshortcuts="Enter"
+            onClick={() => restart()}
+          >
+            继续下一组
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
