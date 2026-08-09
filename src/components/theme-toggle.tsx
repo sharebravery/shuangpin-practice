@@ -15,7 +15,7 @@ import { restorePracticeFocus } from "@/features/practice/practice-input";
 const THEMES = [
   { value: "clean", label: "天青", dot: "#719CA5" },
   { value: "ink", label: "朱砂", dot: "#B24F42" },
-  { value: "graphite", label: "玄青", dot: "#4F7074" },
+  { value: "graphite", label: "玄青", dot: "#8EA9A4" },
 ] as const;
 
 type ThemeName = (typeof THEMES)[number]["value"];

@@ -1,45 +1,81 @@
 /*
- * 谱面布局保留整张键位谱的舞台宽度，但单键不再被横向拉胖。
- * 第一、二行铺满舞台并用更大的间距呼吸；第三行保持视觉居中。
+ * 谱面 / 键盘共用同一套几何系统。
+ * 两种布局只区别视觉材质，不再各自计算键宽、键高、行距和位置。
  */
+[aria-label="双拼键位图"] > div {
+  --practice-key-w: clamp(72px, 7vw, 90px);
+  --practice-key-h: clamp(82px, 7.5vw, 96px);
+  --practice-key-gap: clamp(12px, 1.7vw, 22px);
+  --practice-row-gap: clamp(10px, 1vw, 14px);
+  --practice-row-shift: clamp(16px, 1.7vw, 24px);
+
+  width: 100%;
+  max-width: 1160px;
+  min-width: 900px !important;
+  padding-block: 16px !important;
+}
+
+[aria-label="双拼键位图"] > div > div.relative.z-10 {
+  align-items: center !important;
+  gap: var(--practice-row-gap) !important;
+}
+
 [aria-label="双拼键位图"]
-  div:has(> button[data-keycap="q"][class*="w-full"]),
+  div:has(> button[data-keycap="q"]),
 [aria-label="双拼键位图"]
-  div:has(> button[data-keycap="a"][class*="w-full"]) {
+  div:has(> button[data-keycap="a"]),
+[aria-label="双拼键位图"]
+  div:has(> button[data-keycap="z"]) {
   display: flex !important;
-  width: calc(100% - 52px);
-  justify-content: space-between;
-  gap: 0 !important;
+  width: max-content !important;
+  margin-inline: auto !important;
+  gap: var(--practice-key-gap) !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
 
 [aria-label="双拼键位图"]
-  div:has(> button[data-keycap="q"][class*="w-full"]) {
-  transform: translateX(0);
+  div:has(> button[data-keycap="q"]) {
+  transform: none !important;
 }
 
 [aria-label="双拼键位图"]
-  div:has(> button[data-keycap="a"][class*="w-full"]) {
-  transform: translateX(28px);
+  div:has(> button[data-keycap="a"]) {
+  transform: translateX(var(--practice-row-shift)) !important;
 }
 
 [aria-label="双拼键位图"]
-  div:has(> button[data-keycap="z"][class*="w-full"]) {
-  display: flex !important;
-  width: 72%;
-  margin-inline: auto;
-  justify-content: space-between;
-  gap: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  transform: none;
+  div:has(> button[data-keycap="z"]) {
+  transform: none !important;
 }
 
-[aria-label="双拼键位图"]
-  div:has(> button[data-keycap][class*="w-full"])
-  > button[data-keycap][class*="w-full"] {
-  flex: 0 0 clamp(78px, 7.55vw, 104px);
-  width: clamp(78px, 7.55vw, 104px) !important;
-  height: clamp(80px, 6.45vw, 88px) !important;
+[aria-label="双拼键位图"] button[data-keycap] {
+  flex: 0 0 var(--practice-key-w) !important;
+  width: var(--practice-key-w) !important;
+  height: var(--practice-key-h) !important;
+}
+
+/* 平板：保持同一比例，允许整张键位谱横向滚动。 */
+@media (max-width: 1023px) {
+  [aria-label="双拼键位图"] > div {
+    --practice-key-w: 74px;
+    --practice-key-h: 84px;
+    --practice-key-gap: 14px;
+    --practice-row-gap: 10px;
+    --practice-row-shift: 18px;
+    min-width: 900px !important;
+  }
+}
+
+/* 手机：不把按键压到不可点击，保持横向滚动。 */
+@media (max-width: 639px) {
+  [aria-label="双拼键位图"] > div {
+    --practice-key-w: 68px;
+    --practice-key-h: 80px;
+    --practice-key-gap: 12px;
+    --practice-row-gap: 9px;
+    --practice-row-shift: 16px;
+    min-width: 820px !important;
+    padding-block: 12px !important;
+  }
 }

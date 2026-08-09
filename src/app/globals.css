@@ -2,8 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* 主题都采用浅色瓷面，不再把玄青当作 dark mode。 */
-@custom-variant dark (&:is(.dark *));
+/* 玄青是暗调主题，但不是纯黑 dark mode。 */
+@custom-variant dark (&:is(.graphite *));
 
 @theme inline {
   --color-background: var(--background);
@@ -50,9 +50,9 @@
 }
 
 /*
- * 统一母题：瓷白、釉色、留白与柔和反射。
- * 天青 = 白瓷与天青釉；朱砂 = 暖白瓷与朱砂印色；玄青 = 青灰瓷与玄青釉。
- * 不做纹理拟物，只用冷暖白、边缘高光和非常轻的空间光表达材质。
+ * 统一母题：瓷、釉、留白与柔和反射。
+ * 天青 = 白瓷与天青釉；朱砂 = 暖白瓷与朱砂印色；玄青 = 暮色青瓷与玄青釉。
+ * 三套主题结构一致，只改变冷暖、明度和釉色气质。
  */
 :root,
 .clean {
@@ -155,52 +155,53 @@
 }
 
 .graphite {
-  --background: #f4f6f5;
-  --foreground: #1d2b2d;
-  --card: #fbfcfb;
-  --card-foreground: #1d2b2d;
-  --popover: #fbfcfb;
-  --popover-foreground: #1d2b2d;
-  --primary: #4f7074;
-  --primary-foreground: #ffffff;
-  --secondary: #e8efed;
-  --secondary-foreground: #1d2b2d;
-  --muted: #edf2f0;
-  --muted-foreground: #68797b;
-  --accent: #e8efed;
-  --accent-foreground: #1d2b2d;
-  --destructive: #a94f4b;
-  --border: #d8e1df;
-  --input: #d8e1df;
-  --ring: #4f7074;
-  --chart-1: #4f7074;
-  --chart-2: #68797b;
-  --chart-3: #93a6a6;
-  --chart-4: #405b5f;
-  --chart-5: #c6d2cf;
-  --sidebar: #eef3f1;
-  --sidebar-foreground: #1d2b2d;
-  --sidebar-primary: #4f7074;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e8efed;
-  --sidebar-accent-foreground: #1d2b2d;
-  --sidebar-border: #d8e1df;
-  --sidebar-ring: #4f7074;
-  --brand: #4f7074;
-  --brand-strong: #34575b;
-  --brand-soft: #e6efed;
-  --correct: #4f7074;
-  --correct-soft: #e6efed;
-  --error: #a94f4b;
-  --error-soft: #f4e7e5;
-  --surface: #eef3f1;
-  --key: #fafcfb;
-  --key-hover: #edf3f1;
-  --key-shadow: #c8d4d1;
-  --canvas-glow: rgba(65, 98, 102, 0.09);
-  --canvas-sheen: rgba(255, 255, 255, 0.62);
-  --ceramic-highlight: rgba(255, 255, 255, 0.88);
-  --ceramic-rim: rgba(255, 255, 255, 0.74);
+  color-scheme: dark;
+  --background: #172225;
+  --foreground: #e8efed;
+  --card: #1c2a2d;
+  --card-foreground: #e8efed;
+  --popover: #1c2a2d;
+  --popover-foreground: #e8efed;
+  --primary: #8ea9a4;
+  --primary-foreground: #132023;
+  --secondary: #223438;
+  --secondary-foreground: #e8efed;
+  --muted: #243337;
+  --muted-foreground: #9aaba7;
+  --accent: #263a3d;
+  --accent-foreground: #edf3f1;
+  --destructive: #d17a73;
+  --border: #34484b;
+  --input: #34484b;
+  --ring: #8ea9a4;
+  --chart-1: #8ea9a4;
+  --chart-2: #9aaba7;
+  --chart-3: #657c79;
+  --chart-4: #c4d3cf;
+  --chart-5: #465f5d;
+  --sidebar: #1b292c;
+  --sidebar-foreground: #e8efed;
+  --sidebar-primary: #8ea9a4;
+  --sidebar-primary-foreground: #132023;
+  --sidebar-accent: #263a3d;
+  --sidebar-accent-foreground: #edf3f1;
+  --sidebar-border: #34484b;
+  --sidebar-ring: #8ea9a4;
+  --brand: #8ea9a4;
+  --brand-strong: #bfd0cc;
+  --brand-soft: #263c3e;
+  --correct: #8ea9a4;
+  --correct-soft: #263c3e;
+  --error: #d17a73;
+  --error-soft: #3b292a;
+  --surface: #1b292c;
+  --key: #223235;
+  --key-hover: #293d40;
+  --key-shadow: #0b1315;
+  --canvas-glow: rgba(111, 151, 145, 0.16);
+  --canvas-sheen: rgba(215, 232, 227, 0.035);
+  --ceramic-highlight: rgba(210, 230, 225, 0.11);
+  --ceramic-rim: rgba(212, 232, 228, 0.08);
 }
 
 @layer base {
@@ -219,15 +220,12 @@
   }
 }
 
-/* 主练习谱保持当前舞台位置。 */
+/* 主练习谱保持统一舞台位置。 */
 [aria-label="双拼键位图"] {
   margin-top: 14px;
 }
 
-/*
- * 仅键盘布局加入轻微釉面反射；谱面布局继续保持扁平排版。
- * 利用 keyboard keycap 的 border-b 类区分两种布局，不引入额外组件状态。
- */
+/* 仅键盘布局加入轻微釉面反射；谱面布局保持排版感。 */
 [aria-label="双拼键位图"] button[data-keycap][class*="border-b"]::before {
   content: "";
   pointer-events: none;
