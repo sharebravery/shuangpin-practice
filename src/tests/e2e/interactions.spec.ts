@@ -41,8 +41,8 @@ test("答错 -> 自动进入下一题", async ({ page }) => {
   await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
 });
 
-/** 谱面模式保留键位错误反馈，同时显示最高层轨迹点。 */
-test("答错时谱面保留按钮反馈和轨迹点", async ({ page }) => {
+/** 谱面模式保留键位错误反馈，同时显示最高层轨迹点和正确键呼吸提示。 */
+test("答错时谱面显示错误反馈与正确键呼吸灯", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
 
@@ -62,6 +62,12 @@ test("答错时谱面保留按钮反馈和轨迹点", async ({ page }) => {
   const wrongClass = (await wrongKeyCap.getAttribute("class")) ?? "";
   expect(wrongClass).toContain("bg-[var(--error-soft)]");
   expect(wrongClass).toContain("border-[var(--error)]");
+
+  for (const key of new Set(answer.split(""))) {
+    await expect(
+      page.locator(`button[data-keycap="${key}"] [data-correct-guide]`),
+    ).toBeVisible({ timeout: 500 });
+  }
 });
 
 /** 实体键盘第一键显示呼吸点，第二键显示完整轨迹且按压反馈仍存在。 */
@@ -84,23 +90,70 @@ test("实体键盘输入显示呼吸点和轨迹", async ({ page }) => {
   await page.keyboard.up(answer[1]);
 });
 
-/** 极简布局可通过设置选择，并保留完整键位交互。 */
-test("可切换到极简布局", async ({ page }) => {
+/** 布局只保留谱面和键盘。 */
+test("布局设置只保留谱面和键盘", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
 
   await page.locator("[data-slot='popover-trigger']").click();
   await page.getByLabel("界面布局").click();
-  await page.getByRole("option", { name: "极简" }).click();
+  await expect(page.getByRole("option", { name: "谱面" })).toBeVisible();
+  await expect(page.getByRole("option", { name: "键盘" })).toBeVisible();
+  await expect(page.getByRole("option", { name: "极简" })).toHaveCount(0);
+});
+
+/** 键盘布局答错时，同样为正确按键显示呼吸灯。 */
+test("键盘布局答错时显示正确键呼吸灯", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
+  await page.goto("/");
+  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
+
+  await page.locator("[data-slot='popover-trigger']").click();
+  await page.getByLabel("界面布局").click();
+  await page.getByRole("option", { name: "键盘" }).click();
   await page.keyboard.press("Escape");
 
-  const keyboard = page.getByRole("group", { name: "双拼键位图" });
-  const keys = keyboard.locator("button[data-keycap]");
-  await expect(keys).toHaveCount(27);
-  const firstKeyClass = (await keys.first().getAttribute("class")) ?? "";
-  expect(firstKeyClass).toContain("h-[76px]");
-  expect(firstKeyClass).toContain("border-transparent");
+  const answer = await currentCharacterCode(page);
+  const wrongKey = guaranteedWrongKey(answer);
+  await page.keyboard.type(wrongKey.repeat(2));
+
+  for (const key of new Set(answer.split(""))) {
+    await expect(
+      page.locator(`button[data-keycap="${key}"] [data-correct-guide]`),
+    ).toBeVisible({ timeout: 500 });
+  }
+});
+
+/** 纸墨主题下正确与错误反馈必须清晰区分。 */
+test("纸墨主题正确与错误反馈颜色不同", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
+
+  await page.getByLabel("界面主题").click();
+  await page.getByRole("option", { name: "纸墨" }).click();
+  await expect(page.locator("html")).toHaveClass(/ink/);
+
+  const answer = await currentCharacterCode(page);
+  const wrongKey = guaranteedWrongKey(answer);
+  await page.keyboard.type(wrongKey.repeat(2));
+
+  const correctKeyCap = page.locator(`button[data-keycap="${answer[0]}"]`);
+  const wrongKeyCap = page.locator(`button[data-keycap="${wrongKey}"]`);
+  await expect(correctKeyCap).toHaveAttribute("data-feedback", "correct");
+  await expect(wrongKeyCap).toHaveAttribute("data-feedback", "error");
+
+  const [correctColors, wrongColors] = await Promise.all([
+    correctKeyCap.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return [style.backgroundColor, style.borderColor];
+    }),
+    wrongKeyCap.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return [style.backgroundColor, style.borderColor];
+    }),
+  ]);
+  expect(correctColors).not.toEqual(wrongColors);
 });
 
 /** 即使隐藏输入框失焦，实体键盘仍直接进入练习并自动下一题。 */
@@ -164,6 +217,37 @@ test("autoNext=false -> 答对 -> 自动进入下一题", async ({ page }) => {
   await page.keyboard.type(answer);
 
   await expect(page.getByText(/进度\s*1\s*\/\s*20/)).toBeVisible({ timeout: 5_000 });
+});
+
+/** 完成一组后默认聚焦继续按钮，按 Enter 直接进入下一组。 */
+test("完成一组后 Enter 继续下一组", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
+  await page.goto("/");
+  await page.locator("#practice-input").waitFor({ state: "attached", timeout: 10_000 });
+
+  await page.locator("[data-slot='popover-trigger']").click();
+  await page.getByLabel("每组题数").click();
+  await page.getByRole("option", { name: "10 题" }).click();
+  await page.keyboard.press("Escape");
+
+  for (let completed = 0; completed < 10; completed += 1) {
+    const answer = await currentCharacterCode(page);
+    await page.keyboard.type(answer);
+    if (completed < 9) {
+      await expect(
+        page.getByText(new RegExp(`进度\\s*${completed + 1}\\s*\\/\\s*10`)),
+      ).toBeVisible({ timeout: 2_000 });
+    }
+  }
+
+  const continueButton = page.getByRole("button", { name: "继续下一组" });
+  await expect(continueButton).toBeVisible();
+  await expect(continueButton).toBeFocused();
+  await page.keyboard.press("Enter");
+
+  await expect(continueButton).toBeHidden();
+  await expect(page.getByText(/进度\s*0\s*\/\s*10/)).toBeVisible({ timeout: 2_000 });
+  await expect(page.locator("#practice-input")).toBeFocused();
 });
 
 /** 关闭桌面 Popover 后重新聚焦练习输入框 */
