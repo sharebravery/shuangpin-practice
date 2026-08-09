@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { buttonVariants } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -38,7 +37,6 @@ import {
 import { SettingsIcon } from "lucide-react";
 
 import type { PracticeLayout } from "@/lib/shuangpin/types";
-import { cn } from "@/lib/utils";
 import { usePracticeStore } from "@/stores/practice-store";
 import { restorePracticeFocus } from "./practice-input";
 
@@ -55,8 +53,8 @@ function SettingRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-sm text-foreground">{label}</span>
+    <div className="flex items-center justify-between gap-5">
+      <span className="text-sm text-foreground/90">{label}</span>
       {children}
     </div>
   );
@@ -78,7 +76,11 @@ function SettingsPanel() {
           value={layout}
           onValueChange={(value) => updateSettings({ layout: value as PracticeLayout })}
         >
-          <SelectTrigger size="sm" className="w-24" aria-label="界面布局">
+          <SelectTrigger
+            size="sm"
+            className="w-24 border-border/70 bg-transparent shadow-none"
+            aria-label="界面布局"
+          >
             <SelectValue>
               {(value: PracticeLayout) =>
                 LAYOUTS.find((item) => item.value === value)?.label ?? value
@@ -119,10 +121,10 @@ function SettingsPanel() {
         />
       </SettingRow>
 
-      <Separator />
+      <Separator className="my-1 opacity-60" />
 
       <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>
-        <AlertDialogTrigger className={buttonVariants({ variant: "ghost", size: "sm" })}>
+        <AlertDialogTrigger className="w-fit text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
           清除练习记录
         </AlertDialogTrigger>
         <AlertDialogContent>
@@ -159,10 +161,8 @@ export function MoreSettings() {
       if (!open) restorePracticeFocus();
     };
 
-  const triggerClassName = cn(
-    buttonVariants({ variant: "outline", size: "icon" }),
-    "h-7 w-7 border-border/70 bg-card shadow-none hover:bg-muted/70",
-  );
+  const triggerClassName =
+    "inline-flex h-7 w-7 items-center justify-center rounded-md border border-transparent bg-transparent text-muted-foreground transition-colors hover:bg-[var(--surface)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
   return (
     <>
@@ -175,7 +175,10 @@ export function MoreSettings() {
           >
             <SettingsIcon className="size-3.5" />
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-72 border border-border bg-popover shadow-xl">
+          <PopoverContent
+            align="end"
+            className="w-72 border border-border/70 bg-popover/98 shadow-lg"
+          >
             <SettingsPanel />
           </PopoverContent>
         </Popover>
