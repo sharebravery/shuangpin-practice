@@ -37,6 +37,21 @@ describe("题库可被各方案编码", () => {
   }
 });
 
+describe("j/q/x/y 后的 u 按 ü 韵母处理", () => {
+  for (const scheme of SCHEMES) {
+    it(`${scheme.name} 的 xu 使用 ü 韵母键，不接受全拼 xu`, () => {
+      const r = encodeSyllable("xu", scheme);
+      expect(r.ok).toBe(true);
+      if (!r.ok) return;
+
+      const expected = scheme.initials.x + scheme.finals.v;
+      expect(r.code).toBe(expected);
+      expect(r.accepted).toEqual([expected]);
+      expect(r.accepted).not.toContain("xu");
+    });
+  }
+});
+
 // 实现细则 §10 固定编码样例。每个方案的预期结果独立列出，不共享。
 describe("小鹤双拼编码样例（§10）", () => {
   const scheme = getScheme("xiaohe")!;

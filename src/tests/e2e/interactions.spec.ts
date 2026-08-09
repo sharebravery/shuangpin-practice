@@ -41,10 +41,11 @@ test("打开页面即可连续练习，答对后直接进入下一题", async ({
   await expect(page.locator("#practice-input")).toBeFocused();
 });
 
-test("答错时给出正确键位、呼吸灯和轻量拆解，然后自动继续", async ({ page }) => {
+test("答错时给出正确键位和拆解，并停在当前题直到打对", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
 
+  const pinyin = (await page.locator("[data-practice-pinyin]").textContent()) ?? "";
   const answer = await currentCode(page);
   const wrongKey = guaranteedWrongKey(answer);
   await page.keyboard.type(wrongKey.repeat(2));
@@ -58,8 +59,15 @@ test("答错时给出正确键位、呼吸灯和轻量拆解，然后自动继�
     ).toBeVisible({ timeout: 500 });
   }
 
-  await expect(page.getByText(/已练\s*1/)).toBeVisible();
-  await expect(wrongFeedback).toBeHidden({ timeout: 2_000 });
+  await expect(page.getByText(/已练\s*0/)).toBeVisible();
+  await expect(page.locator("#practice-input")).toBeFocused();
+  await page.waitForTimeout(900);
+  await expect(wrongFeedback).toBeVisible();
+  await expect(page.locator("[data-practice-pinyin]")).toHaveText(pinyin);
+
+  await page.keyboard.type(answer);
+  await expect(page.getByText(/已练\s*1/)).toBeVisible({ timeout: 2_000 });
+  await expect(wrongFeedback).toBeHidden();
 });
 
 test("实体键盘输入显示呼吸点和完整轨迹", async ({ page }) => {
@@ -217,7 +225,7 @@ test("响应式键位保持可用尺寸", async ({ page }) => {
   expect(key!.height).toBeLessThanOrEqual(98);
 });
 
-test("词组某字答错后继续同一词组的下一个字", async ({ page }) => {
+test("词组某字答错后停在该字，打对后才进入下一个字", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
 
@@ -234,6 +242,10 @@ test("词组某字答错后继续同一词组的下一个字", async ({ page }) 
   await page.keyboard.type(wrongKey.repeat(2));
 
   await expect(phrase).toHaveAttribute("data-phrase-index", "0");
+  await page.waitForTimeout(900);
+  await expect(phrase).toHaveAttribute("data-phrase-index", "0");
+
+  await page.keyboard.type(answer);
   await expect(phrase).toHaveAttribute("data-phrase-index", "1", { timeout: 2_000 });
   await expect(phrase).toHaveText(text);
 });

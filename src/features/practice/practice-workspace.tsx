@@ -9,7 +9,6 @@ import { PracticeInput, focusPracticeInput, PRACTICE_INPUT_ID } from "./practice
 import { PracticeStats } from "./practice-stats";
 import { KeyboardMap } from "./keyboard-map";
 
-const WRONG_AUTO_ADVANCE_MS = 800;
 const TRACE_HOLD_MS = 560;
 const ACTIVE_KEY_TIMEOUT_MS = 150;
 
@@ -36,6 +35,10 @@ function displayPart(value: string): string {
   return value.replaceAll("v", "ü");
 }
 
+function canAnswer(status: string): boolean {
+  return status === "answering" || status === "wrong";
+}
+
 export function PracticeWorkspace() {
   const question = usePracticeStore((s) => s.session.question);
   const phraseIndex = usePracticeStore((s) => s.session.phraseIndex);
@@ -49,10 +52,8 @@ export function PracticeWorkspace() {
   const hasHydrated = usePracticeStore((s) => s.hasHydrated);
   const startSession = usePracticeStore((s) => s.startSession);
   const submit = usePracticeStore((s) => s.submit);
-  const next = usePracticeStore((s) => s.next);
 
   const [input, setInput] = useState("");
-  const [lastInput, setLastInput] = useState("");
   const inputRef = useRef("");
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -60,7 +61,6 @@ export function PracticeWorkspace() {
   const [traceKeys, setTraceKeys] = useState<string[]>([]);
   const activeKeyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const traceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     inputRef.current = input;
@@ -77,30 +77,16 @@ export function PracticeWorkspace() {
   if (lastResetKey !== questionResetKey) {
     setLastResetKey(questionResetKey);
     setInput("");
-    setLastInput("");
     setTypedKeys([]);
   }
 
   useEffect(() => {
-    if (status === "answering") {
+    if (canAnswer(status)) {
       focusPracticeInput();
     } else if (typeof document !== "undefined") {
       document.body.focus();
     }
   }, [questionResetKey, status]);
-
-  useEffect(() => {
-    if (autoAdvanceRef.current) {
-      clearTimeout(autoAdvanceRef.current);
-      autoAdvanceRef.current = null;
-    }
-    if (status === "wrong") {
-      autoAdvanceRef.current = setTimeout(() => next(), WRONG_AUTO_ADVANCE_MS);
-    }
-    return () => {
-      if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
-    };
-  }, [status, questionResetKey, next]);
 
   useEffect(
     () => () => {
@@ -111,7 +97,7 @@ export function PracticeWorkspace() {
   );
 
   const expectedLength = question?.kind === "mapping" ? 1 : 2;
-  const inputDisabled = status !== "answering";
+  const inputDisabled = !canAnswer(status);
 
   const flashKey = useCallback((key: string) => {
     setActiveKey(key);
@@ -126,11 +112,12 @@ export function PracticeWorkspace() {
     setTraceKeys(keys);
     if (traceTimerRef.current) clearTimeout(traceTimerRef.current);
 
-    const delay =
-      usePracticeStore.getState().session.status === "wrong"
-        ? WRONG_AUTO_ADVANCE_MS
-        : TRACE_HOLD_MS;
-    traceTimerRef.current = setTimeout(() => setTraceKeys([]), delay);
+    if (usePracticeStore.getState().session.status === "wrong") {
+      traceTimerRef.current = null;
+      return;
+    }
+
+    traceTimerRef.current = setTimeout(() => setTraceKeys([]), TRACE_HOLD_MS);
   }, []);
 
   const processKey = useCallback(
@@ -154,7 +141,6 @@ export function PracticeWorkspace() {
       setTraceKeys(visualKeys);
 
       if (newInput.length >= expectedLength) {
-        setLastInput(newInput);
         submit(newInput);
         holdSubmittedTrace(visualKeys);
         inputRef.current = "";
@@ -169,8 +155,7 @@ export function PracticeWorkspace() {
       const target = event.target as HTMLElement | null;
       if (inOverlay(target) || isEditableAwayFromPractice(target)) return;
 
-      const { session, next: doNext, pause: doPause, resume: doResume } =
-        usePracticeStore.getState();
+      const { session, pause: doPause, resume: doResume } = usePracticeStore.getState();
       const curInput = inputRef.current;
 
       if (
@@ -179,19 +164,10 @@ export function PracticeWorkspace() {
         !event.ctrlKey &&
         !event.altKey &&
         /^[a-z;]$/i.test(event.key) &&
-        session.status === "answering"
+        canAnswer(session.status)
       ) {
         event.preventDefault();
         processKey(event.key);
-        return;
-      }
-
-      if (event.key === "Enter") {
-        if (target?.closest("button, a, [data-keycap]")) return;
-        if (session.status === "wrong") {
-          event.preventDefault();
-          doNext();
-        }
         return;
       }
 
@@ -209,7 +185,7 @@ export function PracticeWorkspace() {
         return;
       }
 
-      if (event.key === "Escape" && session.status === "answering" && curInput !== "") {
+      if (event.key === "Escape" && canAnswer(session.status) && curInput !== "") {
         event.preventDefault();
         inputRef.current = "";
         setInput("");
@@ -227,7 +203,7 @@ export function PracticeWorkspace() {
       const session = usePracticeStore.getState().session;
       const active = document.activeElement as HTMLElement | null;
       if (
-        session.status === "answering" &&
+        canAnswer(session.status) &&
         !inOverlay(active) &&
         !isEditableAwayFromPractice(active)
       ) {
@@ -252,17 +228,16 @@ export function PracticeWorkspace() {
       ? question.charCodes[phraseIndex] ?? ""
       : question?.answer ?? "";
   const answerChars = answerStr.split("");
+  const echoKeys = typedKeys;
 
   const correctKeys = status === "wrong" ? answerChars : [];
   const errorKeys =
     status === "wrong"
-      ? lastInput.split("").filter((key, index) => key !== answerChars[index])
+      ? echoKeys.filter((key, index) => key !== answerChars[index])
       : [];
-  const echoKeys = status === "wrong" ? lastInput.split("") : typedKeys;
   const traceErrorIndexes =
     status === "wrong"
-      ? lastInput
-          .split("")
+      ? echoKeys
           .map((key, index) => (key !== answerChars[index] ? index : -1))
           .filter((index) => index >= 0)
       : [];
@@ -355,7 +330,6 @@ export function PracticeWorkspace() {
           onSubmit={(value) => {
             const cleaned = cleanInput(value).slice(0, expectedLength);
             const submittedKeys = cleaned.split("");
-            setLastInput(cleaned);
             setTypedKeys(submittedKeys);
             submit(cleaned);
             holdSubmittedTrace(submittedKeys);

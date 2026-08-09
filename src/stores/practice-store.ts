@@ -132,7 +132,6 @@ interface PracticeStoreState {
   updateSettings: (patch: Partial<PracticeSettings>) => void;
   startSession: () => void;
   submit: (input: string) => void;
-  next: () => void;
   pause: () => void;
   resume: () => void;
   restart: () => void;
@@ -374,7 +373,8 @@ function resolveCorrect(
   moveToNextQuestion(get, set, { completed, correct, streak, longestStreak });
 }
 
-function finishIncorrectPhrase(
+/** 答错后必须先打对当前题；完成时只累计“已练”，不计入“正确”。 */
+function finishIncorrectQuestion(
   get: () => PracticeStoreState,
   set: (
     partial:
@@ -401,7 +401,6 @@ function resolveWrong(
   if (!question) return;
 
   const isPhrase = question.kind === "phrase";
-  const completed = isPhrase ? session.completed : session.completed + 1;
   const replayKey = questionKey(session.questionId, question, session.phraseIndex);
   const mistakeKey = computeMistakeKey(
     settings,
@@ -411,56 +410,29 @@ function resolveWrong(
   );
   const mistake: MistakeRecord = {
     count: (get().mistakes[mistakeKey]?.count ?? 0) + 1,
-    lastSeen: completed,
+    lastSeen: session.completed,
   };
 
   const forcedCount = session.forcedReappear[replayKey] ?? 0;
   const alreadyQueued = session.replayQueue.some((entry) => entry.key === replayKey);
   const replayQueue =
     forcedCount < 2 && !alreadyQueued
-      ? [...session.replayQueue, { key: replayKey, dueAt: completed + replayDelay() }]
+      ? [
+          ...session.replayQueue,
+          { key: replayKey, dueAt: session.completed + 1 + replayDelay() },
+        ]
       : session.replayQueue;
 
   set((state) => ({
     mistakes: { ...state.mistakes, [mistakeKey]: mistake },
-    totals: isPhrase
-      ? state.totals
-      : { ...state.totals, completed: state.totals.completed + 1 },
     session: {
       ...state.session,
       status: "wrong",
-      completed,
       streak: 0,
       phraseHadError: isPhrase ? true : state.session.phraseHadError,
       replayQueue,
     },
   }));
-}
-
-function advanceAfterWrong(
-  get: () => PracticeStoreState,
-  set: (
-    partial:
-      | Partial<PracticeStoreState>
-      | ((state: PracticeStoreState) => Partial<PracticeStoreState>),
-  ) => void,
-) {
-  const { session } = get();
-  const question = session.question;
-
-  if (question?.kind === "phrase") {
-    const nextIndex = session.phraseIndex + 1;
-    if (nextIndex < question.charCodes.length) {
-      set((state) => ({
-        session: { ...state.session, status: "answering", phraseIndex: nextIndex },
-      }));
-      return;
-    }
-    finishIncorrectPhrase(get, set);
-    return;
-  }
-
-  moveToNextQuestion(get, set);
 }
 
 export const usePracticeStore = create<PracticeStoreState>()(
@@ -505,7 +477,8 @@ export const usePracticeStore = create<PracticeStoreState>()(
 
       submit: (input) => {
         const { session } = get();
-        if (session.status !== "answering") return;
+        const wasWrong = session.status === "wrong";
+        if (session.status !== "answering" && !wasWrong) return;
         const question = session.question;
         if (!question) return;
 
@@ -516,11 +489,15 @@ export const usePracticeStore = create<PracticeStoreState>()(
           if (isAcceptedAnswer(normalized, accepted)) {
             const nextIndex = session.phraseIndex + 1;
             if (nextIndex >= question.charCodes.length) {
-              if (session.phraseHadError) finishIncorrectPhrase(get, set);
+              if (session.phraseHadError || wasWrong) finishIncorrectQuestion(get, set);
               else resolveCorrect(get, set);
             } else {
               set((state) => ({
-                session: { ...state.session, phraseIndex: nextIndex },
+                session: {
+                  ...state.session,
+                  status: "answering",
+                  phraseIndex: nextIndex,
+                },
               }));
             }
             return;
@@ -529,12 +506,12 @@ export const usePracticeStore = create<PracticeStoreState>()(
           return;
         }
 
-        if (isAcceptedAnswer(normalized, question.accepted)) resolveCorrect(get, set);
-        else resolveWrong(get, set);
-      },
-
-      next: () => {
-        if (get().session.status === "wrong") advanceAfterWrong(get, set);
+        if (isAcceptedAnswer(normalized, question.accepted)) {
+          if (wasWrong) finishIncorrectQuestion(get, set);
+          else resolveCorrect(get, set);
+        } else {
+          resolveWrong(get, set);
+        }
       },
 
       pause: () => {

@@ -96,23 +96,32 @@ describe("continuous practice store", () => {
     expect(session.question).not.toBeNull();
   });
 
-  it("答错后短暂停留，记录当前方案错题并累计已练题数", () => {
+  it("答错后停在当前题，记录错题但尚不累计已练", () => {
     setQuestion(CHAR_QUESTION, "c-test");
     usePracticeStore.getState().submit("xx");
 
     const { session, mistakes, totals } = usePracticeStore.getState();
     expect(session.status).toBe("wrong");
+    expect(session.questionId).toBe("c-test");
+    expect(session.completed).toBe(0);
     expect(session.streak).toBe(0);
-    expect(totals).toEqual({ completed: 1, correct: 0 });
+    expect(totals).toEqual({ completed: 0, correct: 0 });
     expect(mistakes["xiaohe:character:c-test"]?.count).toBe(1);
     expect(session.replayQueue).toHaveLength(1);
   });
 
-  it("错误提示后 next 自然进入下一题", () => {
+  it("答错后必须打对当前题才进入下一题，且不计为正确", () => {
     setQuestion(CHAR_QUESTION, "c-test");
     usePracticeStore.getState().submit("xx");
-    usePracticeStore.getState().next();
-    expect(usePracticeStore.getState().session.status).toBe("answering");
+    usePracticeStore.getState().submit("il");
+
+    const { session, totals } = usePracticeStore.getState();
+    expect(session.status).toBe("answering");
+    expect(session.completed).toBe(1);
+    expect(session.correct).toBe(0);
+    expect(session.streak).toBe(0);
+    expect(totals).toEqual({ completed: 1, correct: 0 });
+    expect(session.question).not.toBeNull();
   });
 
   it("词组逐字正确时，整词完成后只累计一题", () => {
@@ -129,7 +138,7 @@ describe("continuous practice store", () => {
     expect(session.phraseIndex).toBe(0);
   });
 
-  it("词组某字答错后继续同一个词组的下一个字", () => {
+  it("词组某字答错后必须先改对该字，再进入下一个字", () => {
     setQuestion(PHRASE_QUESTION, "p-test");
 
     usePracticeStore.getState().submit("zz");
@@ -140,7 +149,7 @@ describe("continuous practice store", () => {
     expect(state.totals.completed).toBe(0);
     expect(state.mistakes["xiaohe:phrase:p-test:0"]).toBeDefined();
 
-    usePracticeStore.getState().next();
+    usePracticeStore.getState().submit("ni");
     state = usePracticeStore.getState();
     expect(state.session.status).toBe("answering");
     expect(state.session.questionId).toBe("p-test");
@@ -152,13 +161,15 @@ describe("continuous practice store", () => {
     expect(state.session.status).toBe("answering");
   });
 
-  it("词组最后一个字答错也只在结束时累计整词一次", () => {
+  it("词组最后一个字答错后也要改对，整词只累计一次", () => {
     setQuestion(PHRASE_QUESTION, "p-test");
     usePracticeStore.getState().submit("ni");
     usePracticeStore.getState().submit("zz");
 
     expect(usePracticeStore.getState().totals.completed).toBe(0);
-    usePracticeStore.getState().next();
+    expect(usePracticeStore.getState().session.status).toBe("wrong");
+
+    usePracticeStore.getState().submit("hk");
     expect(usePracticeStore.getState().totals).toEqual({ completed: 1, correct: 0 });
   });
 
@@ -217,7 +228,7 @@ describe("continuous practice store", () => {
     expect(xiaohePhrase("p002")).toBe(1);
   });
 
-  it("错题安排在之后 3–8 题自动复现", () => {
+  it("错题安排在当前题改对后的 3–8 题自然复现", () => {
     setQuestion(CHAR_QUESTION, "c001");
     usePracticeStore.getState().submit("xx");
     const entry = usePracticeStore.getState().session.replayQueue[0]!;

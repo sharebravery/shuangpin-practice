@@ -4,19 +4,21 @@
 
 A simple, modern Shuangpin (double-pinyin) practice tool — static, local-first and ready to use.
 
-🔗 **在线使用：<https://shuangpin.sharebravery.com>**
+🔗 **在线使用：<https://shuangpin.sharebravery.com>**  
+🏠 **许多言主页：<https://sharebravery.com>**
 
 ## 功能
 
 - 四种方案：小鹤、微软、自然码、搜狗双拼
 - 三种模式：键位、单字、词组（逐字输入）
-- 连续练习：答对直接下一题，答错短暂停留后继续
+- 连续练习：答对直接下一题；答错后停在当前题，打对后才继续
 - 实时键位图：支持谱面 / 键盘两种布局、输入轨迹与正确键呼吸提示
 - 自动复习：错题按当前双拼方案独立记录，之后自然重现并提高出题权重
 - 本地持久化：方案、模式、显示设置与累计统计保存在浏览器本地
 - 三套主题：天青（汝瓷）、朱砂（印泥）、玄青（黑釉）；统一采用克制的东方材料语言
 - 桌面、平板、手机可用；窄屏键位图保持可点击尺寸并横向滚动
 - 微软双拼 `üe` 标准键 `t`，兼容接受 `v`
+- `j/q/x/y` 后全拼写作 `u` 的 `ü` 韵母按双拼方案的 `ü` 键处理，例如小鹤 `xu → xv`；不把全拼 `xu` 作为双拼兼容答案
 
 ## 技术栈
 
@@ -49,7 +51,7 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm exec playwright t
 
 ## 部署
 
-项目使用纯静态导出（`out/`），当前正式地址为 `shuangpin.sharebravery.com`。
+项目使用纯静态导出（`out/`），当前正式地址为 `shuangpin.sharebravery.com`。作者与其他项目主页为 `sharebravery.com`。
 
 ## 数据与隐私
 
@@ -57,7 +59,7 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm exec playwright t
 
 ## 作者
 
-许多言
+[许多言](https://sharebravery.com)
 
 ## License
 
