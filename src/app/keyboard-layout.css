@@ -1,7 +1,7 @@
 /*
  * 谱面布局的字母键必须保持同一几何尺寸。
- * 第三行只有 7 个键，但不能因此被 grid 拉宽；仍按 10 键基准计算宽度，
- * 再通过行偏移保留 QWERTY 的自然错位关系。
+ * 第三行只有 7 个键，但不能因此被拉宽；所有键仍按 10 键基准计算宽度。
+ * 谱面不是机械键盘复刻，因此第三行采用视觉居中，让整体更平衡。
  */
 [aria-label="双拼键位图"]
   div:has(> button[data-keycap="q"][class*="w-full"]),
@@ -28,7 +28,9 @@
 
 [aria-label="双拼键位图"]
   div:has(> button[data-keycap="z"][class*="w-full"]) {
-  transform: translateX(52px);
+  margin-inline: auto;
+  transform: none;
+  justify-content: center;
 }
 
 [aria-label="双拼键位图"]
