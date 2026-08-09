@@ -124,7 +124,7 @@ function SettingsPanel() {
       <Separator className="my-1 opacity-60" />
 
       <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>
-        <AlertDialogTrigger className="w-fit text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
+        <AlertDialogTrigger className="flex w-full items-center justify-center py-1.5 text-center text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
           清除练习记录
         </AlertDialogTrigger>
         <AlertDialogContent>
