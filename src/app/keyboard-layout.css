@@ -2,16 +2,26 @@
  * 谱面 / 键盘共用同一套几何系统。
  * 两种布局只区别视觉材质，不再各自计算键宽、键高、行距和位置。
  */
+[aria-label="双拼键位图"] {
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+[aria-label="双拼键位图"]::-webkit-scrollbar {
+  display: none;
+}
+
 [aria-label="双拼键位图"] > div {
-  --practice-key-w: clamp(72px, 7vw, 90px);
-  --practice-key-h: clamp(82px, 7.5vw, 96px);
-  --practice-key-gap: clamp(12px, 1.7vw, 22px);
-  --practice-row-gap: clamp(10px, 1vw, 14px);
-  --practice-row-shift: clamp(16px, 1.7vw, 24px);
+  --practice-key-w: clamp(70px, 6.6vw, 88px);
+  --practice-key-h: clamp(82px, 7.3vw, 96px);
+  --practice-key-gap: clamp(14px, 1.9vw, 24px);
+  --practice-row-gap: clamp(10px, 1vw, 13px);
+  --practice-row-shift: clamp(16px, 1.6vw, 22px);
 
   width: 100%;
   max-width: 1160px;
-  min-width: 900px !important;
+  min-width: 880px !important;
   padding-block: 16px !important;
 }
 
@@ -55,27 +65,27 @@
   height: var(--practice-key-h) !important;
 }
 
-/* 平板：保持同一比例，允许整张键位谱横向滚动。 */
+/* 平板：保持同一比例，整张键位谱自然横向滚动。 */
 @media (max-width: 1023px) {
   [aria-label="双拼键位图"] > div {
-    --practice-key-w: 74px;
+    --practice-key-w: 72px;
     --practice-key-h: 84px;
-    --practice-key-gap: 14px;
+    --practice-key-gap: 16px;
     --practice-row-gap: 10px;
     --practice-row-shift: 18px;
-    min-width: 900px !important;
+    min-width: 880px !important;
   }
 }
 
-/* 手机：不把按键压到不可点击，保持横向滚动。 */
+/* 手机：不继续压缩触控尺寸，保持横向滚动和相同节奏。 */
 @media (max-width: 639px) {
   [aria-label="双拼键位图"] > div {
-    --practice-key-w: 68px;
-    --practice-key-h: 80px;
-    --practice-key-gap: 12px;
+    --practice-key-w: 66px;
+    --practice-key-h: 78px;
+    --practice-key-gap: 14px;
     --practice-row-gap: 9px;
     --practice-row-shift: 16px;
-    min-width: 820px !important;
+    min-width: 800px !important;
     padding-block: 12px !important;
   }
 }

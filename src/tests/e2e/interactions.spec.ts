@@ -96,6 +96,21 @@ test("切换主题后自动回到练习焦点", async ({ page }) => {
   await expect(page.locator("#practice-input")).toBeFocused();
 });
 
+test("玄青保持明确的暗调主题", async ({ page }) => {
+  await page.goto("/");
+  const lightBackground = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+
+  await page.getByLabel("界面主题").click();
+  await page.getByRole("option", { name: "玄青" }).click();
+  await expect(page.locator("html")).toHaveClass(/graphite/);
+
+  const darkBackground = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  expect(darkBackground).not.toBe(lightBackground);
+  const channels = darkBackground.match(/\d+/g)?.slice(0, 3).map(Number) ?? [];
+  expect(channels).toHaveLength(3);
+  expect(channels.reduce((sum, channel) => sum + channel, 0) / 3).toBeLessThan(70);
+});
+
 test("Space 暂停，再按 Space 恢复", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
@@ -169,6 +184,36 @@ test("谱面三行键位保持等宽且最后一行自身视觉居中", async ({
   const keysCenter = (z!.x + m!.x + m!.width) / 2;
   const rowCenter = bottomRow!.x + bottomRow!.width / 2;
   expect(Math.abs(keysCenter - rowCenter)).toBeLessThan(2);
+});
+
+test("谱面和键盘共用同一套键位尺寸", async ({ page }) => {
+  test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端布局切换专用");
+  await page.goto("/");
+  await page.locator("#practice-input").waitFor({ state: "attached" });
+
+  const scoreKey = await page.locator('button[data-keycap="q"]').boundingBox();
+  expect(scoreKey).toBeTruthy();
+
+  await openDesktopSettings(page);
+  await page.getByLabel("界面布局").click();
+  await page.getByRole("option", { name: "键盘" }).click();
+
+  const keyboardKey = await page.locator('button[data-keycap="q"]').boundingBox();
+  expect(keyboardKey).toBeTruthy();
+  expect(Math.abs(scoreKey!.width - keyboardKey!.width)).toBeLessThan(1);
+  expect(Math.abs(scoreKey!.height - keyboardKey!.height)).toBeLessThan(1);
+});
+
+test("响应式键位保持可用尺寸", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#practice-input").waitFor({ state: "attached" });
+
+  const key = await page.locator('button[data-keycap="q"]').boundingBox();
+  expect(key).toBeTruthy();
+  expect(key!.width).toBeGreaterThanOrEqual(64);
+  expect(key!.width).toBeLessThanOrEqual(90);
+  expect(key!.height).toBeGreaterThanOrEqual(76);
+  expect(key!.height).toBeLessThanOrEqual(98);
 });
 
 test("词组某字答错后继续同一词组的下一个字", async ({ page }) => {
