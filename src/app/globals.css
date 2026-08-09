@@ -52,8 +52,8 @@
 /*
  * 东方材料体系：瓷、印、釉、纸。
  * 天青 = 汝瓷与天青釉；朱砂 = 暖白瓷与朱砂印泥；
- * 玄青 = 暮色黑釉；素笺 = 暖白纸张与现代中文刊物。
- * 主题只改变材质气质，不改变产品结构和练习层级。
+ * 玄青 = 暮色黑釉；素笺 = 书纸与现代中文刊物。
+ * 背景暗纹只负责材质提示，不参与主视觉层级。
  */
 :root,
 .clean {
@@ -104,6 +104,24 @@
   --canvas-sheen: rgba(255, 255, 255, 0.72);
   --ceramic-highlight: rgba(255, 255, 255, 0.94);
   --ceramic-rim: rgba(255, 255, 255, 0.84);
+  --canvas-pattern-one: radial-gradient(
+    circle at 8% 76%,
+    transparent 0 112px,
+    rgba(113, 156, 165, 0.026) 113px 114px,
+    transparent 115px
+  );
+  --canvas-pattern-two: radial-gradient(
+    circle at 92% 20%,
+    transparent 0 74px,
+    rgba(113, 156, 165, 0.02) 75px 76px,
+    transparent 77px
+  );
+  --canvas-pattern-three: linear-gradient(
+    122deg,
+    transparent 0 57%,
+    rgba(113, 156, 165, 0.012) 58%,
+    transparent 60%
+  );
 }
 
 .ink {
@@ -153,6 +171,24 @@
   --canvas-sheen: rgba(255, 253, 249, 0.8);
   --ceramic-highlight: rgba(255, 255, 255, 0.8);
   --ceramic-rim: rgba(255, 255, 255, 0.7);
+  --canvas-pattern-one: radial-gradient(
+    circle at 9% 78%,
+    transparent 0 54px,
+    rgba(178, 79, 66, 0.024) 55px 56px,
+    transparent 57px
+  );
+  --canvas-pattern-two: radial-gradient(
+    circle at 91% 19%,
+    transparent 0 40px,
+    rgba(144, 59, 51, 0.018) 41px 42px,
+    transparent 43px
+  );
+  --canvas-pattern-three: radial-gradient(
+    circle at 50% 118%,
+    transparent 0 278px,
+    rgba(178, 79, 66, 0.014) 279px 280px,
+    transparent 281px
+  );
 }
 
 .graphite {
@@ -203,68 +239,93 @@
   --canvas-sheen: rgba(220, 235, 231, 0.045);
   --ceramic-highlight: rgba(214, 233, 228, 0.13);
   --ceramic-rim: rgba(216, 235, 230, 0.1);
+  --canvas-pattern-one: radial-gradient(
+    ellipse 520px 220px at -2% 72%,
+    transparent 0 74%,
+    rgba(154, 181, 175, 0.026) 74.5% 75%,
+    transparent 75.5%
+  );
+  --canvas-pattern-two: radial-gradient(
+    ellipse 460px 190px at 103% 18%,
+    transparent 0 73%,
+    rgba(198, 215, 210, 0.018) 73.5% 74%,
+    transparent 74.5%
+  );
+  --canvas-pattern-three: linear-gradient(
+    118deg,
+    transparent 42%,
+    rgba(198, 215, 210, 0.012) 50%,
+    transparent 58%
+  );
 }
 
 .paper {
-  --background: #f7f3ea;
-  --foreground: #292820;
-  --card: #fcf9f2;
-  --card-foreground: #292820;
-  --popover: #fcf9f2;
-  --popover-foreground: #292820;
+  --background: #faf8f2;
+  --foreground: #24231f;
+  --card: #fffdf8;
+  --card-foreground: #24231f;
+  --popover: #fffdf8;
+  --popover-foreground: #24231f;
   --primary: #6f756b;
   --primary-foreground: #fffdf8;
-  --secondary: #ece8df;
-  --secondary-foreground: #292820;
-  --muted: #efebe3;
-  --muted-foreground: #777269;
-  --accent: #e9ede8;
-  --accent-foreground: #292820;
+  --secondary: #f1eee7;
+  --secondary-foreground: #24231f;
+  --muted: #f2efe8;
+  --muted-foreground: #736f67;
+  --accent: #edf0eb;
+  --accent-foreground: #24231f;
   --destructive: #9f5147;
-  --border: #d9d3c8;
-  --input: #d9d3c8;
+  --border: #ddd7cc;
+  --input: #ddd7cc;
   --ring: #6f756b;
   --chart-1: #6f756b;
-  --chart-2: #8f877c;
-  --chart-3: #b4aa9d;
-  --chart-4: #514e46;
-  --chart-5: #d8d0c3;
-  --sidebar: #f1ede5;
-  --sidebar-foreground: #292820;
+  --chart-2: #8b857b;
+  --chart-3: #b6aea1;
+  --chart-4: #504d45;
+  --chart-5: #dbd4c9;
+  --sidebar: #f5f1e9;
+  --sidebar-foreground: #24231f;
   --sidebar-primary: #6f756b;
   --sidebar-primary-foreground: #fffdf8;
-  --sidebar-accent: #e9ede8;
-  --sidebar-accent-foreground: #292820;
-  --sidebar-border: #d9d3c8;
+  --sidebar-accent: #edf0eb;
+  --sidebar-accent-foreground: #24231f;
+  --sidebar-border: #ddd7cc;
   --sidebar-ring: #6f756b;
   --brand: #6f756b;
   --brand-strong: #4b554f;
-  --brand-soft: #e8ece6;
+  --brand-soft: #edf0eb;
   --correct: #6f756b;
-  --correct-soft: #e8ece6;
+  --correct-soft: #edf0eb;
   --error: #9f5147;
-  --error-soft: #f2e6e1;
-  --surface: #f0ece4;
-  --key: #fbf8f0;
-  --key-hover: #f1ede5;
-  --key-shadow: #d2cbc0;
-  --canvas-glow: rgba(91, 103, 96, 0.055);
-  --canvas-sheen: rgba(255, 255, 255, 0.5);
-  --ceramic-highlight: rgba(255, 255, 255, 0.46);
-  --ceramic-rim: rgba(255, 255, 255, 0.3);
+  --error-soft: #f3e8e3;
+  --surface: #f5f1e9;
+  --key: #fffdf8;
+  --key-hover: #f4f0e8;
+  --key-shadow: #d6d0c5;
+  --canvas-glow: rgba(111, 117, 107, 0.035);
+  --canvas-sheen: rgba(255, 255, 255, 0.66);
+  --ceramic-highlight: rgba(255, 255, 255, 0.24);
+  --ceramic-rim: rgba(255, 255, 255, 0.16);
   --canvas-pattern-one: repeating-linear-gradient(
     0deg,
-    rgba(74, 68, 58, 0.022) 0,
-    rgba(74, 68, 58, 0.022) 1px,
+    rgba(73, 67, 57, 0.013) 0,
+    rgba(73, 67, 57, 0.013) 1px,
     transparent 1px,
-    transparent 30px
+    transparent 32px
   );
-  --canvas-pattern-two: repeating-linear-gradient(
+  --canvas-pattern-two: linear-gradient(
     90deg,
-    transparent 0,
-    transparent 143px,
-    rgba(74, 68, 58, 0.018) 143px,
-    rgba(74, 68, 58, 0.018) 144px
+    transparent 0 8%,
+    rgba(73, 67, 57, 0.014) 8%,
+    transparent calc(8% + 1px) 92%,
+    rgba(73, 67, 57, 0.014) 92%,
+    transparent calc(92% + 1px)
+  );
+  --canvas-pattern-three: radial-gradient(
+    circle at 91% 22%,
+    transparent 0 68px,
+    rgba(73, 67, 57, 0.018) 69px 70px,
+    transparent 71px
   );
 }
 
@@ -278,24 +339,13 @@
       radial-gradient(900px 360px at 50% -170px, var(--canvas-glow), transparent 72%),
       linear-gradient(180deg, var(--canvas-sheen) 0%, transparent 34%),
       var(--canvas-pattern-one, linear-gradient(transparent, transparent)),
-      var(--canvas-pattern-two, linear-gradient(transparent, transparent));
+      var(--canvas-pattern-two, linear-gradient(transparent, transparent)),
+      var(--canvas-pattern-three, linear-gradient(transparent, transparent));
     background-attachment: fixed;
   }
   html {
     @apply font-sans;
   }
-}
-
-/* 素笺用极淡版心线与水印圆环制造刊物感，不模拟陈旧纸张。 */
-.paper body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 10% 74%, transparent 0 92px, rgba(74, 68, 58, 0.032) 93px 94px, transparent 95px),
-    radial-gradient(circle at 91% 22%, transparent 0 68px, rgba(74, 68, 58, 0.024) 69px 70px, transparent 71px);
 }
 
 /* 主练习谱保持统一舞台位置。 */
