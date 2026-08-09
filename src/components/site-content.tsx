@@ -6,10 +6,7 @@ import {
 } from "@/components/ui/accordion";
 import { SITE } from "@/lib/site";
 
-/**
- * 页面说明：默认折叠，保持在练习首屏之后。
- * Server Component，纯静态内容。
- */
+/** 首屏之后的静态说明与 SEO 内容，不干扰练习主舞台。 */
 export function SiteContent() {
   const itemClassName = "border-border/55";
   const triggerClassName =
@@ -18,44 +15,62 @@ export function SiteContent() {
     "pb-4 leading-7 text-muted-foreground [&_code]:rounded-sm [&_code]:bg-muted/60 [&_code]:px-1 [&_code]:py-0.5 [&_strong]:font-medium [&_strong]:text-foreground";
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-12">
-      <Accordion>
-        <AccordionItem value="what" className={itemClassName}>
-          <AccordionTrigger className={triggerClassName}>什么是双拼</AccordionTrigger>
-          <AccordionContent className={contentClassName}>
-            <p>
-              双拼是一种汉字输入方式，把每个汉字的拼音拆成「声母」和「韵母」两部分，
-              分别对应键盘上的一个键，因此每个汉字只需按两下键即可输入。
-              例如「窗」拼音为 chuang，在小鹤双拼中按 <code>i</code>（ch）和 <code>l</code>（uang）即可。
-            </p>
-            <p>
-              双拼保留了拼音输入的习惯，同时大幅减少击键次数，是提升中文输入效率的常用方案。
-            </p>
-          </AccordionContent>
-        </AccordionItem>
+    <section className="mx-auto w-full max-w-3xl px-4 py-12 sm:py-16">
+      <header className="max-w-2xl">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          在线双拼练习与键位图
+        </h1>
+        <p className="mt-3 leading-7 text-muted-foreground">
+          {SITE.name} 支持小鹤双拼、微软双拼、自然码双拼和搜狗双拼。
+          无需登录，打开即可进行键位、单字和词组练习，输入轨迹与正确键位会直接显示在键位图上。
+        </p>
+      </header>
 
-        <AccordionItem value="schemes" className={itemClassName}>
-          <AccordionTrigger className={triggerClassName}>支持哪些方案</AccordionTrigger>
-          <AccordionContent className={contentClassName}>
-            <p>当前支持四种主流双拼方案：</p>
-            <ul className="ml-4 list-disc">
-              <li>小鹤双拼</li>
-              <li>微软双拼</li>
-              <li>自然码双拼</li>
-              <li>搜狗双拼</li>
-            </ul>
-            <p>
-              在顶部切换方案后，键位图与编码规则会立即更新。微软双拼的{" "}
-              <code>üe</code> 韵母标准键为 <code>t</code>，同时兼容接受 <code>v</code>。
-            </p>
-          </AccordionContent>
-        </AccordionItem>
+      <div className="mt-9 grid gap-8 sm:grid-cols-2 sm:gap-10">
+        <section aria-labelledby="what-is-shuangpin">
+          <h2 id="what-is-shuangpin" className="text-sm font-semibold text-foreground">
+            什么是双拼
+          </h2>
+          <p className="mt-2 leading-7 text-muted-foreground">
+            双拼把一个拼音音节拆成声母和韵母，并分别映射到两个键位，因此大多数汉字可以用两次按键完成编码。
+            例如「窗」的拼音是 chuang，在小鹤双拼中对应 <code>i</code>（ch）和 <code>l</code>（uang）。
+          </p>
+        </section>
 
+        <section aria-labelledby="supported-schemes">
+          <h2 id="supported-schemes" className="text-sm font-semibold text-foreground">
+            支持的双拼方案
+          </h2>
+          <p className="mt-2 leading-7 text-muted-foreground">
+            当前支持小鹤双拼、微软双拼、自然码双拼、搜狗双拼四种方案。
+            不同方案主要差异在声母、韵母的键位映射；切换方案后，练习题编码与双拼键位图会同步更新。
+          </p>
+        </section>
+      </div>
+
+      <section className="mt-9 border-y border-border/55 py-6" aria-labelledby="how-to-practice">
+        <h2 id="how-to-practice" className="text-sm font-semibold text-foreground">
+          怎么练双拼
+        </h2>
+        <ol className="mt-3 grid gap-3 text-sm leading-6 text-muted-foreground sm:grid-cols-3 sm:gap-6">
+          <li>
+            <strong>先认键位：</strong>用「键位」模式熟悉声母和韵母映射。
+          </li>
+          <li>
+            <strong>再练单字：</strong>看到汉字与拼音后，直接输入两键编码形成肌肉记忆。
+          </li>
+          <li>
+            <strong>最后练词组：</strong>连续处理多个音节，逐渐减少对键位图的依赖。
+          </li>
+        </ol>
+      </section>
+
+      <Accordion className="mt-7">
         <AccordionItem value="usage" className={itemClassName}>
           <AccordionTrigger className={triggerClassName}>使用方法与快捷键</AccordionTrigger>
           <AccordionContent className={contentClassName}>
             <ul className="ml-4 list-disc">
-              <li>选择方案与模式后，直接输入双拼编码即可开始练习。</li>
+              <li>选择双拼方案与练习模式后，直接输入编码即可开始。</li>
               <li>达到答案长度会自动判断；答对直接进入下一题，答错显示正确编码与拆解后继续。</li>
               <li><code>Esc</code> 清空当前输入。</li>
               <li><code>Space</code> 在输入为空时暂停或继续。</li>
@@ -70,9 +85,8 @@ export function SiteContent() {
           <AccordionContent className={contentClassName}>
             <p>
               <strong>为什么有的字显示分号？</strong>
-              搜狗、微软双拼的 <code>ing</code> 韵母使用分号键，例如「名」对应{" "}
-              <code>m</code> + <code>;</code>；小鹤双拼的 <code>ing</code> 使用{" "}
-              <code>k</code> 键，例如「名」对应 <code>m</code> + <code>k</code>。请使用英文键盘输入。
+              搜狗、微软双拼的 <code>ing</code> 韵母使用分号键，例如「名」对应 <code>m</code> + <code>;</code>；
+              小鹤双拼的 <code>ing</code> 使用 <code>k</code> 键，例如「名」对应 <code>m</code> + <code>k</code>。请使用英文键盘输入。
             </p>
             <p>
               <strong>刷新后设置还在吗？</strong>

@@ -24,9 +24,10 @@ test("切换方案后直接使用新方案继续练习", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
 
-  await page.getByLabel("双拼方案").click();
+  const schemeSelect = page.getByRole("combobox", { name: "双拼方案" });
+  await schemeSelect.click();
   await page.getByRole("option", { name: "微软双拼" }).click();
-  await expect(page.getByLabel("双拼方案")).toContainText("微软双拼");
+  await expect(schemeSelect).toContainText("微软双拼");
 
   await typeAnswer(page, "microsoft");
   await expect(page.getByText(/已练\s*1/)).toBeVisible({ timeout: 2_000 });
@@ -41,14 +42,15 @@ test("显示设置和方案持久化，当前输入不恢复", async ({ page }) 
   await page.getByLabel("显示拼音").click();
   await page.keyboard.press("Escape");
 
-  await page.getByLabel("双拼方案").click();
+  const schemeSelect = page.getByRole("combobox", { name: "双拼方案" });
+  await schemeSelect.click();
   await page.getByRole("option", { name: "自然码双拼" }).click();
   await page.keyboard.press("q");
 
   await page.reload();
   await page.locator("#practice-input").waitFor({ state: "attached" });
 
-  await expect(page.getByLabel("双拼方案")).toContainText("自然码双拼");
+  await expect(page.getByRole("combobox", { name: "双拼方案" })).toContainText("自然码双拼");
   await expect(page.locator("[data-practice-pinyin]")).toBeHidden();
   await expect(page.locator("#practice-input")).toHaveValue("");
 });

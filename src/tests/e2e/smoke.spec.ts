@@ -1,13 +1,12 @@
 import { test, expect } from "@playwright/test";
 
-/**
- * Phase 1 冒烟测试：验证 Playwright 能打开静态导出首页。
- * Phase 6 会补充完整的关键用户流程。
- */
-test("首页可打开并渲染产品名称", async ({ page }) => {
+/** 基础冒烟测试：验证静态首页、SEO 主标题与运行时无错误。 */
+test("首页可打开并渲染产品名称与 SEO 主标题", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/双拼练习/);
   await expect(page.getByText("双拼练习").first()).toBeVisible();
+  await expect(page.locator("h1")).toHaveText("在线双拼练习与键位图");
+  await expect(page.locator('meta[name="keywords"]')).toHaveCount(0);
 });
 
 test("首页无控制台错误", async ({ page }) => {

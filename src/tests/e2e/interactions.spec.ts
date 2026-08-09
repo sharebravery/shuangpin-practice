@@ -127,7 +127,7 @@ test("设置只保留真正需要的少量选项", async ({ page }) => {
   await page.locator("#practice-input").waitFor({ state: "attached" });
   await openDesktopSettings(page);
 
-  await expect(page.getByLabel("界面布局")).toBeVisible();
+  await expect(page.getByLabel("界面布局")).toHaveCount(0);
   await expect(page.getByLabel("显示键位图")).toBeVisible();
   await expect(page.getByLabel("输入轨迹")).toBeVisible();
   await expect(page.getByLabel("显示拼音")).toBeVisible();
@@ -154,16 +154,19 @@ test("可以隐藏键位图，练习本身不中断", async ({ page }) => {
   await expect(page.getByText(/已练\s*1/)).toBeVisible({ timeout: 2_000 });
 });
 
-test("布局只保留谱面和键盘", async ({ page }) => {
-  test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
+test("谱面和键盘作为主练习视图直接切换", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
-  await openDesktopSettings(page);
-  await page.getByLabel("界面布局").click();
 
-  await expect(page.getByRole("option", { name: "谱面" })).toBeVisible();
-  await expect(page.getByRole("option", { name: "键盘" })).toBeVisible();
-  await expect(page.getByRole("option", { name: "极简" })).toHaveCount(0);
+  const layoutSwitch = page.getByRole("group", { name: "键位布局" });
+  await expect(layoutSwitch).toBeVisible();
+  await expect(layoutSwitch.getByRole("button", { name: "谱面" })).toHaveAttribute("aria-pressed", "true");
+  await expect(layoutSwitch.getByRole("button", { name: "键盘" })).toBeVisible();
+  await expect(layoutSwitch.getByRole("button", { name: "极简" })).toHaveCount(0);
+
+  await layoutSwitch.getByRole("button", { name: "键盘" }).click();
+  await expect(layoutSwitch.getByRole("button", { name: "键盘" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#practice-input")).toBeFocused();
 });
 
 test("谱面三行键位保持等宽且最后一行自身视觉居中", async ({ page }) => {
@@ -187,16 +190,14 @@ test("谱面三行键位保持等宽且最后一行自身视觉居中", async ({
 });
 
 test("谱面和键盘共用同一套键位尺寸", async ({ page }) => {
-  test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端布局切换专用");
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
 
   const scoreKey = await page.locator('button[data-keycap="q"]').boundingBox();
   expect(scoreKey).toBeTruthy();
 
-  await openDesktopSettings(page);
-  await page.getByLabel("界面布局").click();
-  await page.getByRole("option", { name: "键盘" }).click();
+  const layoutSwitch = page.getByRole("group", { name: "键位布局" });
+  await layoutSwitch.getByRole("button", { name: "键盘" }).click();
 
   const keyboardKey = await page.locator('button[data-keycap="q"]').boundingBox();
   expect(keyboardKey).toBeTruthy();

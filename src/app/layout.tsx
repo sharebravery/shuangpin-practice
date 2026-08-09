@@ -19,22 +19,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const seoTitle = `${SITE.name} - 小鹤、微软、自然码、搜狗在线练习与键位图`;
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
-  title: `${SITE.name} - 打开即用的双拼键位练习`,
+  title: seoTitle,
   description: SITE.description,
-  keywords: [
-    "双拼练习",
-    "小鹤双拼",
-    "微软双拼",
-    "自然码双拼",
-    "搜狗双拼",
-    "双拼键位图",
-    "双拼输入法",
-  ],
+  authors: [{ name: SITE.author }],
+  creator: SITE.author,
   alternates: { canonical: "/" },
   openGraph: {
-    title: `${SITE.name} - 打开即用的双拼键位练习`,
+    title: seoTitle,
     description: SITE.description,
     url: SITE.url,
     siteName: SITE.name,
@@ -43,7 +38,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: SITE.name,
+    title: seoTitle,
     description: SITE.description,
   },
 };
