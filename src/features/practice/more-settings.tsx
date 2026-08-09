@@ -42,7 +42,6 @@ import { cn } from "@/lib/utils";
 import { usePracticeStore } from "@/stores/practice-store";
 import { restorePracticeFocus } from "./practice-input";
 
-const QUESTION_COUNTS = [10, 15, 20, 30, 50];
 const LAYOUTS: { value: PracticeLayout; label: string }[] = [
   { value: "score", label: "谱面" },
   { value: "keyboard", label: "键盘" },
@@ -69,7 +68,6 @@ function SettingsPanel() {
   const clearHistory = usePracticeStore((s) => s.clearHistory);
   const [clearOpen, setClearOpen] = useState(false);
 
-  // 兼容曾经持久化过的 minimal：旧值统一回落到谱面。
   const layout: PracticeLayout = settings.layout === "keyboard" ? "keyboard" : "score";
   const showTrace = settings.showTrace ?? true;
 
@@ -96,6 +94,15 @@ function SettingsPanel() {
           </SelectContent>
         </Select>
       </SettingRow>
+
+      <SettingRow label="显示键位图">
+        <Switch
+          checked={settings.showKeyboard}
+          onCheckedChange={(checked) => updateSettings({ showKeyboard: checked })}
+          aria-label="显示键位图"
+        />
+      </SettingRow>
+
       <SettingRow label="输入轨迹">
         <Switch
           checked={showTrace}
@@ -103,57 +110,26 @@ function SettingsPanel() {
           aria-label="输入轨迹"
         />
       </SettingRow>
-      <Separator />
+
       <SettingRow label="显示拼音">
         <Switch
           checked={settings.showPinyin}
-          onCheckedChange={(c) => updateSettings({ showPinyin: c })}
+          onCheckedChange={(checked) => updateSettings({ showPinyin: checked })}
           aria-label="显示拼音"
         />
       </SettingRow>
-      <SettingRow label="错题优先">
-        <Switch
-          checked={settings.mistakePriority}
-          onCheckedChange={(c) => updateSettings({ mistakePriority: c })}
-          aria-label="错题优先"
-        />
-      </SettingRow>
-      <SettingRow label="答对自动下一题">
-        <Switch
-          checked={settings.autoNext}
-          onCheckedChange={(c) => updateSettings({ autoNext: c })}
-          aria-label="答对自动下一题"
-        />
-      </SettingRow>
-      <SettingRow label="每组题数">
-        <Select
-          value={String(settings.questionsPerSession)}
-          onValueChange={(v) => updateSettings({ questionsPerSession: Number(v) })}
-        >
-          <SelectTrigger size="sm" className="w-24" aria-label="每组题数">
-            <SelectValue>{(value: string) => `${value} 题`}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {QUESTION_COUNTS.map((n) => (
-              <SelectItem key={n} value={String(n)}>
-                {n} 题
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </SettingRow>
+
       <Separator />
+
       <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>
-        <AlertDialogTrigger
-          className={buttonVariants({ variant: "destructive", size: "sm" })}
-        >
-          清空记录
+        <AlertDialogTrigger className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          清除练习记录
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>清空本地记录？</AlertDialogTitle>
+            <AlertDialogTitle>清除练习记录？</AlertDialogTitle>
             <AlertDialogDescription>
-              将清空累计统计与错题记录，不影响当前设置。此操作不可撤销。
+              将清空累计统计和后台错题记录，不影响方案与显示设置。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -164,7 +140,7 @@ function SettingsPanel() {
                 setClearOpen(false);
               }}
             >
-              确认清空
+              确认清除
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -204,6 +180,7 @@ export function MoreSettings() {
           </PopoverContent>
         </Popover>
       </div>
+
       <div className="md:hidden">
         <Drawer open={drawerOpen} onOpenChange={handleOpenChange(setDrawerOpen)}>
           <DrawerTrigger
