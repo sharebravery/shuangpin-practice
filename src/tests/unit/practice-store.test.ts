@@ -245,7 +245,7 @@ describe("continuous practice store", () => {
     );
 
     usePracticeStore.persist.rehydrate();
-    const settings = usePracticeStore.getState().settings as Record<string, unknown>;
+    const settings = usePracticeStore.getState().settings as unknown as Record<string, unknown>;
     expect(settings.questionsPerSession).toBeUndefined();
     expect(settings.autoNext).toBeUndefined();
     expect(settings.mistakePriority).toBeUndefined();
