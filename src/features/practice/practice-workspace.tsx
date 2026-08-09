@@ -281,7 +281,7 @@ export function PracticeWorkspace() {
 
   return (
     <div
-      className="flex flex-col items-center py-1 sm:py-2"
+      className="flex flex-col items-center py-0.5 sm:py-1"
       onPointerDown={(event) => {
         const target = event.target as HTMLElement;
         if (
@@ -294,16 +294,16 @@ export function PracticeWorkspace() {
         window.requestAnimationFrame(() => focusPracticeInput());
       }}
     >
-      <div className="flex min-h-8 w-full items-center justify-between gap-3">
+      <div className="flex h-8 w-full items-center justify-between gap-3">
         <PracticeToolbar />
         <PracticeStats />
       </div>
 
-      <div className="relative flex min-h-[280px] w-full flex-col items-center justify-center py-7 sm:min-h-[320px] sm:py-9">
+      <div className="relative flex min-h-[218px] w-full flex-col items-center justify-center py-2 sm:min-h-[238px] sm:py-3">
         <PracticePrompt />
 
         <div
-          className="flex h-[76px] items-center justify-center gap-7 font-mono text-[2.6rem] font-bold tracking-wide text-[var(--brand)] sm:h-20 sm:text-[2.9rem]"
+          className="flex h-16 items-center justify-center gap-6 font-mono text-[2.45rem] font-bold tracking-wide text-[var(--brand)] sm:h-[68px] sm:gap-7 sm:text-[2.7rem]"
           aria-live="polite"
           aria-atomic="true"
         >
@@ -324,7 +324,7 @@ export function PracticeWorkspace() {
           })}
         </div>
 
-        <div className="flex h-5 items-center justify-center font-mono text-[0.68rem] text-muted-foreground">
+        <div className="flex h-[18px] items-center justify-center font-mono text-[0.68rem] text-muted-foreground">
           {status === "wrong" && (
             <span>
               正确&nbsp;
