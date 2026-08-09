@@ -50,8 +50,9 @@ test("答错时给出正确键位、呼吸灯和轻量拆解，然后自动继�
   const wrongKey = guaranteedWrongKey(answer);
   await page.keyboard.type(wrongKey.repeat(2));
 
-  await expect(page.getByText(/正确/)).toBeVisible();
-  await expect(page.getByText(/→/)).toBeVisible();
+  const wrongFeedback = page.getByText(/^正确\s/);
+  await expect(wrongFeedback).toBeVisible();
+  await expect(wrongFeedback).toContainText("→");
   for (const key of new Set(answer.split(""))) {
     await expect(
       page.locator(`button[data-keycap="${key}"] [data-correct-guide]`),
@@ -59,7 +60,7 @@ test("答错时给出正确键位、呼吸灯和轻量拆解，然后自动继�
   }
 
   await expect(page.getByText(/已练\s*1/)).toBeVisible();
-  await expect(page.getByText(/正确/)).toBeHidden({ timeout: 2_000 });
+  await expect(wrongFeedback).toBeHidden({ timeout: 2_000 });
 });
 
 test("实体键盘输入显示呼吸点和完整轨迹", async ({ page }) => {
