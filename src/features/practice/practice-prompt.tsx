@@ -26,14 +26,6 @@ export function PracticePrompt() {
     );
   }
 
-  if (status === "completed") {
-    return (
-      <div className="flex h-28 items-center justify-center text-center">
-        <p className="text-lg font-medium">本组完成 🎉</p>
-      </div>
-    );
-  }
-
   const wrong = status === "wrong";
 
   return (
@@ -58,9 +50,10 @@ export function PracticePrompt() {
             {question.character}
           </span>
           <span
+            data-practice-pinyin
             className={cn(
               "mt-4 h-5 text-sm text-muted-foreground sm:text-base",
-              (!showPinyin || wrong) && "invisible",
+              !showPinyin && "invisible",
             )}
           >
             {question.pinyin}
@@ -89,9 +82,10 @@ export function PracticePrompt() {
             ))}
           </span>
           <span
+            data-practice-pinyin
             className={cn(
               "mt-3 h-5 text-xs text-muted-foreground sm:text-sm",
-              (!showPinyin || wrong) && "invisible",
+              !showPinyin && "invisible",
             )}
           >
             {question.syllables[phraseIndex]}
