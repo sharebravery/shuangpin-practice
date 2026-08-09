@@ -2,7 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.graphite *));
+/* 主题都采用浅色瓷面，不再把玄青当作 dark mode。 */
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -49,158 +50,157 @@
 }
 
 /*
- * 三套主题共用同一套结构，只改变材质气质：
- * 天青 = 白瓷与天青釉；朱砂 = 宣纸与印色；玄青 = 深青夜色与黑釉。
- * “陶瓷”主要通过冷暖白、微弱釉面高光、边缘反射和空间光表达，避免拟物化。
+ * 统一母题：瓷白、釉色、留白与柔和反射。
+ * 天青 = 白瓷与天青釉；朱砂 = 暖白瓷与朱砂印色；玄青 = 青灰瓷与玄青釉。
+ * 不做纹理拟物，只用冷暖白、边缘高光和非常轻的空间光表达材质。
  */
 :root,
 .clean {
-  --background: #fbfdfe;
-  --foreground: #14212b;
+  --background: #fafcfb;
+  --foreground: #18262c;
   --card: #ffffff;
-  --card-foreground: #14212b;
+  --card-foreground: #18262c;
   --popover: #ffffff;
-  --popover-foreground: #14212b;
-  --primary: #6697ad;
+  --popover-foreground: #18262c;
+  --primary: #719ca5;
   --primary-foreground: #ffffff;
-  --secondary: #edf6f8;
-  --secondary-foreground: #14212b;
-  --muted: #f2f7f8;
-  --muted-foreground: #657985;
-  --accent: #edf6f8;
-  --accent-foreground: #14212b;
+  --secondary: #edf5f4;
+  --secondary-foreground: #18262c;
+  --muted: #f2f6f5;
+  --muted-foreground: #687b82;
+  --accent: #edf5f4;
+  --accent-foreground: #18262c;
   --destructive: #c95a61;
-  --border: #dce7eb;
-  --input: #dce7eb;
-  --ring: #6697ad;
-  --chart-1: #6697ad;
-  --chart-2: #657985;
-  --chart-3: #9db3bc;
-  --chart-4: #496775;
-  --chart-5: #cbdadf;
+  --border: #dde7e5;
+  --input: #dde7e5;
+  --ring: #719ca5;
+  --chart-1: #719ca5;
+  --chart-2: #687b82;
+  --chart-3: #a1b5b9;
+  --chart-4: #526e75;
+  --chart-5: #cbdad8;
   --radius: 0.55rem;
-  --sidebar: #f5fafb;
-  --sidebar-foreground: #14212b;
-  --sidebar-primary: #6697ad;
+  --sidebar: #f5f9f8;
+  --sidebar-foreground: #18262c;
+  --sidebar-primary: #719ca5;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #edf6f8;
-  --sidebar-accent-foreground: #14212b;
-  --sidebar-border: #dce7eb;
-  --sidebar-ring: #6697ad;
-  --brand: #6697ad;
-  --brand-strong: #47788f;
-  --brand-soft: #edf6f8;
-  --correct: #6697ad;
-  --correct-soft: #edf6f8;
+  --sidebar-accent: #edf5f4;
+  --sidebar-accent-foreground: #18262c;
+  --sidebar-border: #dde7e5;
+  --sidebar-ring: #719ca5;
+  --brand: #719ca5;
+  --brand-strong: #4f7880;
+  --brand-soft: #edf5f4;
+  --correct: #719ca5;
+  --correct-soft: #edf5f4;
   --error: #c95a61;
   --error-soft: #fff1f2;
-  --surface: #f5fafb;
+  --surface: #f4f8f7;
   --key: #fdfefe;
-  --key-hover: #f4f9fa;
-  --key-shadow: #ccdce2;
-  --canvas-glow: rgba(112, 165, 185, 0.14);
+  --key-hover: #f2f7f6;
+  --key-shadow: #cedbd9;
+  --canvas-glow: rgba(112, 154, 164, 0.11);
   --canvas-sheen: rgba(255, 255, 255, 0.72);
-  --ceramic-highlight: rgba(255, 255, 255, 0.92);
-  --ceramic-rim: rgba(255, 255, 255, 0.82);
+  --ceramic-highlight: rgba(255, 255, 255, 0.94);
+  --ceramic-rim: rgba(255, 255, 255, 0.84);
 }
 
 .ink {
-  --background: #fffaf3;
-  --foreground: #2b2824;
+  --background: #fffaf4;
+  --foreground: #2c2925;
   --card: #fffdf9;
-  --card-foreground: #2b2824;
+  --card-foreground: #2c2925;
   --popover: #fffdf9;
-  --popover-foreground: #2b2824;
-  --primary: #b64b3d;
+  --popover-foreground: #2c2925;
+  --primary: #b24f42;
   --primary-foreground: #ffffff;
-  --secondary: #faeee7;
-  --secondary-foreground: #2b2824;
-  --muted: #f5efe7;
-  --muted-foreground: #746b63;
-  --accent: #faeee7;
-  --accent-foreground: #2b2824;
+  --secondary: #f8eee8;
+  --secondary-foreground: #2c2925;
+  --muted: #f5efe8;
+  --muted-foreground: #756d65;
+  --accent: #f8eee8;
+  --accent-foreground: #2c2925;
   --destructive: #913b36;
-  --border: #e6dacf;
-  --input: #e6dacf;
-  --ring: #b64b3d;
-  --chart-1: #b64b3d;
-  --chart-2: #746b63;
-  --chart-3: #aa9b8e;
-  --chart-4: #544b44;
-  --chart-5: #dbcec2;
-  --sidebar: #faf4ec;
-  --sidebar-foreground: #2b2824;
-  --sidebar-primary: #b64b3d;
+  --border: #e7ddd3;
+  --input: #e7ddd3;
+  --ring: #b24f42;
+  --chart-1: #b24f42;
+  --chart-2: #756d65;
+  --chart-3: #ad9e92;
+  --chart-4: #574e47;
+  --chart-5: #ddd1c6;
+  --sidebar: #faf5ee;
+  --sidebar-foreground: #2c2925;
+  --sidebar-primary: #b24f42;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #faeee7;
-  --sidebar-accent-foreground: #2b2824;
-  --sidebar-border: #e6dacf;
-  --sidebar-ring: #b64b3d;
-  --brand: #b64b3d;
-  --brand-strong: #94382f;
-  --brand-soft: #faece7;
-  --correct: #b64b3d;
-  --correct-soft: #faece7;
+  --sidebar-accent: #f8eee8;
+  --sidebar-accent-foreground: #2c2925;
+  --sidebar-border: #e7ddd3;
+  --sidebar-ring: #b24f42;
+  --brand: #b24f42;
+  --brand-strong: #903b33;
+  --brand-soft: #f9ece7;
+  --correct: #b24f42;
+  --correct-soft: #f9ece7;
   --error: #913b36;
-  --error-soft: #f7e6e1;
-  --surface: #faf4ec;
+  --error-soft: #f5e5e1;
+  --surface: #faf5ee;
   --key: #fffdfa;
-  --key-hover: #faf3e9;
-  --key-shadow: #d9cbbf;
-  --canvas-glow: rgba(183, 83, 63, 0.055);
-  --canvas-sheen: rgba(255, 253, 249, 0.78);
-  --ceramic-highlight: rgba(255, 255, 255, 0.78);
-  --ceramic-rim: rgba(255, 255, 255, 0.68);
+  --key-hover: #faf3ea;
+  --key-shadow: #dacfc4;
+  --canvas-glow: rgba(178, 79, 66, 0.05);
+  --canvas-sheen: rgba(255, 253, 249, 0.8);
+  --ceramic-highlight: rgba(255, 255, 255, 0.8);
+  --ceramic-rim: rgba(255, 255, 255, 0.7);
 }
 
 .graphite {
-  color-scheme: dark;
-  --background: #0d1719;
-  --foreground: #edf3f3;
-  --card: #111d20;
-  --card-foreground: #edf3f3;
-  --popover: #111d20;
-  --popover-foreground: #edf3f3;
-  --primary: #78a4ad;
-  --primary-foreground: #091214;
-  --secondary: #172a2e;
-  --secondary-foreground: #edf3f3;
-  --muted: #162327;
-  --muted-foreground: #96aaae;
-  --accent: #172a2e;
-  --accent-foreground: #edf3f3;
-  --destructive: #d47a78;
-  --border: #294046;
-  --input: #294046;
-  --ring: #78a4ad;
-  --chart-1: #78a4ad;
-  --chart-2: #96aaae;
-  --chart-3: #627b80;
-  --chart-4: #c4d3d5;
-  --chart-5: #425b60;
-  --sidebar: #111d20;
-  --sidebar-foreground: #edf3f3;
-  --sidebar-primary: #78a4ad;
-  --sidebar-primary-foreground: #091214;
-  --sidebar-accent: #172a2e;
-  --sidebar-accent-foreground: #edf3f3;
-  --sidebar-border: #294046;
-  --sidebar-ring: #78a4ad;
-  --brand: #78a4ad;
-  --brand-strong: #a1c2c8;
-  --brand-soft: #172d32;
-  --correct: #78a4ad;
-  --correct-soft: #172d32;
-  --error: #d47a78;
-  --error-soft: #342326;
-  --surface: #121f22;
-  --key: #15262a;
-  --key-hover: #1a2e33;
-  --key-shadow: #050a0b;
-  --canvas-glow: rgba(84, 139, 149, 0.16);
-  --canvas-sheen: rgba(24, 43, 47, 0.46);
-  --ceramic-highlight: rgba(188, 216, 220, 0.11);
-  --ceramic-rim: rgba(190, 220, 224, 0.08);
+  --background: #f4f6f5;
+  --foreground: #1d2b2d;
+  --card: #fbfcfb;
+  --card-foreground: #1d2b2d;
+  --popover: #fbfcfb;
+  --popover-foreground: #1d2b2d;
+  --primary: #4f7074;
+  --primary-foreground: #ffffff;
+  --secondary: #e8efed;
+  --secondary-foreground: #1d2b2d;
+  --muted: #edf2f0;
+  --muted-foreground: #68797b;
+  --accent: #e8efed;
+  --accent-foreground: #1d2b2d;
+  --destructive: #a94f4b;
+  --border: #d8e1df;
+  --input: #d8e1df;
+  --ring: #4f7074;
+  --chart-1: #4f7074;
+  --chart-2: #68797b;
+  --chart-3: #93a6a6;
+  --chart-4: #405b5f;
+  --chart-5: #c6d2cf;
+  --sidebar: #eef3f1;
+  --sidebar-foreground: #1d2b2d;
+  --sidebar-primary: #4f7074;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8efed;
+  --sidebar-accent-foreground: #1d2b2d;
+  --sidebar-border: #d8e1df;
+  --sidebar-ring: #4f7074;
+  --brand: #4f7074;
+  --brand-strong: #34575b;
+  --brand-soft: #e6efed;
+  --correct: #4f7074;
+  --correct-soft: #e6efed;
+  --error: #a94f4b;
+  --error-soft: #f4e7e5;
+  --surface: #eef3f1;
+  --key: #fafcfb;
+  --key-hover: #edf3f1;
+  --key-shadow: #c8d4d1;
+  --canvas-glow: rgba(65, 98, 102, 0.09);
+  --canvas-sheen: rgba(255, 255, 255, 0.62);
+  --ceramic-highlight: rgba(255, 255, 255, 0.88);
+  --ceramic-rim: rgba(255, 255, 255, 0.74);
 }
 
 @layer base {
@@ -210,8 +210,8 @@
   body {
     @apply bg-background text-foreground;
     background-image:
-      radial-gradient(900px 380px at 50% -170px, var(--canvas-glow), transparent 72%),
-      linear-gradient(180deg, var(--canvas-sheen) 0%, transparent 36%);
+      radial-gradient(900px 360px at 50% -170px, var(--canvas-glow), transparent 72%),
+      linear-gradient(180deg, var(--canvas-sheen) 0%, transparent 34%);
     background-attachment: fixed;
   }
   html {
@@ -219,7 +219,7 @@
   }
 }
 
-/* 主练习谱再向下沉一点，让“字 + 键位谱”更像一个完整舞台。 */
+/* 主练习谱保持当前舞台位置。 */
 [aria-label="双拼键位图"] {
   margin-top: 14px;
 }
