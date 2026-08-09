@@ -9,8 +9,8 @@ export type SchemeId = "xiaohe" | "microsoft" | "ziranma" | "sogou";
 /** 练习模式：键位 / 单字 / 词组。 */
 export type PracticeMode = "mapping" | "character" | "phrase";
 
-/** 视觉布局：谱面 / 键盘 / 极简轨迹。 */
-export type PracticeLayout = "score" | "keyboard" | "minimal";
+/** 视觉布局：谱面 / 键盘。 */
+export type PracticeLayout = "score" | "keyboard";
 
 /**
  * 双拼方案：声母、韵母、零声母到键位的映射。
