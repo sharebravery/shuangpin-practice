@@ -11,7 +11,7 @@ export function PracticePrompt() {
 
   if (status === "ready" || !question) {
     return (
-      <div className="flex h-28 items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-24 items-center justify-center text-sm text-muted-foreground sm:h-[104px]">
         准备开始…
       </div>
     );
@@ -19,7 +19,7 @@ export function PracticePrompt() {
 
   if (status === "paused") {
     return (
-      <div className="flex h-28 flex-col items-center justify-center text-center">
+      <div className="flex h-24 flex-col items-center justify-center text-center sm:h-[104px]">
         <p className="text-lg font-medium">已暂停</p>
         <p className="mt-1 text-xs text-muted-foreground">按 Space 继续</p>
       </div>
@@ -29,7 +29,7 @@ export function PracticePrompt() {
   const wrong = status === "wrong";
 
   return (
-    <div className="flex h-28 w-full flex-col items-center justify-center">
+    <div className="flex h-24 w-full flex-col items-center justify-center sm:h-[104px]">
       {question.kind === "mapping" && (
         <>
           <span className="h-4 text-[0.65rem] uppercase tracking-widest text-muted-foreground">
@@ -52,7 +52,7 @@ export function PracticePrompt() {
           <span
             data-practice-pinyin
             className={cn(
-              "mt-4 h-5 text-sm text-muted-foreground sm:text-base",
+              "mt-3 h-5 text-sm text-muted-foreground sm:text-base",
               !showPinyin && "invisible",
             )}
           >
@@ -88,7 +88,7 @@ export function PracticePrompt() {
           <span
             data-practice-pinyin
             className={cn(
-              "mt-3 h-5 text-xs text-muted-foreground sm:text-sm",
+              "mt-2.5 h-5 text-xs text-muted-foreground sm:text-sm",
               !showPinyin && "invisible",
             )}
           >
