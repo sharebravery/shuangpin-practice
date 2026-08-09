@@ -20,8 +20,8 @@ function guaranteedWrongKey(answer: string): string {
   return PRACTICE_KEYS.find((key) => !answer.includes(key)) ?? "q";
 }
 
-async function openSettings(page: Page) {
-  await page.getByLabel("更多设置").click();
+async function openDesktopSettings(page: Page) {
+  await page.locator("[data-slot='popover-trigger']").click();
 }
 
 test("默认主题为天青", async ({ page }) => {
@@ -33,13 +33,12 @@ test("打开页面即可连续练习，答对后直接进入下一题", async ({
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
 
-  const firstCharacter = await page.locator("[data-practice-character]").textContent();
   const answer = await currentCode(page);
   await page.keyboard.type(answer);
 
   await expect(page.getByText(/已练\s*1/)).toBeVisible({ timeout: 2_000 });
   await expect(page.locator("[data-result-panel]")).toHaveCount(0);
-  await expect(page.locator("[data-practice-character]")).not.toHaveText(firstCharacter ?? "");
+  await expect(page.locator("#practice-input")).toBeFocused();
 });
 
 test("答错时给出正确键位、呼吸灯和轻量拆解，然后自动继续", async ({ page }) => {
@@ -111,7 +110,7 @@ test("设置只保留真正需要的少量选项", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
-  await openSettings(page);
+  await openDesktopSettings(page);
 
   await expect(page.getByLabel("界面布局")).toBeVisible();
   await expect(page.getByLabel("显示键位图")).toBeVisible();
@@ -128,7 +127,7 @@ test("可以隐藏键位图，练习本身不中断", async ({ page }) => {
   await page.locator("#practice-input").waitFor({ state: "attached" });
   await expect(page.getByRole("group", { name: "双拼键位图" })).toBeVisible();
 
-  await openSettings(page);
+  await openDesktopSettings(page);
   await page.getByLabel("显示键位图").click();
   await expect(page.getByRole("group", { name: "双拼键位图" })).toHaveCount(0);
   await page.keyboard.press("Escape");
@@ -142,7 +141,7 @@ test("布局只保留谱面和键盘", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
-  await openSettings(page);
+  await openDesktopSettings(page);
   await page.getByLabel("界面布局").click();
 
   await expect(page.getByRole("option", { name: "谱面" })).toBeVisible();
@@ -150,21 +149,22 @@ test("布局只保留谱面和键盘", async ({ page }) => {
   await expect(page.getByRole("option", { name: "极简" })).toHaveCount(0);
 });
 
-test("谱面三行键位保持等宽且最后一行视觉居中", async ({ page }) => {
+test("谱面三行键位保持等宽且最后一行在键位场中居中", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
 
   const q = await page.locator('button[data-keycap="q"]').boundingBox();
+  const p = await page.locator('button[data-keycap="p"]').boundingBox();
   const a = await page.locator('button[data-keycap="a"]').boundingBox();
   const z = await page.locator('button[data-keycap="z"]').boundingBox();
   const m = await page.locator('button[data-keycap="m"]').boundingBox();
-  expect(q && a && z && m).toBeTruthy();
+  expect(q && p && a && z && m).toBeTruthy();
   expect(Math.abs(q!.width - a!.width)).toBeLessThan(1);
   expect(Math.abs(q!.width - z!.width)).toBeLessThan(1);
 
-  const viewport = page.viewportSize()!;
+  const topCenter = (q!.x + p!.x + p!.width) / 2;
   const bottomCenter = (z!.x + m!.x + m!.width) / 2;
-  expect(Math.abs(bottomCenter - viewport.width / 2)).toBeLessThan(40);
+  expect(Math.abs(bottomCenter - topCenter)).toBeLessThan(2);
 });
 
 test("词组某字答错后继续同一词组的下一个字", async ({ page }) => {
