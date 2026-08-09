@@ -37,7 +37,7 @@ test("显示设置和方案持久化，当前输入不恢复", async ({ page }) 
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
 
-  await page.getByLabel("更多设置").click();
+  await page.locator("[data-slot='popover-trigger']").click();
   await page.getByLabel("显示拼音").click();
   await page.keyboard.press("Escape");
 
@@ -60,7 +60,7 @@ test.describe("移动端设置", () => {
     await page.goto("/");
     await page.locator("#practice-input").waitFor({ state: "attached" });
 
-    await page.getByLabel("更多设置").click();
+    await page.locator("[data-slot='drawer-trigger']").click();
     await expect(page.getByRole("dialog", { name: "更多设置" })).toBeVisible();
     await expect(page.getByLabel("显示键位图")).toBeVisible();
     await expect(page.getByLabel("输入轨迹")).toBeVisible();
