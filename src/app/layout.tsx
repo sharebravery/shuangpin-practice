@@ -62,7 +62,7 @@ export default function RootLayout({
       <body className="min-h-dvh bg-background text-foreground antialiased">
         <ThemeProvider
           attribute="class"
-          themes={["clean", "ink", "graphite", "paper"]}
+          themes={["clean", "ink", "graphite"]}
           defaultTheme="clean"
           enableSystem={false}
           disableTransitionOnChange

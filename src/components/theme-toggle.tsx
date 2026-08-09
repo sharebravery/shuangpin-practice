@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 
 import {
@@ -16,7 +16,6 @@ const THEMES = [
   { value: "clean", label: "天青", subtitle: "汝瓷 · 天青釉", dot: "#719CA5" },
   { value: "ink", label: "朱砂", subtitle: "印泥 · 朱砂色", dot: "#B24F42" },
   { value: "graphite", label: "玄青", subtitle: "黑釉 · 暮色", dot: "#8EA9A4" },
-  { value: "paper", label: "素笺", subtitle: "纸张 · 刊物", dot: "#6F756B" },
 ] as const;
 
 type ThemeName = (typeof THEMES)[number]["value"];
@@ -25,12 +24,18 @@ const subscribe = () => () => {};
 const getSnapshot = () => true;
 const getServerSnapshot = () => false;
 
+function isThemeName(value: string | undefined): value is ThemeName {
+  return THEMES.some((item) => item.value === value);
+}
+
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const current: ThemeName = THEMES.some((item) => item.value === theme)
-    ? (theme as ThemeName)
-    : "clean";
+  const current: ThemeName = isThemeName(theme) ? theme : "clean";
+
+  useEffect(() => {
+    if (mounted && theme && !isThemeName(theme)) setTheme("clean");
+  }, [mounted, setTheme, theme]);
 
   return (
     <Select

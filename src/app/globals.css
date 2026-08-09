@@ -50,10 +50,9 @@
 }
 
 /*
- * 东方材料体系：瓷、印、釉、纸。
- * 天青 = 汝瓷与天青釉；朱砂 = 暖白瓷与朱砂印泥；
- * 玄青 = 暮色黑釉；素笺 = 书纸与现代中文刊物。
- * 每套主题最多两层材质暗纹；暗纹能被感知，但不进入主视觉层级。
+ * 东方材料体系：瓷、印、釉。
+ * 天青 = 汝瓷与天青釉；朱砂 = 暖白瓷与朱砂印泥；玄青 = 暮色黑釉。
+ * 每套主题最多两层材质暗纹；暗纹属于页面材质并随页面自然滚动。
  */
 :root,
 .clean {
@@ -241,70 +240,6 @@
   );
 }
 
-.paper {
-  --background: #faf8f2;
-  --foreground: #24231f;
-  --card: #fffdf8;
-  --card-foreground: #24231f;
-  --popover: #fffdf8;
-  --popover-foreground: #24231f;
-  --primary: #6f756b;
-  --primary-foreground: #fffdf8;
-  --secondary: #f1eee7;
-  --secondary-foreground: #24231f;
-  --muted: #f2efe8;
-  --muted-foreground: #736f67;
-  --accent: #edf0eb;
-  --accent-foreground: #24231f;
-  --destructive: #9f5147;
-  --border: #ddd7cc;
-  --input: #ddd7cc;
-  --ring: #6f756b;
-  --chart-1: #6f756b;
-  --chart-2: #8b857b;
-  --chart-3: #b6aea1;
-  --chart-4: #504d45;
-  --chart-5: #dbd4c9;
-  --sidebar: #f5f1e9;
-  --sidebar-foreground: #24231f;
-  --sidebar-primary: #6f756b;
-  --sidebar-primary-foreground: #fffdf8;
-  --sidebar-accent: #edf0eb;
-  --sidebar-accent-foreground: #24231f;
-  --sidebar-border: #ddd7cc;
-  --sidebar-ring: #6f756b;
-  --brand: #6f756b;
-  --brand-strong: #4b554f;
-  --brand-soft: #edf0eb;
-  --correct: #6f756b;
-  --correct-soft: #edf0eb;
-  --error: #9f5147;
-  --error-soft: #f3e8e3;
-  --surface: #f5f1e9;
-  --key: #fffdf8;
-  --key-hover: #f4f0e8;
-  --key-shadow: #d6d0c5;
-  --canvas-glow: rgba(111, 117, 107, 0.035);
-  --canvas-sheen: rgba(255, 255, 255, 0.66);
-  --ceramic-highlight: rgba(255, 255, 255, 0.24);
-  --ceramic-rim: rgba(255, 255, 255, 0.16);
-  --canvas-pattern-one: repeating-linear-gradient(
-    0deg,
-    rgba(73, 67, 57, 0.024) 0,
-    rgba(73, 67, 57, 0.024) 1px,
-    transparent 1px,
-    transparent 32px
-  );
-  --canvas-pattern-two: linear-gradient(
-    90deg,
-    transparent 0 8%,
-    rgba(73, 67, 57, 0.026) 8%,
-    transparent calc(8% + 1px) 92%,
-    rgba(73, 67, 57, 0.026) 92%,
-    transparent calc(92% + 1px)
-  );
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -316,7 +251,6 @@
       linear-gradient(180deg, var(--canvas-sheen) 0%, transparent 34%),
       var(--canvas-pattern-one, linear-gradient(transparent, transparent)),
       var(--canvas-pattern-two, linear-gradient(transparent, transparent));
-    background-attachment: fixed;
   }
   html {
     @apply font-sans;
