@@ -20,7 +20,7 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
 
 /**
  * 一组完成后的内联结算面板。
- * 不使用模态层，不遮挡页面；Enter 仍由 PracticeWorkspace 直接开始下一组。
+ * 不使用模态层，不遮挡页面；默认聚焦“继续下一组”，Enter 可直接续练。
  */
 export function ResultDialog() {
   const status = usePracticeStore((s) => s.session.status);
@@ -74,7 +74,7 @@ export function ResultDialog() {
             练习错题
           </Button>
         )}
-        <Button size="sm" className="min-w-28" onClick={() => restart()}>
+        <Button autoFocus size="sm" className="min-w-28" onClick={() => restart()}>
           继续下一组
           <span className="ml-1 text-[0.68rem] opacity-70">↵</span>
         </Button>
