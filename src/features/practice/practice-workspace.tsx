@@ -8,10 +8,8 @@ import { PracticePrompt } from "./practice-prompt";
 import { PracticeInput, focusPracticeInput, PRACTICE_INPUT_ID } from "./practice-input";
 import { PracticeStats } from "./practice-stats";
 import { KeyboardMap } from "./keyboard-map";
-import { ResultDialog } from "./result-dialog";
 
 const WRONG_AUTO_ADVANCE_MS = 800;
-const CORRECT_FEEDBACK_MS = 400;
 const TRACE_HOLD_MS = 560;
 const ACTIVE_KEY_TIMEOUT_MS = 150;
 
@@ -34,16 +32,20 @@ function isEditableAwayFromPractice(el: HTMLElement | null): boolean {
   return !!el.closest("input, textarea, [contenteditable='true']");
 }
 
+function displayPart(value: string): string {
+  return value.replaceAll("v", "ü");
+}
+
 export function PracticeWorkspace() {
   const question = usePracticeStore((s) => s.session.question);
   const phraseIndex = usePracticeStore((s) => s.session.phraseIndex);
   const questionId = usePracticeStore((s) => s.session.questionId);
   const status = usePracticeStore((s) => s.session.status);
-  const feedback = usePracticeStore((s) => s.session.feedback);
   const layout = usePracticeStore((s) =>
     s.settings.layout === "keyboard" ? "keyboard" : "score",
   );
   const showTrace = usePracticeStore((s) => s.settings.showTrace ?? true);
+  const showKeyboard = usePracticeStore((s) => s.settings.showKeyboard);
   const hasHydrated = usePracticeStore((s) => s.hasHydrated);
   const startSession = usePracticeStore((s) => s.startSession);
   const submit = usePracticeStore((s) => s.submit);
@@ -80,12 +82,12 @@ export function PracticeWorkspace() {
   }
 
   useEffect(() => {
-    if (status === "answering" && feedback === "none") {
+    if (status === "answering") {
       focusPracticeInput();
     } else if (typeof document !== "undefined") {
       document.body.focus();
     }
-  }, [questionResetKey, status, feedback]);
+  }, [questionResetKey, status]);
 
   useEffect(() => {
     if (autoAdvanceRef.current) {
@@ -94,13 +96,11 @@ export function PracticeWorkspace() {
     }
     if (status === "wrong") {
       autoAdvanceRef.current = setTimeout(() => next(), WRONG_AUTO_ADVANCE_MS);
-    } else if (feedback === "correct") {
-      autoAdvanceRef.current = setTimeout(() => next(), CORRECT_FEEDBACK_MS);
     }
     return () => {
       if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
     };
-  }, [status, feedback, questionResetKey, next]);
+  }, [status, questionResetKey, next]);
 
   useEffect(
     () => () => {
@@ -111,7 +111,7 @@ export function PracticeWorkspace() {
   );
 
   const expectedLength = question?.kind === "mapping" ? 1 : 2;
-  const inputDisabled = status !== "answering" || feedback !== "none";
+  const inputDisabled = status !== "answering";
 
   const flashKey = useCallback((key: string) => {
     setActiveKey(key);
@@ -126,8 +126,10 @@ export function PracticeWorkspace() {
     setTraceKeys(keys);
     if (traceTimerRef.current) clearTimeout(traceTimerRef.current);
 
-    const afterSubmit = usePracticeStore.getState().session;
-    const delay = afterSubmit.status === "wrong" ? WRONG_AUTO_ADVANCE_MS : TRACE_HOLD_MS;
+    const delay =
+      usePracticeStore.getState().session.status === "wrong"
+        ? WRONG_AUTO_ADVANCE_MS
+        : TRACE_HOLD_MS;
     traceTimerRef.current = setTimeout(() => setTraceKeys([]), delay);
   }, []);
 
@@ -163,8 +165,8 @@ export function PracticeWorkspace() {
   );
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
+    const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
       if (inOverlay(target) || isEditableAwayFromPractice(target)) return;
 
       const { session, next: doNext, pause: doPause, resume: doResume } =
@@ -172,58 +174,47 @@ export function PracticeWorkspace() {
       const curInput = inputRef.current;
 
       if (
-        !e.isComposing &&
-        !e.metaKey &&
-        !e.ctrlKey &&
-        !e.altKey &&
-        /^[a-z;]$/i.test(e.key) &&
-        session.status === "answering" &&
-        session.feedback === "none"
+        !event.isComposing &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        /^[a-z;]$/i.test(event.key) &&
+        session.status === "answering"
       ) {
-        e.preventDefault();
-        processKey(e.key);
+        event.preventDefault();
+        processKey(event.key);
         return;
       }
 
-      if (e.key === "Enter") {
+      if (event.key === "Enter") {
         if (target?.closest("button, a, [data-keycap]")) return;
-        if (
-          session.status === "wrong" ||
-          session.feedback === "correct" ||
-          session.status === "completed"
-        ) {
-          e.preventDefault();
+        if (session.status === "wrong") {
+          event.preventDefault();
           doNext();
         }
         return;
       }
 
-      if (e.key === " ") {
+      if (event.key === " ") {
         if (target?.closest("button, a, [data-keycap]")) return;
-        if (session.status === "answering" && session.feedback === "none") {
-          e.preventDefault();
+        if (session.status === "answering") {
+          event.preventDefault();
           if (curInput === "") doPause();
         } else if (session.status === "paused") {
-          e.preventDefault();
+          event.preventDefault();
           doResume();
         } else {
-          e.preventDefault();
+          event.preventDefault();
         }
         return;
       }
 
-      if (e.key === "Escape") {
-        if (
-          session.status === "answering" &&
-          session.feedback === "none" &&
-          curInput !== ""
-        ) {
-          e.preventDefault();
-          inputRef.current = "";
-          setInput("");
-          setTypedKeys([]);
-          setTraceKeys([]);
-        }
+      if (event.key === "Escape" && session.status === "answering" && curInput !== "") {
+        event.preventDefault();
+        inputRef.current = "";
+        setInput("");
+        setTypedKeys([]);
+        setTraceKeys([]);
       }
     };
 
@@ -237,7 +228,6 @@ export function PracticeWorkspace() {
       const active = document.activeElement as HTMLElement | null;
       if (
         session.status === "answering" &&
-        session.feedback === "none" &&
         !inOverlay(active) &&
         !isEditableAwayFromPractice(active)
       ) {
@@ -263,17 +253,11 @@ export function PracticeWorkspace() {
       : question?.answer ?? "";
   const answerChars = answerStr.split("");
 
-  let correctKeys: string[] = [];
-  let errorKeys: string[] = [];
-  if (status === "wrong") {
-    correctKeys = answerChars;
-    errorKeys = lastInput
-      .split("")
-      .filter((key, index) => key !== answerChars[index]);
-  } else if (feedback === "correct") {
-    correctKeys = answerChars;
-  }
-
+  const correctKeys = status === "wrong" ? answerChars : [];
+  const errorKeys =
+    status === "wrong"
+      ? lastInput.split("").filter((key, index) => key !== answerChars[index])
+      : [];
   const echoKeys = status === "wrong" ? lastInput.split("") : typedKeys;
   const traceErrorIndexes =
     status === "wrong"
@@ -281,6 +265,18 @@ export function PracticeWorkspace() {
           .split("")
           .map((key, index) => (key !== answerChars[index] ? index : -1))
           .filter((index) => index >= 0)
+      : [];
+
+  const breakdown =
+    status === "wrong" && question?.kind === "character"
+      ? [
+          question.breakdown.initial
+            ? `${displayPart(question.breakdown.initial)}→${question.breakdown.initialKey}`
+            : "",
+          question.breakdown.final
+            ? `${displayPart(question.breakdown.final)}→${question.breakdown.finalKey}`
+            : "",
+        ].filter(Boolean)
       : [];
 
   return (
@@ -304,84 +300,85 @@ export function PracticeWorkspace() {
       </div>
 
       <div className="relative flex min-h-[280px] w-full flex-col items-center justify-center py-7 sm:min-h-[320px] sm:py-9">
-        {status === "completed" ? (
-          <ResultDialog />
-        ) : (
-          <>
-            <PracticePrompt />
+        <PracticePrompt />
 
-            <div
-              className="flex h-[76px] items-center justify-center gap-7 font-mono text-[2.6rem] font-bold tracking-wide text-[var(--brand)] sm:h-20 sm:text-[2.9rem]"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              {echoKeys.map((key, index) => {
-                const isWrongKey = status === "wrong" && key !== answerChars[index];
-                return (
-                  <span
-                    key={`${index}-${key}`}
-                    className={
-                      isWrongKey
-                        ? "animate-in fade-in slide-in-from-bottom-1 text-[var(--error)] duration-150"
-                        : "animate-in fade-in slide-in-from-bottom-1 duration-150"
-                    }
-                  >
-                    {key}
-                  </span>
-                );
-              })}
-            </div>
+        <div
+          className="flex h-[76px] items-center justify-center gap-7 font-mono text-[2.6rem] font-bold tracking-wide text-[var(--brand)] sm:h-20 sm:text-[2.9rem]"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {echoKeys.map((key, index) => {
+            const isWrongKey = status === "wrong" && key !== answerChars[index];
+            return (
+              <span
+                key={`${index}-${key}`}
+                className={
+                  isWrongKey
+                    ? "animate-in fade-in slide-in-from-bottom-1 text-[var(--error)] duration-150"
+                    : "animate-in fade-in slide-in-from-bottom-1 duration-150"
+                }
+              >
+                {key}
+              </span>
+            );
+          })}
+        </div>
 
-            <div className="flex h-5 items-center justify-center font-mono text-[0.68rem] text-muted-foreground">
-              {status === "wrong" && (
-                <span>
-                  正确&nbsp;
-                  <span className="font-semibold text-[var(--correct)]">{answerStr}</span>
-                </span>
+        <div className="flex h-5 items-center justify-center font-mono text-[0.68rem] text-muted-foreground">
+          {status === "wrong" && (
+            <span>
+              正确&nbsp;
+              <span className="font-semibold text-[var(--correct)]">
+                {answerChars.join(" ")}
+              </span>
+              {breakdown.length > 0 && (
+                <span className="ml-2 text-muted-foreground/80">· {breakdown.join(" · ")}</span>
               )}
-            </div>
+            </span>
+          )}
+        </div>
 
-            <PracticeInput
-              value={input}
-              expectedLength={expectedLength}
-              disabled={inputDisabled}
-              onChange={(value) => {
-                const cleaned = cleanInput(value).slice(0, expectedLength);
-                const visualKeys = cleaned.split("");
-                inputRef.current = cleaned;
-                setInput(cleaned);
-                setTypedKeys(visualKeys);
-                setTraceKeys(visualKeys);
-                const lastKey = cleaned.at(-1);
-                if (lastKey) flashKey(lastKey);
-              }}
-              onSubmit={(value) => {
-                const cleaned = cleanInput(value).slice(0, expectedLength);
-                const submittedKeys = cleaned.split("");
-                setLastInput(cleaned);
-                setTypedKeys(submittedKeys);
-                submit(cleaned);
-                holdSubmittedTrace(submittedKeys);
-                inputRef.current = "";
-                setInput("");
-              }}
-            />
-          </>
-        )}
+        <PracticeInput
+          value={input}
+          expectedLength={expectedLength}
+          disabled={inputDisabled}
+          onChange={(value) => {
+            const cleaned = cleanInput(value).slice(0, expectedLength);
+            const visualKeys = cleaned.split("");
+            inputRef.current = cleaned;
+            setInput(cleaned);
+            setTypedKeys(visualKeys);
+            setTraceKeys(visualKeys);
+            const lastKey = cleaned.at(-1);
+            if (lastKey) flashKey(lastKey);
+          }}
+          onSubmit={(value) => {
+            const cleaned = cleanInput(value).slice(0, expectedLength);
+            const submittedKeys = cleaned.split("");
+            setLastInput(cleaned);
+            setTypedKeys(submittedKeys);
+            submit(cleaned);
+            holdSubmittedTrace(submittedKeys);
+            inputRef.current = "";
+            setInput("");
+          }}
+        />
       </div>
 
-      <KeyboardMap
-        layout={layout}
-        showTrace={showTrace}
-        activeKey={activeKey}
-        typedKeys={echoKeys}
-        traceKeys={traceKeys}
-        traceErrorIndexes={traceErrorIndexes}
-        correctKeys={correctKeys}
-        errorKeys={errorKeys}
-        onKeyClick={processKey}
-        disabled={inputDisabled}
-      />
+      {showKeyboard && (
+        <KeyboardMap
+          layout={layout}
+          showTrace={showTrace}
+          activeKey={activeKey}
+          typedKeys={echoKeys}
+          traceKeys={traceKeys}
+          traceErrorIndexes={traceErrorIndexes}
+          correctKeys={correctKeys}
+          errorKeys={errorKeys}
+          onKeyClick={processKey}
+          disabled={inputDisabled}
+        />
+      )}
     </div>
   );
 }
