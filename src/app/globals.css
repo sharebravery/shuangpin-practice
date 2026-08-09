@@ -48,141 +48,159 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * 三套主题共用同一套结构，只改变材质气质：
+ * 天青 = 白瓷与天青釉；朱砂 = 宣纸与印色；玄青 = 深青夜色与黑釉。
+ * “陶瓷”主要通过冷暖白、微弱釉面高光、边缘反射和空间光表达，避免拟物化。
+ */
 :root,
 .clean {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --background: #fbfdfe;
+  --foreground: #14212b;
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #14212b;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #1677b3;
+  --popover-foreground: #14212b;
+  --primary: #6697ad;
   --primary-foreground: #ffffff;
-  --secondary: #eaf5fb;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #eaf5fb;
-  --accent-foreground: #0f172a;
-  --destructive: #e5484d;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #1677b3;
-  --chart-1: #1677b3;
-  --chart-2: #64748b;
-  --chart-3: #94a3b8;
-  --chart-4: #475569;
-  --chart-5: #cbd5e1;
+  --secondary: #edf6f8;
+  --secondary-foreground: #14212b;
+  --muted: #f2f7f8;
+  --muted-foreground: #657985;
+  --accent: #edf6f8;
+  --accent-foreground: #14212b;
+  --destructive: #c95a61;
+  --border: #dce7eb;
+  --input: #dce7eb;
+  --ring: #6697ad;
+  --chart-1: #6697ad;
+  --chart-2: #657985;
+  --chart-3: #9db3bc;
+  --chart-4: #496775;
+  --chart-5: #cbdadf;
   --radius: 0.55rem;
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #1677b3;
+  --sidebar: #f5fafb;
+  --sidebar-foreground: #14212b;
+  --sidebar-primary: #6697ad;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eaf5fb;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #1677b3;
-  --brand: #1677b3;
-  --brand-strong: #0e6390;
-  --brand-soft: #eaf5fb;
-  --correct: #1677b3;
-  --correct-soft: #eaf5fb;
-  --error: #e5484d;
+  --sidebar-accent: #edf6f8;
+  --sidebar-accent-foreground: #14212b;
+  --sidebar-border: #dce7eb;
+  --sidebar-ring: #6697ad;
+  --brand: #6697ad;
+  --brand-strong: #47788f;
+  --brand-soft: #edf6f8;
+  --correct: #6697ad;
+  --correct-soft: #edf6f8;
+  --error: #c95a61;
   --error-soft: #fff1f2;
-  --surface: #f8fafc;
-  --key: #f8fafc;
-  --key-hover: #f1f5f9;
-  --key-shadow: #cbd5e1;
+  --surface: #f5fafb;
+  --key: #fdfefe;
+  --key-hover: #f4f9fa;
+  --key-shadow: #ccdce2;
+  --canvas-glow: rgba(112, 165, 185, 0.14);
+  --canvas-sheen: rgba(255, 255, 255, 0.72);
+  --ceramic-highlight: rgba(255, 255, 255, 0.92);
+  --ceramic-rim: rgba(255, 255, 255, 0.82);
 }
 
 .ink {
-  --background: #fffdf8;
-  --foreground: #202124;
-  --card: #fffdf8;
-  --card-foreground: #202124;
-  --popover: #fffdf8;
-  --popover-foreground: #202124;
-  --primary: #b93a2f;
+  --background: #fffaf3;
+  --foreground: #2b2824;
+  --card: #fffdf9;
+  --card-foreground: #2b2824;
+  --popover: #fffdf9;
+  --popover-foreground: #2b2824;
+  --primary: #b64b3d;
   --primary-foreground: #ffffff;
-  --secondary: #fff1ee;
-  --secondary-foreground: #202124;
-  --muted: #f7f3ed;
-  --muted-foreground: #706b65;
-  --accent: #fff1ee;
-  --accent-foreground: #202124;
-  --destructive: #cf3038;
-  --border: #e7e0d7;
-  --input: #e7e0d7;
-  --ring: #b93a2f;
-  --chart-1: #b93a2f;
-  --chart-2: #706b65;
-  --chart-3: #aaa198;
-  --chart-4: #4d4945;
-  --chart-5: #d9d1c7;
-  --sidebar: #faf7f2;
-  --sidebar-foreground: #202124;
-  --sidebar-primary: #b93a2f;
+  --secondary: #faeee7;
+  --secondary-foreground: #2b2824;
+  --muted: #f5efe7;
+  --muted-foreground: #746b63;
+  --accent: #faeee7;
+  --accent-foreground: #2b2824;
+  --destructive: #913b36;
+  --border: #e6dacf;
+  --input: #e6dacf;
+  --ring: #b64b3d;
+  --chart-1: #b64b3d;
+  --chart-2: #746b63;
+  --chart-3: #aa9b8e;
+  --chart-4: #544b44;
+  --chart-5: #dbcec2;
+  --sidebar: #faf4ec;
+  --sidebar-foreground: #2b2824;
+  --sidebar-primary: #b64b3d;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #fff1ee;
-  --sidebar-accent-foreground: #202124;
-  --sidebar-border: #e7e0d7;
-  --sidebar-ring: #b93a2f;
-  --brand: #b93a2f;
-  --brand-strong: #962d25;
-  --brand-soft: #fff1ee;
-  --correct: #b93a2f;
-  --correct-soft: #fff1ee;
-  --error: #cf3038;
-  --error-soft: #fff0f1;
-  --surface: #faf7f2;
-  --key: #fffefa;
-  --key-hover: #faf5ee;
-  --key-shadow: #d8d0c6;
+  --sidebar-accent: #faeee7;
+  --sidebar-accent-foreground: #2b2824;
+  --sidebar-border: #e6dacf;
+  --sidebar-ring: #b64b3d;
+  --brand: #b64b3d;
+  --brand-strong: #94382f;
+  --brand-soft: #faece7;
+  --correct: #b64b3d;
+  --correct-soft: #faece7;
+  --error: #913b36;
+  --error-soft: #f7e6e1;
+  --surface: #faf4ec;
+  --key: #fffdfa;
+  --key-hover: #faf3e9;
+  --key-shadow: #d9cbbf;
+  --canvas-glow: rgba(183, 83, 63, 0.055);
+  --canvas-sheen: rgba(255, 253, 249, 0.78);
+  --ceramic-highlight: rgba(255, 255, 255, 0.78);
+  --ceramic-rim: rgba(255, 255, 255, 0.68);
 }
 
 .graphite {
-  --background: #0b1220;
-  --foreground: #f8fafc;
-  --card: #111827;
-  --card-foreground: #f8fafc;
-  --popover: #111827;
-  --popover-foreground: #f8fafc;
-  --primary: #38bdf8;
-  --primary-foreground: #07111f;
-  --secondary: #15263a;
-  --secondary-foreground: #f8fafc;
-  --muted: #172033;
-  --muted-foreground: #94a3b8;
-  --accent: #15263a;
-  --accent-foreground: #f8fafc;
-  --destructive: #fb7185;
-  --border: #263449;
-  --input: #263449;
-  --ring: #38bdf8;
-  --chart-1: #38bdf8;
-  --chart-2: #94a3b8;
-  --chart-3: #64748b;
-  --chart-4: #cbd5e1;
-  --chart-5: #475569;
-  --sidebar: #111827;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #38bdf8;
-  --sidebar-primary-foreground: #07111f;
-  --sidebar-accent: #15263a;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #263449;
-  --sidebar-ring: #38bdf8;
-  --brand: #38bdf8;
-  --brand-strong: #7dd3fc;
-  --brand-soft: #15263a;
-  --correct: #38bdf8;
-  --correct-soft: #15263a;
-  --error: #fb7185;
-  --error-soft: #341923;
-  --surface: #111827;
-  --key: #172033;
-  --key-hover: #1d2940;
-  --key-shadow: #050a12;
+  color-scheme: dark;
+  --background: #0d1719;
+  --foreground: #edf3f3;
+  --card: #111d20;
+  --card-foreground: #edf3f3;
+  --popover: #111d20;
+  --popover-foreground: #edf3f3;
+  --primary: #78a4ad;
+  --primary-foreground: #091214;
+  --secondary: #172a2e;
+  --secondary-foreground: #edf3f3;
+  --muted: #162327;
+  --muted-foreground: #96aaae;
+  --accent: #172a2e;
+  --accent-foreground: #edf3f3;
+  --destructive: #d47a78;
+  --border: #294046;
+  --input: #294046;
+  --ring: #78a4ad;
+  --chart-1: #78a4ad;
+  --chart-2: #96aaae;
+  --chart-3: #627b80;
+  --chart-4: #c4d3d5;
+  --chart-5: #425b60;
+  --sidebar: #111d20;
+  --sidebar-foreground: #edf3f3;
+  --sidebar-primary: #78a4ad;
+  --sidebar-primary-foreground: #091214;
+  --sidebar-accent: #172a2e;
+  --sidebar-accent-foreground: #edf3f3;
+  --sidebar-border: #294046;
+  --sidebar-ring: #78a4ad;
+  --brand: #78a4ad;
+  --brand-strong: #a1c2c8;
+  --brand-soft: #172d32;
+  --correct: #78a4ad;
+  --correct-soft: #172d32;
+  --error: #d47a78;
+  --error-soft: #342326;
+  --surface: #121f22;
+  --key: #15262a;
+  --key-hover: #1a2e33;
+  --key-shadow: #050a0b;
+  --canvas-glow: rgba(84, 139, 149, 0.16);
+  --canvas-sheen: rgba(24, 43, 47, 0.46);
+  --ceramic-highlight: rgba(188, 216, 220, 0.11);
+  --ceramic-rim: rgba(190, 220, 224, 0.08);
 }
 
 @layer base {
@@ -191,10 +209,35 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(900px 380px at 50% -170px, var(--canvas-glow), transparent 72%),
+      linear-gradient(180deg, var(--canvas-sheen) 0%, transparent 36%);
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;
   }
+}
+
+/* 主练习谱再向下沉一点，让“字 + 键位谱”更像一个完整舞台。 */
+[aria-label="双拼键位图"] {
+  margin-top: 14px;
+}
+
+/*
+ * 仅键盘布局加入轻微釉面反射；谱面布局继续保持扁平排版。
+ * 利用 keyboard keycap 的 border-b 类区分两种布局，不引入额外组件状态。
+ */
+[aria-label="双拼键位图"] button[data-keycap][class*="border-b"]::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 1px 2px auto;
+  height: 42%;
+  border-radius: inherit;
+  background: linear-gradient(180deg, var(--ceramic-highlight), transparent);
+  box-shadow: inset 0 1px 0 var(--ceramic-rim);
+  opacity: 0.66;
 }
 
 @keyframes trace-draw {
