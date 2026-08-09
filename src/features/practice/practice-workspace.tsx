@@ -40,7 +40,9 @@ export function PracticeWorkspace() {
   const questionId = usePracticeStore((s) => s.session.questionId);
   const status = usePracticeStore((s) => s.session.status);
   const feedback = usePracticeStore((s) => s.session.feedback);
-  const layout = usePracticeStore((s) => s.settings.layout ?? "score");
+  const layout = usePracticeStore((s) =>
+    s.settings.layout === "keyboard" ? "keyboard" : "score",
+  );
   const showTrace = usePracticeStore((s) => s.settings.showTrace ?? true);
   const hasHydrated = usePracticeStore((s) => s.hasHydrated);
   const startSession = usePracticeStore((s) => s.startSession);
@@ -330,7 +332,7 @@ export function PracticeWorkspace() {
           {status === "wrong" && (
             <span>
               正确&nbsp;
-              <span className="font-semibold text-[var(--brand)]">{answerStr}</span>
+              <span className="font-semibold text-[var(--correct)]">{answerStr}</span>
             </span>
           )}
         </div>
