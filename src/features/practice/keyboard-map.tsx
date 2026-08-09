@@ -98,6 +98,7 @@ export function KeyboardMap({
   const correctSet = new Set(correctKeys);
   const errorSet = new Set(errorKeys);
   const traceErrorSet = new Set(traceErrorIndexes);
+  const showingWrongAnswer = errorKeys.length > 0;
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const [traceGeometry, setTraceGeometry] = useState<TraceGeometry>({
@@ -170,7 +171,7 @@ export function KeyboardMap({
   }, [layout, updateTrace]);
 
   const traceHasError = traceErrorIndexes.length > 0;
-  const isGridLayout = layout === "score" || layout === "minimal";
+  const isGridLayout = layout === "score";
 
   return (
     <div className="w-full overflow-x-auto pb-1" role="group" aria-label="双拼键位图">
@@ -179,7 +180,6 @@ export function KeyboardMap({
         className={cn(
           "relative mx-auto min-w-[820px] lg:min-w-0",
           layout === "score" && "py-4 sm:py-[18px]",
-          layout === "minimal" && "py-2 sm:py-3",
         )}
       >
         {layout === "score" && (
@@ -274,6 +274,7 @@ export function KeyboardMap({
                 const isError = errorSet.has(key) && !isCorrect;
                 const isTyped = typedSet.has(key);
                 const isActive = activeKey === key;
+                const showCorrectGuide = showingWrongAnswer && isCorrect;
 
                 return (
                   <button
@@ -300,8 +301,6 @@ export function KeyboardMap({
                         "h-[82px] w-full rounded-xl border-transparent bg-transparent sm:h-[92px] lg:h-[96px]",
                       layout === "keyboard" &&
                         "flex h-14 w-10 flex-col items-center justify-center rounded-lg border-b-[3px] border-[var(--border)] bg-[var(--key)] shadow-sm sm:h-[88px] sm:w-[72px] sm:rounded-xl lg:h-[102px] lg:w-[86px] lg:rounded-[14px]",
-                      layout === "minimal" &&
-                        "h-[76px] w-full rounded-2xl border-transparent bg-transparent sm:h-[82px] lg:h-[86px]",
 
                       layout === "score" &&
                         !disabled &&
@@ -315,7 +314,7 @@ export function KeyboardMap({
                         "border-[var(--brand)]/35 bg-[var(--brand-soft)]/45",
                       layout === "score" &&
                         isCorrect &&
-                        "border-[var(--brand)] bg-[var(--brand-soft)]",
+                        "border-[var(--correct)] bg-[var(--correct-soft)]",
                       layout === "score" &&
                         isError &&
                         "border-[var(--error)] bg-[var(--error-soft)]",
@@ -333,17 +332,13 @@ export function KeyboardMap({
                         "border-[var(--brand)]/70 bg-[var(--brand-soft)]",
                       layout === "keyboard" &&
                         isCorrect &&
-                        "border-[var(--brand)] bg-[var(--brand-soft)]",
+                        "border-[var(--correct)] bg-[var(--correct-soft)]",
                       layout === "keyboard" &&
                         isError &&
                         "border-[var(--error)] bg-[var(--error-soft)]",
                       layout === "keyboard" &&
                         isActive &&
                         "translate-y-[3px] scale-[0.975] shadow-none ring-2 ring-[var(--brand)]/35 ring-offset-1 ring-offset-background",
-
-                      layout === "minimal" &&
-                        !disabled &&
-                        "hover:bg-[var(--brand-soft)]/35",
                     )}
                   >
                     {layout === "score" && (
@@ -351,35 +346,43 @@ export function KeyboardMap({
                         className={cn(
                           "pointer-events-none absolute bottom-2 left-3 right-3 h-px origin-center scale-x-[0.38] bg-border/70 opacity-0 transition-all duration-150",
                           !disabled && "group-hover:scale-x-100 group-hover:opacity-100",
-                          (isTyped || isCorrect || isActive) &&
+                          (isTyped || isActive) &&
                             "scale-x-100 bg-[var(--brand)] opacity-100",
+                          isCorrect &&
+                            "scale-x-100 bg-[var(--correct)] opacity-100",
                           isError &&
                             "scale-x-100 bg-[var(--error)] opacity-100",
                         )}
                       />
                     )}
 
-                    {layout === "minimal" && (
+                    {showCorrectGuide && (
                       <span
-                        className="pointer-events-none absolute left-1/2 top-1/2 size-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-border"
+                        data-correct-guide
                         aria-hidden="true"
-                      />
+                        className={cn(
+                          "pointer-events-none absolute z-20 flex size-4 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--correct)_12%,transparent)] animate-[key-guide-breathe_900ms_ease-in-out_infinite]",
+                          layout === "score"
+                            ? "bottom-3 right-3"
+                            : "left-2 top-2",
+                        )}
+                      >
+                        <span className="size-[5px] rounded-full bg-[var(--correct)] shadow-[0_0_8px_color-mix(in_srgb,var(--correct)_55%,transparent)]" />
+                      </span>
                     )}
 
-                    {layout !== "minimal" &&
-                      keyContent &&
-                      keyContent.initials.length > 0 && (
-                        <span
-                          className={cn(
-                            "absolute font-semibold leading-none text-[var(--brand)]/75",
-                            layout === "score"
-                              ? "right-3 top-3 text-[0.62rem] lg:right-4 lg:text-[0.68rem]"
-                              : "right-1 top-1 text-[0.55rem] sm:right-2 sm:top-2 sm:text-[0.65rem] lg:text-[0.7rem]",
-                          )}
-                        >
-                          {keyContent.initials.join("/")}
-                        </span>
-                      )}
+                    {keyContent && keyContent.initials.length > 0 && (
+                      <span
+                        className={cn(
+                          "absolute font-semibold leading-none text-[var(--brand)]/75",
+                          layout === "score"
+                            ? "right-3 top-3 text-[0.62rem] lg:right-4 lg:text-[0.68rem]"
+                            : "right-1 top-1 text-[0.55rem] sm:right-2 sm:top-2 sm:text-[0.65rem] lg:text-[0.7rem]",
+                        )}
+                      >
+                        {keyContent.initials.join("/")}
+                      </span>
+                    )}
 
                     <span
                       className={cn(
@@ -388,8 +391,6 @@ export function KeyboardMap({
                           "absolute left-3 top-3 text-2xl tracking-tight sm:text-[1.7rem] lg:left-4 lg:text-[1.9rem]",
                         layout === "keyboard" &&
                           "text-base sm:text-2xl lg:text-[1.75rem]",
-                        layout === "minimal" &&
-                          "absolute left-1/2 top-1 -translate-x-1/2 text-lg font-semibold tracking-tight",
                       )}
                     >
                       {key}
@@ -403,8 +404,6 @@ export function KeyboardMap({
                             "absolute bottom-[18px] left-3 right-2 truncate text-[0.62rem] sm:text-[0.7rem] lg:left-4 lg:text-xs",
                           layout === "keyboard" &&
                             "mt-1 max-w-[90%] truncate text-[0.55rem] sm:mt-2 sm:text-[0.7rem] lg:text-xs",
-                          layout === "minimal" &&
-                            "absolute bottom-1 left-1/2 max-w-[92%] -translate-x-1/2 truncate text-[0.58rem] sm:text-[0.62rem]",
                         )}
                       >
                         {keyContent.finals.map(displayFinal).join(" · ")}
