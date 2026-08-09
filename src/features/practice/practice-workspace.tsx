@@ -366,12 +366,7 @@ export function PracticeWorkspace() {
       </div>
 
       {showKeyboard && (
-        <div
-          key={layout}
-          data-layout-stage
-          data-layout={layout}
-          className="w-full motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-200"
-        >
+        <div data-layout-stage data-layout={layout} className="w-full">
           <KeyboardMap
             layout={layout}
             showTrace={showTrace}
