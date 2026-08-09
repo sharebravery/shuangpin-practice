@@ -13,11 +13,11 @@ const KEYBOARD_ROWS = [
   ["z", "x", "c", "v", "b", "n", "m"],
 ] as const;
 
-const KEYBOARD_ROW_OFFSETS = ["0px", "28px", "62px"] as const;
+const KEYBOARD_ROW_OFFSETS = ["0px", "28px", "52px"] as const;
 const GRID_ROW_PADDING = [
   { left: "0px", right: "0px" },
   { left: "42px", right: "42px" },
-  { left: "112px", right: "164px" },
+  { left: "88px", right: "188px" },
 ] as const;
 
 const SCHEME_DATA: Record<
