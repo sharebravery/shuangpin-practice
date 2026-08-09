@@ -63,7 +63,11 @@ export function PracticePrompt() {
 
       {question.kind === "phrase" && (
         <div className="flex h-full flex-col items-center justify-center">
-          <span className="text-4xl font-semibold leading-none tracking-wide sm:text-5xl">
+          <span
+            data-practice-phrase
+            data-phrase-index={phraseIndex}
+            className="text-4xl font-semibold leading-none tracking-wide sm:text-5xl"
+          >
             {[...question.text].map((ch, i) => (
               <span
                 key={i}
