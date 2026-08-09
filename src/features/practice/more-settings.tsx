@@ -46,7 +46,6 @@ const QUESTION_COUNTS = [10, 15, 20, 30, 50];
 const LAYOUTS: { value: PracticeLayout; label: string }[] = [
   { value: "score", label: "谱面" },
   { value: "keyboard", label: "键盘" },
-  { value: "minimal", label: "极简" },
 ];
 
 function SettingRow({
@@ -70,7 +69,8 @@ function SettingsPanel() {
   const clearHistory = usePracticeStore((s) => s.clearHistory);
   const [clearOpen, setClearOpen] = useState(false);
 
-  const layout = settings.layout ?? "score";
+  // 兼容曾经持久化过的 minimal：旧值统一回落到谱面。
+  const layout: PracticeLayout = settings.layout === "keyboard" ? "keyboard" : "score";
   const showTrace = settings.showTrace ?? true;
 
   return (
