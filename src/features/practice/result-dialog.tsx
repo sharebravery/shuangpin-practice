@@ -1,34 +1,26 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
-import { usePracticeStore } from "@/stores/practice-store";
 import { calculateAccuracy } from "@/lib/shuangpin/statistics";
 import { SITE } from "@/lib/site";
+import { usePracticeStore } from "@/stores/practice-store";
 
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-1">
-      <span className="text-2xl font-semibold tabular-nums">{value}</span>
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div className="flex min-w-0 flex-col items-center justify-center gap-1 px-3 py-4 sm:px-5">
+      <span className="text-xl font-semibold tracking-tight tabular-nums sm:text-2xl">
+        {value}
+      </span>
+      <span className="text-[0.7rem] text-muted-foreground">{label}</span>
     </div>
   );
 }
 
 /**
- * 练习结果弹窗（PRD §10、实现细则 §11 completed 状态）。
- * 完成本组后展示统计，默认聚焦“继续下一组”，回车可无缝继续练习。
+ * 一组完成后的内联结算面板。
+ * 不使用模态层，不遮挡页面；Enter 仍由 PracticeWorkspace 直接开始下一组。
  */
 export function ResultDialog() {
   const status = usePracticeStore((s) => s.session.status);
@@ -38,16 +30,10 @@ export function ResultDialog() {
   const mistakeCount = usePracticeStore((s) => s.session.sessionMistakes.length);
   const restart = usePracticeStore((s) => s.restart);
   const startMistakeSession = usePracticeStore((s) => s.startMistakeSession);
-  const continueButtonRef = useRef<HTMLButtonElement>(null);
 
-  const open = status === "completed";
+  if (status !== "completed") return null;
+
   const accuracy = Math.round(calculateAccuracy(correct, completed) * 100);
-
-  useEffect(() => {
-    if (!open) return;
-    const frame = window.requestAnimationFrame(() => continueButtonRef.current?.focus());
-    return () => window.cancelAnimationFrame(frame);
-  }, [open]);
 
   const copyResult = async () => {
     const text = `我在${SITE.name}完成了 ${completed} 题，正确率 ${accuracy}%，最长连击 ${longestStreak} 次。${SITE.url}`;
@@ -60,42 +46,39 @@ export function ResultDialog() {
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        // 关闭（Esc / 点击遮罩 / X）即开始下一组，避免打断练习流。
-        if (!o) restart();
-      }}
+    <section
+      data-result-panel
+      aria-label="本组练习结果"
+      className="mx-auto flex w-full max-w-2xl flex-col items-center px-4 text-center"
     >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>本组完成 🎉</DialogTitle>
-          <DialogDescription>按 Enter 继续下一组。</DialogDescription>
-        </DialogHeader>
-        <div className="grid grid-cols-2 gap-4 py-2">
-          <Stat label="完成题数" value={completed} />
-          <Stat label="正确率" value={`${accuracy}%`} />
-          <Stat label="最长连击" value={longestStreak} />
-          <Stat label="本组错题" value={mistakeCount} />
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={copyResult}>
-            复制成绩
+      <span
+        aria-hidden="true"
+        className="mb-5 size-2 rounded-full bg-[var(--brand)] shadow-[0_0_18px_color-mix(in_srgb,var(--brand)_36%,transparent)]"
+      />
+      <h2 className="text-2xl font-semibold tracking-tight sm:text-[1.7rem]">本组完成</h2>
+      <p className="mt-2 text-sm text-muted-foreground">保持手感，按 Enter 继续下一组</p>
+
+      <div className="mt-7 grid w-full grid-cols-2 border-y border-border/70 sm:grid-cols-4 sm:divide-x sm:divide-border/70">
+        <Stat label="完成题数" value={completed} />
+        <Stat label="正确率" value={`${accuracy}%`} />
+        <Stat label="最长连击" value={longestStreak} />
+        <Stat label="本组错题" value={mistakeCount} />
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+        <Button variant="ghost" size="sm" onClick={copyResult}>
+          复制成绩
+        </Button>
+        {mistakeCount > 0 && (
+          <Button variant="outline" size="sm" onClick={() => startMistakeSession()}>
+            练习错题
           </Button>
-          {mistakeCount > 0 && (
-            <Button variant="outline" onClick={() => startMistakeSession()}>
-              练习错题
-            </Button>
-          )}
-          <Button
-            ref={continueButtonRef}
-            aria-keyshortcuts="Enter"
-            onClick={() => restart()}
-          >
-            继续下一组
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        )}
+        <Button size="sm" className="min-w-28" onClick={() => restart()}>
+          继续下一组
+          <span className="ml-1 text-[0.68rem] opacity-70">↵</span>
+        </Button>
+      </div>
+    </section>
   );
 }
