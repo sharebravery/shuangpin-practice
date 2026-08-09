@@ -131,7 +131,7 @@ function SettingsPanel() {
           <AlertDialogHeader>
             <AlertDialogTitle>清除练习记录？</AlertDialogTitle>
             <AlertDialogDescription>
-              将清空累计统计和后台错题记录，不影响方案与显示设置。
+              将清空累计统计和后台错题记录，并重新开始练习；方案与显示设置会保留。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

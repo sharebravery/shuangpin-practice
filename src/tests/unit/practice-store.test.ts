@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import type { GeneratedQuestion } from "@/lib/shuangpin/generate-question";
 import {
   DEFAULT_SESSION,
   DEFAULT_SETTINGS,
@@ -7,7 +8,6 @@ import {
   computeMistakeKey,
   usePracticeStore,
 } from "@/stores/practice-store";
-import type { GeneratedQuestion } from "@/lib/shuangpin/generate-question";
 import { cleanup } from "./test-utils";
 
 const CHAR_QUESTION: GeneratedQuestion = {
@@ -68,8 +68,7 @@ describe("continuous practice store", () => {
   });
 
   it("默认打开就是小鹤单字练习，设置保持精简", () => {
-    const { settings } = usePracticeStore.getState();
-    expect(settings).toEqual({
+    expect(usePracticeStore.getState().settings).toEqual({
       scheme: "xiaohe",
       mode: "character",
       showPinyin: true,
@@ -97,7 +96,7 @@ describe("continuous practice store", () => {
     expect(session.question).not.toBeNull();
   });
 
-  it("答错后短暂停留，记录错题并累计已练题数", () => {
+  it("答错后短暂停留，记录当前方案错题并累计已练题数", () => {
     setQuestion(CHAR_QUESTION, "c-test");
     usePracticeStore.getState().submit("xx");
 
@@ -105,7 +104,7 @@ describe("continuous practice store", () => {
     expect(session.status).toBe("wrong");
     expect(session.streak).toBe(0);
     expect(totals).toEqual({ completed: 1, correct: 0 });
-    expect(mistakes["c-test"]?.count).toBe(1);
+    expect(mistakes["xiaohe:character:c-test"]?.count).toBe(1);
     expect(session.replayQueue).toHaveLength(1);
   });
 
@@ -139,7 +138,7 @@ describe("continuous practice store", () => {
     expect(state.session.phraseIndex).toBe(0);
     expect(state.session.phraseHadError).toBe(true);
     expect(state.totals.completed).toBe(0);
-    expect(state.mistakes["p-test:0"]).toBeDefined();
+    expect(state.mistakes["xiaohe:phrase:p-test:0"]).toBeDefined();
 
     usePracticeStore.getState().next();
     state = usePracticeStore.getState();
@@ -173,24 +172,49 @@ describe("continuous practice store", () => {
     expect(usePracticeStore.getState().session.questionId).toBe(id);
   });
 
-  it("清除记录只清空累计统计和后台错题", () => {
+  it("清除练习记录会清空统计、错题和当前复现状态并重新开始", () => {
     setQuestion(CHAR_QUESTION, "c-test");
     usePracticeStore.getState().submit("xx");
+    expect(usePracticeStore.getState().session.replayQueue).toHaveLength(1);
+
     usePracticeStore.getState().clearHistory();
-    expect(usePracticeStore.getState().mistakes).toEqual({});
-    expect(usePracticeStore.getState().totals).toEqual({ completed: 0, correct: 0 });
+    const { mistakes, totals, session } = usePracticeStore.getState();
+    expect(mistakes).toEqual({});
+    expect(totals).toEqual({ completed: 0, correct: 0 });
+    expect(session.status).toBe("answering");
+    expect(session.completed).toBe(0);
+    expect(session.correct).toBe(0);
+    expect(session.streak).toBe(0);
+    expect(session.replayQueue).toEqual([]);
+    expect(session.forcedReappear).toEqual({});
+    expect(session.question).not.toBeNull();
   });
 
-  it("错题始终自动获得 3 倍权重", () => {
-    const character = { ...DEFAULT_SETTINGS, mode: "character" as const };
-    const weight = buildWeightFor(character, { c001: { count: 1, lastSeen: 0 } });
-    expect(weight("c001")).toBe(3);
-    expect(weight("c002")).toBe(1);
+  it("错题权重按方案和模式隔离", () => {
+    const mistakes = {
+      "xiaohe:character:c001": { count: 1, lastSeen: 0 },
+      "xiaohe:phrase:p001:1": { count: 1, lastSeen: 0 },
+    };
 
-    const phrase = { ...DEFAULT_SETTINGS, mode: "phrase" as const };
-    const phraseWeight = buildWeightFor(phrase, { "p001:1": { count: 1, lastSeen: 0 } });
-    expect(phraseWeight("p001")).toBe(3);
-    expect(phraseWeight("p002")).toBe(1);
+    const xiaoheCharacter = buildWeightFor(
+      { ...DEFAULT_SETTINGS, scheme: "xiaohe", mode: "character" },
+      mistakes,
+    );
+    expect(xiaoheCharacter("c001")).toBe(3);
+    expect(xiaoheCharacter("c002")).toBe(1);
+
+    const microsoftCharacter = buildWeightFor(
+      { ...DEFAULT_SETTINGS, scheme: "microsoft", mode: "character" },
+      mistakes,
+    );
+    expect(microsoftCharacter("c001")).toBe(1);
+
+    const xiaohePhrase = buildWeightFor(
+      { ...DEFAULT_SETTINGS, scheme: "xiaohe", mode: "phrase" },
+      mistakes,
+    );
+    expect(xiaohePhrase("p001")).toBe(3);
+    expect(xiaohePhrase("p002")).toBe(1);
   });
 
   it("错题安排在之后 3–8 题自动复现", () => {
@@ -211,19 +235,28 @@ describe("continuous practice store", () => {
     expect(usePracticeStore.getState().session.replayQueue).toHaveLength(0);
   });
 
-  it("computeMistakeKey 在词组模式精确记录到当前字", () => {
-    expect(computeMistakeKey("p-test", PHRASE_QUESTION, 1)).toBe("p-test:1");
-    expect(computeMistakeKey("c-test", CHAR_QUESTION, 0)).toBe("c-test");
+  it("computeMistakeKey 同时包含方案、模式和词组字位", () => {
+    expect(
+      computeMistakeKey(
+        { ...DEFAULT_SETTINGS, mode: "phrase" },
+        "p-test",
+        PHRASE_QUESTION,
+        1,
+      ),
+    ).toBe("xiaohe:phrase:p-test:1");
+    expect(
+      computeMistakeKey(DEFAULT_SETTINGS, "c-test", CHAR_QUESTION, 0),
+    ).toBe("xiaohe:character:c-test");
   });
 
-  it("持久化不保存当前题，并迁移掉旧的分组和节奏设置", () => {
+  it("持久化不保存当前题，并迁移旧设置与未分方案的错题", () => {
     usePracticeStore.getState().setScheme("microsoft");
     const raw = localStorage.getItem("shuangpin-practice");
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw!);
     expect(parsed.state.settings.scheme).toBe("microsoft");
     expect(parsed.state.session).toBeUndefined();
-    expect(parsed.version).toBe(3);
+    expect(parsed.version).toBe(4);
 
     localStorage.setItem(
       "shuangpin-practice",
@@ -237,20 +270,22 @@ describe("continuous practice store", () => {
             autoNext: false,
             mistakePriority: false,
           },
-          mistakes: {},
+          mistakes: { c001: { count: 2, lastSeen: 3 } },
           totals: { completed: 12, correct: 10 },
         },
-        version: 2,
+        version: 3,
       }),
     );
 
     usePracticeStore.persist.rehydrate();
-    const settings = usePracticeStore.getState().settings as unknown as Record<string, unknown>;
+    const state = usePracticeStore.getState();
+    const settings = state.settings as unknown as Record<string, unknown>;
     expect(settings.questionsPerSession).toBeUndefined();
     expect(settings.autoNext).toBeUndefined();
     expect(settings.mistakePriority).toBeUndefined();
     expect(settings.sound).toBeUndefined();
-    expect(usePracticeStore.getState().totals.completed).toBe(12);
+    expect(state.mistakes).toEqual({});
+    expect(state.totals.completed).toBe(12);
   });
 
   it("损坏的 localStorage 不会阻断练习", () => {

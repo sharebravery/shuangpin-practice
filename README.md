@@ -1,19 +1,21 @@
 # 双拼练习 · Shuangpin Practice
 
-打开页面，选择双拼方案，马上开始练习。
+打开页面，直接开始练习。无登录、无后端、无分组打断。
 
-A simple, modern Shuangpin (double-pinyin) practice tool — no signup, no backend, static export. Supports Xiaohe, Microsoft, Ziranma and Sogou schemes with a live key map.
+A simple, modern Shuangpin (double-pinyin) practice tool — static, local-first and ready to use.
 
 🔗 **在线使用：<https://shuangpin.sharebravery.com>**
 
 ## 功能
 
 - 四种方案：小鹤、微软、自然码、搜狗双拼
-- 三种模式：键位练习、单字练习、词组练习（逐字输入）
-- 实时键位图：随方案切换，高亮已输入与正确/错误键
-- 错题机制：3–8 题后强制重现，错题优先 3 倍权重，错题专项
-- 本地持久化：方案、模式、设置、累计统计刷新后保留
-- 浅色 / 深色 / 跟随系统，桌面与移动端自适应
+- 三种模式：键位、单字、词组（逐字输入）
+- 连续练习：答对直接下一题，答错短暂停留后继续
+- 实时键位图：支持谱面 / 键盘两种布局、输入轨迹与正确键呼吸提示
+- 自动复习：错题按当前双拼方案独立记录，之后自然重现并提高出题权重
+- 本地持久化：方案、模式、显示设置与累计统计保存在浏览器本地
+- 三套主题：天青、朱砂、玄青；统一采用瓷、釉、留白的视觉语言
+- 桌面、平板、手机可用；窄屏键位图保持可点击尺寸并横向滚动
 - 微软双拼 `üe` 标准键 `t`，兼容接受 `v`
 
 ## 技术栈
@@ -37,17 +39,25 @@ pnpm dev
 | `pnpm typecheck` | TypeScript 类型检查 |
 | `pnpm lint` | ESLint（含组件约束） |
 | `pnpm test` | Vitest 单元测试 |
-| `pnpm test:e2e` | 先 build 再运行 Playwright |
+| `pnpm test:e2e` | 构建后运行 Playwright |
 
 ## 质量门槛
 
 ```bash
-pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm test:e2e
+pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm exec playwright test
 ```
 
 ## 部署
 
-纯静态导出（`out/`），可部署到 Vercel、Cloudflare Pages 等任意静态托管。
+项目使用纯静态导出（`out/`），当前正式地址为 `shuangpin.sharebravery.com`。
+
+## 数据与隐私
+
+无账号、无后端。练习设置、累计统计和错题记录只保存在当前浏览器本地，可在设置中随时清除。
+
+## 作者
+
+许多言
 
 ## License
 

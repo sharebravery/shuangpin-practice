@@ -100,10 +100,10 @@ export function SiteContent() {
         </AccordionItem>
 
         <AccordionItem value="author" className={itemClassName}>
-          <AccordionTrigger className={triggerClassName}>关于云北</AccordionTrigger>
+          <AccordionTrigger className={triggerClassName}>关于{SITE.author}</AccordionTrigger>
           <AccordionContent className={contentClassName}>
             <p>
-              本工具由云北制作。云北是双拼的长期使用者，希望这个工具能帮助你更轻松地掌握双拼。
+              本工具由{SITE.author}制作。希望它保持简单、直接，让你打开页面就能开始练习双拼。
             </p>
           </AccordionContent>
         </AccordionItem>

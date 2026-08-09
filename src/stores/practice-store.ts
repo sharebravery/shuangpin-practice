@@ -4,13 +4,12 @@ import { persist, type PersistStorage, type StorageValue } from "zustand/middlew
 import { CHARACTERS } from "@/data/characters";
 import { PHRASES } from "@/data/phrases";
 import { getScheme } from "@/data/schemes";
+import { encodePhrase, encodeSyllableDetailed } from "@/lib/shuangpin/encode";
 import type {
   GeneratedQuestion,
   GenerateOptions,
 } from "@/lib/shuangpin/generate-question";
 import { generateQuestion } from "@/lib/shuangpin/generate-question";
-import { encodePhrase, encodeSyllableDetailed } from "@/lib/shuangpin/encode";
-import { isAcceptedAnswer, normalizeAnswer } from "@/lib/shuangpin/validate";
 import type {
   MistakeRecord,
   PracticeMode,
@@ -18,6 +17,7 @@ import type {
   SchemeId,
   ShuangpinScheme,
 } from "@/lib/shuangpin/types";
+import { isAcceptedAnswer, normalizeAnswer } from "@/lib/shuangpin/validate";
 
 export type SessionStatus = "ready" | "answering" | "wrong" | "paused";
 
@@ -78,6 +78,7 @@ const DEFAULT_TOTALS: PracticeTotals = { completed: 0, correct: 0 };
 export { DEFAULT_TOTALS };
 
 const RECENT_WINDOW = 4;
+const PERSIST_VERSION = 4;
 
 /** 错题在之后 3–8 题自然重现。 */
 function replayDelay(): number {
@@ -139,7 +140,8 @@ interface PracticeStoreState {
   setHasHydrated: (value: boolean) => void;
 }
 
-export function computeMistakeKey(
+/** 复现队列只关心当前题本身；方案切换会重开 session。 */
+export function questionKey(
   questionId: string,
   question: GeneratedQuestion,
   phraseIndex: number,
@@ -147,8 +149,22 @@ export function computeMistakeKey(
   return question.kind === "phrase" ? `${questionId}:${phraseIndex}` : questionId;
 }
 
+/** 错题属于“方案 + 模式 + 题目”，避免不同方案互相污染。 */
+export function computeMistakeKey(
+  settings: PracticeSettings,
+  questionId: string,
+  question: GeneratedQuestion,
+  phraseIndex: number,
+): string {
+  return `${settings.scheme}:${settings.mode}:${questionKey(questionId, question, phraseIndex)}`;
+}
+
 export function questionIdFromKey(key: string, mode: PracticeMode): string {
   return mode === "phrase" ? (key.split(":")[0] ?? key) : key;
+}
+
+function mistakeScope(settings: PracticeSettings): string {
+  return `${settings.scheme}:${settings.mode}:`;
 }
 
 /** 错题自动提高到普通题 3 倍权重；用户不需要管理这个规则。 */
@@ -156,11 +172,14 @@ export function buildWeightFor(
   settings: PracticeSettings,
   mistakes: Record<string, MistakeRecord>,
 ): (id: string) => number {
+  const scope = mistakeScope(settings);
+
   if (settings.mode === "phrase") {
     const keys = Object.keys(mistakes);
-    return (id: string) => (keys.some((k) => k.startsWith(`${id}:`)) ? 3 : 1);
+    return (id: string) => (keys.some((key) => key.startsWith(`${scope}${id}:`)) ? 3 : 1);
   }
-  return (id: string) => (mistakes[id] ? 3 : 1);
+
+  return (id: string) => (mistakes[`${scope}${id}`] ? 3 : 1);
 }
 
 export function makeQuestionByKey(
@@ -169,23 +188,23 @@ export function makeQuestionByKey(
   mode: PracticeMode,
 ): { question: GeneratedQuestion; id: string } | null {
   if (mode === "character") {
-    const c = CHARACTERS.find((item) => item.id === key);
-    if (!c) return null;
-    const enc = encodeSyllableDetailed(c.pinyin, scheme);
-    if (!enc.ok) return null;
+    const character = CHARACTERS.find((item) => item.id === key);
+    if (!character) return null;
+    const encoded = encodeSyllableDetailed(character.pinyin, scheme);
+    if (!encoded.ok) return null;
     return {
-      id: c.id,
+      id: character.id,
       question: {
         kind: "character",
-        character: c.character,
-        pinyin: c.pinyin,
-        answer: enc.code,
-        accepted: enc.accepted,
+        character: character.character,
+        pinyin: character.pinyin,
+        answer: encoded.code,
+        accepted: encoded.accepted,
         breakdown: {
-          initial: enc.initial,
-          final: enc.final,
-          initialKey: enc.initialKey,
-          finalKey: enc.finalKey,
+          initial: encoded.initial,
+          final: encoded.final,
+          initialKey: encoded.initialKey,
+          finalKey: encoded.finalKey,
         },
       },
     };
@@ -193,19 +212,19 @@ export function makeQuestionByKey(
 
   if (mode === "phrase") {
     const phraseId = key.split(":")[0] ?? key;
-    const p = PHRASES.find((item) => item.id === phraseId);
-    if (!p) return null;
-    const enc = encodePhrase(p.syllables, scheme);
-    if (!enc.ok) return null;
+    const phrase = PHRASES.find((item) => item.id === phraseId);
+    if (!phrase) return null;
+    const encoded = encodePhrase(phrase.syllables, scheme);
+    if (!encoded.ok) return null;
     return {
-      id: p.id,
+      id: phrase.id,
       question: {
         kind: "phrase",
-        text: p.text,
-        syllables: p.syllables,
-        charCodes: enc.charCodes,
-        charAccepted: enc.charAccepted,
-        answer: enc.code,
+        text: phrase.text,
+        syllables: phrase.syllables,
+        charCodes: encoded.charCodes,
+        charAccepted: encoded.charAccepted,
+        answer: encoded.code,
       },
     };
   }
@@ -253,7 +272,7 @@ function pickNextMain(
     if (made) return { ...made, forcedKey: entry.key };
   }
 
-  const opts: GenerateOptions = {
+  const options: GenerateOptions = {
     scheme,
     mode: settings.mode,
     characters: CHARACTERS,
@@ -262,7 +281,7 @@ function pickNextMain(
     weightFor: buildWeightFor(settings, mistakes),
     random: Math.random,
   };
-  const result = generateQuestion(opts);
+  const result = generateQuestion(options);
   return result.ok ? { question: result.question, id: result.id } : null;
 }
 
@@ -377,27 +396,33 @@ function resolveWrong(
       | ((state: PracticeStoreState) => Partial<PracticeStoreState>),
   ) => void,
 ) {
-  const { session } = get();
-  const q = session.question;
-  if (!q) return;
+  const { session, settings } = get();
+  const question = session.question;
+  if (!question) return;
 
-  const isPhrase = q.kind === "phrase";
+  const isPhrase = question.kind === "phrase";
   const completed = isPhrase ? session.completed : session.completed + 1;
-  const key = computeMistakeKey(session.questionId, q, session.phraseIndex);
+  const replayKey = questionKey(session.questionId, question, session.phraseIndex);
+  const mistakeKey = computeMistakeKey(
+    settings,
+    session.questionId,
+    question,
+    session.phraseIndex,
+  );
   const mistake: MistakeRecord = {
-    count: (get().mistakes[key]?.count ?? 0) + 1,
+    count: (get().mistakes[mistakeKey]?.count ?? 0) + 1,
     lastSeen: completed,
   };
 
-  const forcedCount = session.forcedReappear[key] ?? 0;
-  const alreadyQueued = session.replayQueue.some((entry) => entry.key === key);
+  const forcedCount = session.forcedReappear[replayKey] ?? 0;
+  const alreadyQueued = session.replayQueue.some((entry) => entry.key === replayKey);
   const replayQueue =
     forcedCount < 2 && !alreadyQueued
-      ? [...session.replayQueue, { key, dueAt: completed + replayDelay() }]
+      ? [...session.replayQueue, { key: replayKey, dueAt: completed + replayDelay() }]
       : session.replayQueue;
 
   set((state) => ({
-    mistakes: { ...state.mistakes, [key]: mistake },
+    mistakes: { ...state.mistakes, [mistakeKey]: mistake },
     totals: isPhrase
       ? state.totals
       : { ...state.totals, completed: state.totals.completed + 1 },
@@ -421,13 +446,13 @@ function advanceAfterWrong(
   ) => void,
 ) {
   const { session } = get();
-  const q = session.question;
+  const question = session.question;
 
-  if (q?.kind === "phrase") {
-    const nextIdx = session.phraseIndex + 1;
-    if (nextIdx < q.charCodes.length) {
+  if (question?.kind === "phrase") {
+    const nextIndex = session.phraseIndex + 1;
+    if (nextIndex < question.charCodes.length) {
       set((state) => ({
-        session: { ...state.session, status: "answering", phraseIndex: nextIdx },
+        session: { ...state.session, status: "answering", phraseIndex: nextIndex },
       }));
       return;
     }
@@ -481,21 +506,21 @@ export const usePracticeStore = create<PracticeStoreState>()(
       submit: (input) => {
         const { session } = get();
         if (session.status !== "answering") return;
-        const q = session.question;
-        if (!q) return;
+        const question = session.question;
+        if (!question) return;
 
-        const norm = normalizeAnswer(input);
+        const normalized = normalizeAnswer(input);
 
-        if (q.kind === "phrase") {
-          const accepted = q.charAccepted[session.phraseIndex] ?? [];
-          if (isAcceptedAnswer(norm, accepted)) {
-            const nextIdx = session.phraseIndex + 1;
-            if (nextIdx >= q.charCodes.length) {
+        if (question.kind === "phrase") {
+          const accepted = question.charAccepted[session.phraseIndex] ?? [];
+          if (isAcceptedAnswer(normalized, accepted)) {
+            const nextIndex = session.phraseIndex + 1;
+            if (nextIndex >= question.charCodes.length) {
               if (session.phraseHadError) finishIncorrectPhrase(get, set);
               else resolveCorrect(get, set);
             } else {
               set((state) => ({
-                session: { ...state.session, phraseIndex: nextIdx },
+                session: { ...state.session, phraseIndex: nextIndex },
               }));
             }
             return;
@@ -504,7 +529,7 @@ export const usePracticeStore = create<PracticeStoreState>()(
           return;
         }
 
-        if (isAcceptedAnswer(norm, q.accepted)) resolveCorrect(get, set);
+        if (isAcceptedAnswer(normalized, question.accepted)) resolveCorrect(get, set);
         else resolveWrong(get, set);
       },
 
@@ -527,16 +552,21 @@ export const usePracticeStore = create<PracticeStoreState>()(
       restart: () => get().startSession(),
 
       clearHistory: () => {
-        set({ mistakes: {}, totals: { ...DEFAULT_TOTALS } });
+        set({
+          mistakes: {},
+          totals: { ...DEFAULT_TOTALS },
+          session: { ...DEFAULT_SESSION },
+        });
+        get().startSession();
       },
 
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
     {
       name: "shuangpin-practice",
-      version: 3,
+      version: PERSIST_VERSION,
       storage: safeJsonStorage,
-      migrate: (persisted: unknown): PersistedState => {
+      migrate: (persisted: unknown, persistedVersion): PersistedState => {
         const old = (persisted ?? {}) as Partial<PersistedState> & {
           settings?: PracticeSettings & {
             sound?: boolean;
@@ -557,7 +587,8 @@ export const usePracticeStore = create<PracticeStoreState>()(
         return {
           version: 1,
           settings: { ...DEFAULT_SETTINGS, ...legacySettings } as PracticeSettings,
-          mistakes: old.mistakes ?? {},
+          // v3 及更早的错题没有方案作用域，无法可靠迁移；累计统计继续保留。
+          mistakes: persistedVersion >= PERSIST_VERSION ? (old.mistakes ?? {}) : {},
           totals: old.totals ?? { ...DEFAULT_TOTALS },
         };
       },
