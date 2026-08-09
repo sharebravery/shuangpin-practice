@@ -304,64 +304,70 @@ export function PracticeWorkspace() {
       </div>
 
       <div className="relative flex min-h-[280px] w-full flex-col items-center justify-center py-7 sm:min-h-[320px] sm:py-9">
-        <PracticePrompt />
+        {status === "completed" ? (
+          <ResultDialog />
+        ) : (
+          <>
+            <PracticePrompt />
 
-        <div
-          className="flex h-[76px] items-center justify-center gap-7 font-mono text-[2.6rem] font-bold tracking-wide text-[var(--brand)] sm:h-20 sm:text-[2.9rem]"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          {echoKeys.map((key, index) => {
-            const isWrongKey = status === "wrong" && key !== answerChars[index];
-            return (
-              <span
-                key={`${index}-${key}`}
-                className={
-                  isWrongKey
-                    ? "animate-in fade-in slide-in-from-bottom-1 text-[var(--error)] duration-150"
-                    : "animate-in fade-in slide-in-from-bottom-1 duration-150"
-                }
-              >
-                {key}
-              </span>
-            );
-          })}
-        </div>
+            <div
+              className="flex h-[76px] items-center justify-center gap-7 font-mono text-[2.6rem] font-bold tracking-wide text-[var(--brand)] sm:h-20 sm:text-[2.9rem]"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {echoKeys.map((key, index) => {
+                const isWrongKey = status === "wrong" && key !== answerChars[index];
+                return (
+                  <span
+                    key={`${index}-${key}`}
+                    className={
+                      isWrongKey
+                        ? "animate-in fade-in slide-in-from-bottom-1 text-[var(--error)] duration-150"
+                        : "animate-in fade-in slide-in-from-bottom-1 duration-150"
+                    }
+                  >
+                    {key}
+                  </span>
+                );
+              })}
+            </div>
 
-        <div className="flex h-5 items-center justify-center font-mono text-[0.68rem] text-muted-foreground">
-          {status === "wrong" && (
-            <span>
-              正确&nbsp;
-              <span className="font-semibold text-[var(--correct)]">{answerStr}</span>
-            </span>
-          )}
-        </div>
+            <div className="flex h-5 items-center justify-center font-mono text-[0.68rem] text-muted-foreground">
+              {status === "wrong" && (
+                <span>
+                  正确&nbsp;
+                  <span className="font-semibold text-[var(--correct)]">{answerStr}</span>
+                </span>
+              )}
+            </div>
 
-        <PracticeInput
-          value={input}
-          expectedLength={expectedLength}
-          disabled={inputDisabled}
-          onChange={(value) => {
-            const cleaned = cleanInput(value).slice(0, expectedLength);
-            const visualKeys = cleaned.split("");
-            inputRef.current = cleaned;
-            setInput(cleaned);
-            setTypedKeys(visualKeys);
-            setTraceKeys(visualKeys);
-            const lastKey = cleaned.at(-1);
-            if (lastKey) flashKey(lastKey);
-          }}
-          onSubmit={(value) => {
-            const cleaned = cleanInput(value).slice(0, expectedLength);
-            const submittedKeys = cleaned.split("");
-            setLastInput(cleaned);
-            setTypedKeys(submittedKeys);
-            submit(cleaned);
-            holdSubmittedTrace(submittedKeys);
-            inputRef.current = "";
-            setInput("");
-          }}
-        />
+            <PracticeInput
+              value={input}
+              expectedLength={expectedLength}
+              disabled={inputDisabled}
+              onChange={(value) => {
+                const cleaned = cleanInput(value).slice(0, expectedLength);
+                const visualKeys = cleaned.split("");
+                inputRef.current = cleaned;
+                setInput(cleaned);
+                setTypedKeys(visualKeys);
+                setTraceKeys(visualKeys);
+                const lastKey = cleaned.at(-1);
+                if (lastKey) flashKey(lastKey);
+              }}
+              onSubmit={(value) => {
+                const cleaned = cleanInput(value).slice(0, expectedLength);
+                const submittedKeys = cleaned.split("");
+                setLastInput(cleaned);
+                setTypedKeys(submittedKeys);
+                submit(cleaned);
+                holdSubmittedTrace(submittedKeys);
+                inputRef.current = "";
+                setInput("");
+              }}
+            />
+          </>
+        )}
       </div>
 
       <KeyboardMap
@@ -376,8 +382,6 @@ export function PracticeWorkspace() {
         onKeyClick={processKey}
         disabled={inputDisabled}
       />
-
-      <ResultDialog />
     </div>
   );
 }
