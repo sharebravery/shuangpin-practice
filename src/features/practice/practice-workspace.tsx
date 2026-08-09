@@ -281,7 +281,7 @@ export function PracticeWorkspace() {
 
   return (
     <div
-      className="flex flex-col items-center py-0.5 sm:py-1"
+      className="flex w-full flex-col items-center py-0.5 sm:py-1"
       onPointerDown={(event) => {
         const target = event.target as HTMLElement;
         if (
@@ -299,7 +299,7 @@ export function PracticeWorkspace() {
         <PracticeStats />
       </div>
 
-      <div className="relative flex min-h-[218px] w-full flex-col items-center justify-center py-2 sm:min-h-[238px] sm:py-3">
+      <div className="relative mt-3 flex min-h-[218px] w-full flex-col items-center justify-center py-2 sm:mt-5 sm:min-h-[238px] sm:py-3">
         <PracticePrompt />
 
         <div

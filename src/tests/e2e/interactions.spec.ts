@@ -91,7 +91,7 @@ test("切换主题后自动回到练习焦点", async ({ page }) => {
   await page.locator("#practice-input").waitFor({ state: "attached" });
 
   await page.getByLabel("界面主题").click();
-  await page.getByRole("option", { name: "纸墨" }).click();
+  await page.getByRole("option", { name: "朱砂" }).click();
   await expect(page.locator("html")).toHaveClass(/ink/);
   await expect(page.locator("#practice-input")).toBeFocused();
 });
