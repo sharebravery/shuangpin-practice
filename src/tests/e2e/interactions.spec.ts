@@ -124,13 +124,15 @@ test("设置只保留真正需要的少量选项", async ({ page }) => {
 test("可以隐藏键位图，练习本身不中断", async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) < 768, "桌面端 Popover 专用");
   await page.goto("/");
-  await page.locator("#practice-input").waitFor({ state: "attached" });
+  const input = page.locator("#practice-input");
+  await input.waitFor({ state: "attached" });
   await expect(page.getByRole("group", { name: "双拼键位图" })).toBeVisible();
 
   await openDesktopSettings(page);
   await page.getByLabel("显示键位图").click();
   await expect(page.getByRole("group", { name: "双拼键位图" })).toHaveCount(0);
   await page.keyboard.press("Escape");
+  await expect(input).toBeFocused();
 
   const answer = await currentCode(page);
   await page.keyboard.type(answer);
@@ -149,22 +151,24 @@ test("布局只保留谱面和键盘", async ({ page }) => {
   await expect(page.getByRole("option", { name: "极简" })).toHaveCount(0);
 });
 
-test("谱面三行键位保持等宽且最后一行在键位场中居中", async ({ page }) => {
+test("谱面三行键位保持等宽且最后一行自身视觉居中", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
 
   const q = await page.locator('button[data-keycap="q"]').boundingBox();
-  const p = await page.locator('button[data-keycap="p"]').boundingBox();
   const a = await page.locator('button[data-keycap="a"]').boundingBox();
-  const z = await page.locator('button[data-keycap="z"]').boundingBox();
-  const m = await page.locator('button[data-keycap="m"]').boundingBox();
-  expect(q && p && a && z && m).toBeTruthy();
+  const zLocator = page.locator('button[data-keycap="z"]');
+  const mLocator = page.locator('button[data-keycap="m"]');
+  const z = await zLocator.boundingBox();
+  const m = await mLocator.boundingBox();
+  const bottomRow = await zLocator.locator("..").boundingBox();
+  expect(q && a && z && m && bottomRow).toBeTruthy();
   expect(Math.abs(q!.width - a!.width)).toBeLessThan(1);
   expect(Math.abs(q!.width - z!.width)).toBeLessThan(1);
 
-  const topCenter = (q!.x + p!.x + p!.width) / 2;
-  const bottomCenter = (z!.x + m!.x + m!.width) / 2;
-  expect(Math.abs(bottomCenter - topCenter)).toBeLessThan(2);
+  const keysCenter = (z!.x + m!.x + m!.width) / 2;
+  const rowCenter = bottomRow!.x + bottomRow!.width / 2;
+  expect(Math.abs(keysCenter - rowCenter)).toBeLessThan(2);
 });
 
 test("词组某字答错后继续同一词组的下一个字", async ({ page }) => {
