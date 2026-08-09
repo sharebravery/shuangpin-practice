@@ -13,9 +13,10 @@ import {
 import { restorePracticeFocus } from "@/features/practice/practice-input";
 
 const THEMES = [
-  { value: "clean", label: "天青", dot: "#719CA5" },
-  { value: "ink", label: "朱砂", dot: "#B24F42" },
-  { value: "graphite", label: "玄青", dot: "#8EA9A4" },
+  { value: "clean", label: "天青", subtitle: "汝瓷 · 天青釉", dot: "#719CA5" },
+  { value: "ink", label: "朱砂", subtitle: "印泥 · 朱砂色", dot: "#B24F42" },
+  { value: "graphite", label: "玄青", subtitle: "黑釉 · 暮色", dot: "#8EA9A4" },
+  { value: "paper", label: "素笺", subtitle: "纸张 · 刊物", dot: "#6F756B" },
 ] as const;
 
 type ThemeName = (typeof THEMES)[number]["value"];
@@ -51,16 +52,21 @@ export function ThemeToggle() {
           {(value: ThemeName) => THEMES.find((item) => item.value === value)?.label ?? "天青"}
         </SelectValue>
       </SelectTrigger>
-      <SelectContent align="end">
+      <SelectContent align="end" className="min-w-44">
         {THEMES.map((item) => (
-          <SelectItem key={item.value} value={item.value}>
-            <span className="flex items-center gap-2">
+          <SelectItem key={item.value} value={item.value} aria-label={item.label}>
+            <span className="flex items-center gap-2.5">
               <span
-                className="size-2.5 rounded-full ring-1 ring-foreground/10"
+                className="size-2.5 shrink-0 rounded-full ring-1 ring-foreground/10"
                 style={{ backgroundColor: item.dot }}
                 aria-hidden="true"
               />
-              {item.label}
+              <span className="grid gap-0.5 leading-none">
+                <span>{item.label}</span>
+                <span className="text-[10px] font-normal text-muted-foreground">
+                  {item.subtitle}
+                </span>
+              </span>
             </span>
           </SelectItem>
         ))}

@@ -50,9 +50,10 @@
 }
 
 /*
- * 统一母题：瓷、釉、留白与柔和反射。
- * 天青 = 白瓷与天青釉；朱砂 = 暖白瓷与朱砂印色；玄青 = 暮色青瓷与玄青釉。
- * 三套主题结构一致，只改变冷暖、明度和釉色气质。
+ * 东方材料体系：瓷、印、釉、纸。
+ * 天青 = 汝瓷与天青釉；朱砂 = 暖白瓷与朱砂印泥；
+ * 玄青 = 暮色黑釉；素笺 = 暖白纸张与现代中文刊物。
+ * 主题只改变材质气质，不改变产品结构和练习层级。
  */
 :root,
 .clean {
@@ -204,6 +205,69 @@
   --ceramic-rim: rgba(216, 235, 230, 0.1);
 }
 
+.paper {
+  --background: #f7f3ea;
+  --foreground: #292820;
+  --card: #fcf9f2;
+  --card-foreground: #292820;
+  --popover: #fcf9f2;
+  --popover-foreground: #292820;
+  --primary: #6f756b;
+  --primary-foreground: #fffdf8;
+  --secondary: #ece8df;
+  --secondary-foreground: #292820;
+  --muted: #efebe3;
+  --muted-foreground: #777269;
+  --accent: #e9ede8;
+  --accent-foreground: #292820;
+  --destructive: #9f5147;
+  --border: #d9d3c8;
+  --input: #d9d3c8;
+  --ring: #6f756b;
+  --chart-1: #6f756b;
+  --chart-2: #8f877c;
+  --chart-3: #b4aa9d;
+  --chart-4: #514e46;
+  --chart-5: #d8d0c3;
+  --sidebar: #f1ede5;
+  --sidebar-foreground: #292820;
+  --sidebar-primary: #6f756b;
+  --sidebar-primary-foreground: #fffdf8;
+  --sidebar-accent: #e9ede8;
+  --sidebar-accent-foreground: #292820;
+  --sidebar-border: #d9d3c8;
+  --sidebar-ring: #6f756b;
+  --brand: #6f756b;
+  --brand-strong: #4b554f;
+  --brand-soft: #e8ece6;
+  --correct: #6f756b;
+  --correct-soft: #e8ece6;
+  --error: #9f5147;
+  --error-soft: #f2e6e1;
+  --surface: #f0ece4;
+  --key: #fbf8f0;
+  --key-hover: #f1ede5;
+  --key-shadow: #d2cbc0;
+  --canvas-glow: rgba(91, 103, 96, 0.055);
+  --canvas-sheen: rgba(255, 255, 255, 0.5);
+  --ceramic-highlight: rgba(255, 255, 255, 0.46);
+  --ceramic-rim: rgba(255, 255, 255, 0.3);
+  --canvas-pattern-one: repeating-linear-gradient(
+    0deg,
+    rgba(74, 68, 58, 0.022) 0,
+    rgba(74, 68, 58, 0.022) 1px,
+    transparent 1px,
+    transparent 30px
+  );
+  --canvas-pattern-two: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 143px,
+    rgba(74, 68, 58, 0.018) 143px,
+    rgba(74, 68, 58, 0.018) 144px
+  );
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -212,7 +276,9 @@
     @apply bg-background text-foreground;
     background-image:
       radial-gradient(900px 360px at 50% -170px, var(--canvas-glow), transparent 72%),
-      linear-gradient(180deg, var(--canvas-sheen) 0%, transparent 34%);
+      linear-gradient(180deg, var(--canvas-sheen) 0%, transparent 34%),
+      var(--canvas-pattern-one, linear-gradient(transparent, transparent)),
+      var(--canvas-pattern-two, linear-gradient(transparent, transparent));
     background-attachment: fixed;
   }
   html {
@@ -220,12 +286,24 @@
   }
 }
 
+/* 素笺用极淡版心线与水印圆环制造刊物感，不模拟陈旧纸张。 */
+.paper body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 10% 74%, transparent 0 92px, rgba(74, 68, 58, 0.032) 93px 94px, transparent 95px),
+    radial-gradient(circle at 91% 22%, transparent 0 68px, rgba(74, 68, 58, 0.024) 69px 70px, transparent 71px);
+}
+
 /* 主练习谱保持统一舞台位置。 */
 [aria-label="双拼键位图"] {
   margin-top: 14px;
 }
 
-/* 仅键盘布局加入轻微釉面反射；谱面布局保持排版感。 */
+/* 仅键盘布局加入轻微材质高光；谱面布局保持排版感。 */
 [aria-label="双拼键位图"] button[data-keycap][class*="border-b"]::before {
   content: "";
   pointer-events: none;
