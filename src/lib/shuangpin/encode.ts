@@ -25,6 +25,9 @@ const INITIALS_SHORT = [
 /** 零声母起始元音。 */
 const ZERO_INITIAL_VOWELS = ["a", "o", "e"] as const;
 
+/** 主流输入法常见的两键拼音兼容，仅限 j/q/x/y + u（实际为 ü）。 */
+const PINYIN_U_COMPAT_SYLLABLES = new Set(["ju", "qu", "xu", "yu"]);
+
 export type SplitResult =
   | { initial: string; final: string }
   | { zeroInitial: true; syllable: string }
@@ -150,6 +153,9 @@ export function encodeSyllableDetailed(
 
   const code = initialKey + finalKeys[0]!;
   const accepted = finalKeys.map((k) => initialKey + k);
+  if (PINYIN_U_COMPAT_SYLLABLES.has(norm) && !accepted.includes(norm)) {
+    accepted.push(norm);
+  }
 
   return {
     ok: true,

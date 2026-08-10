@@ -37,17 +37,34 @@ describe("题库可被各方案编码", () => {
   }
 });
 
-describe("j/q/x/y 后的 u 按 ü 韵母处理", () => {
-  for (const scheme of SCHEMES) {
-    it(`${scheme.name} 的 xu 使用 ü 韵母键，不接受全拼 xu`, () => {
-      const r = encodeSyllable("xu", scheme);
-      expect(r.ok).toBe(true);
-      if (!r.ok) return;
+describe("j/q/x/y 后的 u 按 ü 韵母处理并兼容两键拼音", () => {
+  const compatCases = [
+    ["ju", "j"],
+    ["qu", "q"],
+    ["xu", "x"],
+    ["yu", "y"],
+  ] as const;
 
-      const expected = scheme.initials.x + scheme.finals.v;
-      expect(r.code).toBe(expected);
-      expect(r.accepted).toEqual([expected]);
-      expect(r.accepted).not.toContain("xu");
+  for (const scheme of SCHEMES) {
+    it(`${scheme.name} 保持标准双拼码，同时接受 ju/qu/xu/yu`, () => {
+      for (const [pinyin, initial] of compatCases) {
+        const r = encodeSyllable(pinyin, scheme);
+        expect(r.ok).toBe(true);
+        if (!r.ok) continue;
+
+        const expected = scheme.initials[initial] + scheme.finals.v;
+        expect(r.code).toBe(expected);
+        expect(r.accepted).toContain(expected);
+        expect(r.accepted).toContain(pinyin);
+      }
+    });
+
+    it(`${scheme.name} 不启用三字母及更长全拼混输`, () => {
+      for (const pinyin of ["xue", "xuan", "xun", "jue", "quan"]) {
+        const r = encodeSyllable(pinyin, scheme);
+        expect(r.ok).toBe(true);
+        if (r.ok) expect(r.accepted).not.toContain(pinyin);
+      }
     });
   }
 });
