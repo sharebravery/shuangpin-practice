@@ -49,10 +49,13 @@ export function PracticeInput({
 }: PracticeInputProps) {
   const [composing, setComposing] = useState(false);
 
-  const handle = (raw: string) => {
+  const handle = (raw: string, input: HTMLInputElement) => {
     const filtered = clean(raw).slice(0, expectedLength);
     onChange(filtered);
-    if (filtered.length >= expectedLength) onSubmit(filtered);
+    if (filtered.length >= expectedLength) {
+      onSubmit(filtered);
+      input.value = "";
+    }
   };
 
   return (
@@ -73,12 +76,13 @@ export function PracticeInput({
           onChange(e.target.value);
           return;
         }
-        handle(e.target.value);
+        handle(e.target.value, e.target);
       }}
       onCompositionStart={() => setComposing(true)}
       onCompositionEnd={(e) => {
         setComposing(false);
-        handle((e.target as HTMLInputElement).value);
+        const input = e.target as HTMLInputElement;
+        handle(input.value, input);
       }}
     />
   );

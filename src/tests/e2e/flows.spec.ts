@@ -20,6 +20,15 @@ async function typeAnswer(
   await page.keyboard.type(result.code);
 }
 
+async function dispatchNativeInput(page: Page, value: string) {
+  await page.locator("#practice-input").evaluate((node, nextValue) => {
+    const input = node as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    setter?.call(input, nextValue);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }, value);
+}
+
 test("切换方案后直接使用新方案继续练习", async ({ page }) => {
   await page.goto("/");
   await page.locator("#practice-input").waitFor({ state: "attached" });
@@ -53,6 +62,29 @@ test("显示设置和方案持久化，当前输入不恢复", async ({ page }) 
   await expect(page.getByRole("combobox", { name: "双拼方案" })).toContainText("自然码双拼");
   await expect(page.locator("[data-practice-pinyin]")).toBeHidden();
   await expect(page.locator("#practice-input")).toHaveValue("");
+});
+
+test("答错后清空真实输入框并可直接重输", async ({ page }) => {
+  await page.goto("/");
+  const input = page.locator("#practice-input");
+  await input.waitFor({ state: "attached" });
+
+  const pinyin = await readPinyin(page);
+  const result = encodeSyllable(pinyin, getScheme("xiaohe")!);
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+
+  const wrong = ["zz", "xx", "qq", "aa"].find(
+    (candidate) => !result.accepted.includes(candidate),
+  );
+  expect(wrong).toBeTruthy();
+  if (!wrong) return;
+
+  await dispatchNativeInput(page, wrong);
+  await expect(input).toHaveValue("");
+
+  await dispatchNativeInput(page, result.code);
+  await expect(page.getByText(/已练\s*1/)).toBeVisible({ timeout: 2_000 });
 });
 
 test.describe("移动端设置", () => {
