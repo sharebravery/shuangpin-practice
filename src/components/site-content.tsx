@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/accordion";
 import { SITE } from "@/lib/site";
 
-/** 首屏之后的静态说明与 SEO 内容，不干扰练习主舞台。 */
+/** 首屏之后的说明与 SEO 内容，不干扰练习主舞台。 */
 export function SiteContent() {
   const itemClassName = "border-border/55";
   const triggerClassName =
@@ -99,15 +99,15 @@ export function SiteContent() {
         </AccordionItem>
 
         <AccordionItem value="project" className={itemClassName}>
-          <AccordionTrigger className={triggerClassName}>项目说明与开源</AccordionTrigger>
+          <AccordionTrigger className={triggerClassName}>关于珠落</AccordionTrigger>
           <AccordionContent className={contentClassName}>
             <p>
-              {SITE.name} 是一个无后端、无登录的静态双拼练习工具，目标是打开即用。
-              项目源码开源在{" "}
+              {SITE.name} 希望把双拼练习做得简单、直接：打开页面即可开始，不需要额外设置。
+              项目源码已在{" "}
               <a href={SITE.github} target="_blank" rel="noreferrer">
                 GitHub
               </a>
-              ，欢迎反馈与改进。
+              开源，欢迎反馈与改进。
             </p>
           </AccordionContent>
         </AccordionItem>
