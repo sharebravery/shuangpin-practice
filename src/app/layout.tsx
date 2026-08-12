@@ -7,7 +7,6 @@ import "./keyboard-layout.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { StoreHydration } from "@/components/store-hydration";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/sonner";
 import { SITE } from "@/lib/site";
 
 const geistSans = Geist({
@@ -66,7 +65,6 @@ export default function RootLayout({
           <TooltipProvider>
             <StoreHydration />
             {children}
-            <Toaster position="bottom-center" />
           </TooltipProvider>
         </ThemeProvider>
         <Analytics />

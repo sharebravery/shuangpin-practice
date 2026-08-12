@@ -15,7 +15,6 @@
 | lucide-react | 图标 | ISC |
 | next-themes | 主题切换 | MIT |
 | zustand | 状态管理 | MIT |
-| sonner | 消息提示 | MIT |
 | tw-animate-css | 动画工具样式 | MIT |
 
 ## 开发依赖
