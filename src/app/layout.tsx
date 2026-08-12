@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import "./keyboard-layout.css";
 
@@ -19,7 +20,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const seoTitle = `${SITE.name} - 小鹤、微软、自然码、搜狗在线练习与键位图`;
+const seoTitle = `${SITE.name} - 小鹤、微软、自然码、搜狗在线双拼练习与键位图`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -68,6 +69,7 @@ export default function RootLayout({
             <Toaster position="bottom-center" />
           </TooltipProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

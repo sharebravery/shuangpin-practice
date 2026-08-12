@@ -93,8 +93,8 @@ export function SiteContent() {
               方案、模式与显示设置会保存在浏览器本地，刷新后保留；当前题目与输入不会恢复。
             </p>
             <p>
-              <strong>数据会上传吗？</strong>
-              不会。本工具无后端、无账号，所有练习数据仅保存在本地浏览器。
+              <strong>练习数据会上传吗？</strong>
+              不会。{SITE.name} 无账号、无后端，练习设置、累计统计和错题记录等练习数据仅保存在当前浏览器本地。
             </p>
           </AccordionContent>
         </AccordionItem>

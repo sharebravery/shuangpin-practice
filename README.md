@@ -1,8 +1,10 @@
-# 双拼练习 · Shuangpin Practice
+# 珠落 · Shuangpin Practice
 
-打开页面，直接开始练习。无登录、无后端、无分组打断。
+珠落是一个在线双拼练习与键位图工具。支持小鹤双拼、微软双拼、自然码、搜狗双拼，提供键位、单字、词组练习、错题复习和输入轨迹。
 
-A simple, modern Shuangpin (double-pinyin) practice tool — static, local-first and ready to use.
+一音两键，珠落成字。
+
+Zhuluo is a simple, modern Shuangpin Practice tool.
 
 🔗 **在线使用：<https://shuangpin.sharebravery.com>**  
 🏠 **许多言主页：<https://sharebravery.com>**
@@ -55,7 +57,7 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm exec playwright t
 
 ## 数据与隐私
 
-无账号、无后端。练习设置、累计统计和错题记录只保存在当前浏览器本地，可在设置中随时清除。
+无账号、无后端。练习设置、累计统计和错题记录等练习数据仅保存在当前浏览器本地，可在设置中随时清除。
 
 ## 作者
 
