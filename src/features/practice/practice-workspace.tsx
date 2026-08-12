@@ -20,6 +20,12 @@ function cleanInput(value: string): string {
   return value.toLowerCase().replace(/[^a-z;]/g, "");
 }
 
+function physicalKey(event: KeyboardEvent): string {
+  if (event.code === "Semicolon") return ";";
+  if (/^Key[A-Z]$/.test(event.code)) return event.code.slice(3).toLowerCase();
+  return cleanSingleKey(event.key);
+}
+
 function inOverlay(el: HTMLElement | null): boolean {
   return !!el?.closest(
     "[data-slot='select-trigger'],[data-slot='select-content'],[data-slot='popover-content'],[data-slot='drawer-popup'],[role='dialog'],[role='option']",
@@ -55,9 +61,9 @@ export function PracticeWorkspace() {
 
   const [input, setInput] = useState("");
   const inputRef = useRef("");
+  const [lastAttempt, setLastAttempt] = useState("");
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
-  const [typedKeys, setTypedKeys] = useState<string[]>([]);
   const [traceKeys, setTraceKeys] = useState<string[]>([]);
   const activeKeyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const traceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,7 +79,7 @@ export function PracticeWorkspace() {
   if (lastResetKey !== questionResetKey) {
     setLastResetKey(questionResetKey);
     setInput("");
-    setTypedKeys([]);
+    setLastAttempt("");
   }
 
   useEffect(() => {
@@ -120,34 +126,54 @@ export function PracticeWorkspace() {
     traceTimerRef.current = setTimeout(() => setTraceKeys([]), TRACE_HOLD_MS);
   }, []);
 
-  const processKey = useCallback(
-    (rawKey: string) => {
-      if (inputDisabled) return;
-      const key = cleanSingleKey(rawKey);
-      if (!key) return;
+  const clearInput = useCallback(() => {
+    inputRef.current = "";
+    setInput("");
+  }, []);
 
-      flashKey(key);
+  const submitAttempt = useCallback(
+    (attempt: string) => {
+      const submittedKeys = attempt.split("");
+      setLastAttempt(attempt);
+      submit(attempt);
+      holdSubmittedTrace(submittedKeys);
+      clearInput();
+    },
+    [clearInput, holdSubmittedTrace, submit],
+  );
+
+  const updateInput = useCallback(
+    (rawValue: string) => {
+      const nextInput = cleanInput(rawValue).slice(0, expectedLength);
+      const visualKeys = nextInput.split("");
 
       if (traceTimerRef.current) {
         clearTimeout(traceTimerRef.current);
         traceTimerRef.current = null;
       }
 
-      const newInput = (inputRef.current + key).slice(0, expectedLength);
-      const visualKeys = newInput.split("");
-      inputRef.current = newInput;
-      setInput(newInput);
-      setTypedKeys(visualKeys);
+      inputRef.current = nextInput;
+      setInput(nextInput);
       setTraceKeys(visualKeys);
 
-      if (newInput.length >= expectedLength) {
-        submit(newInput);
-        holdSubmittedTrace(visualKeys);
-        inputRef.current = "";
-        setInput("");
+      const lastKey = visualKeys.at(-1);
+      if (lastKey) flashKey(lastKey);
+
+      if (nextInput.length >= expectedLength) {
+        submitAttempt(nextInput);
       }
     },
-    [expectedLength, flashKey, holdSubmittedTrace, inputDisabled, submit],
+    [expectedLength, flashKey, submitAttempt],
+  );
+
+  const processKey = useCallback(
+    (rawKey: string) => {
+      if (inputDisabled) return;
+      const key = cleanSingleKey(rawKey);
+      if (!key) return;
+      updateInput(inputRef.current + key);
+    },
+    [inputDisabled, updateInput],
   );
 
   useEffect(() => {
@@ -157,17 +183,17 @@ export function PracticeWorkspace() {
 
       const { session, pause: doPause, resume: doResume } = usePracticeStore.getState();
       const curInput = inputRef.current;
+      const key = physicalKey(event);
 
       if (
-        !event.isComposing &&
         !event.metaKey &&
         !event.ctrlKey &&
         !event.altKey &&
-        /^[a-z;]$/i.test(event.key) &&
+        key &&
         canAnswer(session.status)
       ) {
         event.preventDefault();
-        processKey(event.key);
+        processKey(key);
         return;
       }
 
@@ -187,16 +213,14 @@ export function PracticeWorkspace() {
 
       if (event.key === "Escape" && canAnswer(session.status) && curInput !== "") {
         event.preventDefault();
-        inputRef.current = "";
-        setInput("");
-        setTypedKeys([]);
+        clearInput();
         setTraceKeys([]);
       }
     };
 
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [processKey]);
+  }, [clearInput, processKey]);
 
   useEffect(() => {
     const restore = () => {
@@ -228,19 +252,22 @@ export function PracticeWorkspace() {
       ? question.charCodes[phraseIndex] ?? ""
       : question?.answer ?? "";
   const answerChars = answerStr.split("");
-  const echoKeys = typedKeys;
+  const showingWrongAttempt = status === "wrong" && input === "" && lastAttempt !== "";
+  const echoKeys = input
+    ? input.split("")
+    : showingWrongAttempt
+      ? lastAttempt.split("")
+      : [];
 
   const correctKeys = status === "wrong" ? answerChars : [];
-  const errorKeys =
-    status === "wrong"
-      ? echoKeys.filter((key, index) => key !== answerChars[index])
-      : [];
-  const traceErrorIndexes =
-    status === "wrong"
-      ? echoKeys
-          .map((key, index) => (key !== answerChars[index] ? index : -1))
-          .filter((index) => index >= 0)
-      : [];
+  const errorKeys = showingWrongAttempt
+    ? echoKeys.filter((key, index) => key !== answerChars[index])
+    : [];
+  const traceErrorIndexes = showingWrongAttempt
+    ? echoKeys
+        .map((key, index) => (key !== answerChars[index] ? index : -1))
+        .filter((index) => index >= 0)
+    : [];
 
   const breakdown =
     status === "wrong" && question?.kind === "character"
@@ -283,7 +310,7 @@ export function PracticeWorkspace() {
           aria-atomic="true"
         >
           {echoKeys.map((key, index) => {
-            const isWrongKey = status === "wrong" && key !== answerChars[index];
+            const isWrongKey = showingWrongAttempt && key !== answerChars[index];
             return (
               <span
                 key={`${index}-${key}`}
@@ -317,25 +344,7 @@ export function PracticeWorkspace() {
           value={input}
           expectedLength={expectedLength}
           disabled={inputDisabled}
-          onChange={(value) => {
-            const cleaned = cleanInput(value).slice(0, expectedLength);
-            const visualKeys = cleaned.split("");
-            inputRef.current = cleaned;
-            setInput(cleaned);
-            setTypedKeys(visualKeys);
-            setTraceKeys(visualKeys);
-            const lastKey = cleaned.at(-1);
-            if (lastKey) flashKey(lastKey);
-          }}
-          onSubmit={(value) => {
-            const cleaned = cleanInput(value).slice(0, expectedLength);
-            const submittedKeys = cleaned.split("");
-            setTypedKeys(submittedKeys);
-            submit(cleaned);
-            holdSubmittedTrace(submittedKeys);
-            inputRef.current = "";
-            setInput("");
-          }}
+          onInput={updateInput}
         />
       </div>
 

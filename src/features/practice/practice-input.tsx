@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
 export const PRACTICE_INPUT_ID = "practice-input";
@@ -23,41 +22,24 @@ export function restorePracticeFocus() {
   });
 }
 
-function clean(s: string): string {
-  return s.toLowerCase().replace(/[^a-z;]/g, "");
-}
-
 interface PracticeInputProps {
   value: string;
   expectedLength: number;
   disabled: boolean;
-  onChange: (value: string) => void;
-  onSubmit: (value: string) => void;
+  onInput: (value: string) => void;
 }
 
 /**
- * Visually hidden input: keeps mobile keyboard, IME and accessibility semantics.
- * Desktop physical keydown is handled once at workspace/window level so focus
- * loss does not break practice or visual feedback.
+ * Visually hidden input used by mobile keyboards and accessibility.
+ * Submission is handled only by PracticeWorkspace so every input source shares
+ * the same linear buffer -> submit -> clear flow.
  */
 export function PracticeInput({
   value,
   expectedLength,
   disabled,
-  onChange,
-  onSubmit,
+  onInput,
 }: PracticeInputProps) {
-  const [composing, setComposing] = useState(false);
-
-  const handle = (raw: string, input: HTMLInputElement) => {
-    const filtered = clean(raw).slice(0, expectedLength);
-    onChange(filtered);
-    if (filtered.length >= expectedLength) {
-      onSubmit(filtered);
-      input.value = "";
-    }
-  };
-
   return (
     <Input
       id={PRACTICE_INPUT_ID}
@@ -71,19 +53,7 @@ export function PracticeInput({
       inputMode="text"
       aria-label="请输入双拼编码"
       className="sr-only"
-      onChange={(e) => {
-        if (composing) {
-          onChange(e.target.value);
-          return;
-        }
-        handle(e.target.value, e.target);
-      }}
-      onCompositionStart={() => setComposing(true)}
-      onCompositionEnd={(e) => {
-        setComposing(false);
-        const input = e.target as HTMLInputElement;
-        handle(input.value, input);
-      }}
+      onChange={(event) => onInput(event.target.value)}
     />
   );
 }
