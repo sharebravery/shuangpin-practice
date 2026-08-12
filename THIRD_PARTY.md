@@ -6,7 +6,7 @@
 
 | 依赖 | 用途 | 许可证 |
 | --- | --- | --- |
-| next | 应用框架（静态导出） | MIT |
+| next | 应用框架 | MIT |
 | react / react-dom | UI 运行时 | MIT |
 | @base-ui/react | shadcn/ui 底层 primitives | MIT |
 | class-variance-authority | 组件变体 | Apache-2.0 |
@@ -26,7 +26,7 @@
 | eslint / eslint-config-next | Lint 与组件约束 | MIT |
 | vitest / @vitejs/plugin-react / jsdom | 单元测试 | MIT |
 | @playwright/test | E2E 测试 | Apache-2.0 |
-| serve | 静态产物本地服务 | MIT |
+| serve | 构建产物本地预览 | MIT |
 | shadcn | 组件 CLI | MIT |
 
 ## 题库与方案
