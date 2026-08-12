@@ -74,7 +74,6 @@ export function SiteContent() {
               <li>达到答案长度会自动判断；答对直接进入下一题，答错显示正确编码与拆解后继续。</li>
               <li><code>Esc</code> 清空当前输入。</li>
               <li><code>Space</code> 在输入为空时暂停或继续。</li>
-              <li><code>Enter</code> 可在答错提示期间提前进入下一题。</li>
               <li>点击主练习区可重新聚焦输入。</li>
             </ul>
           </AccordionContent>

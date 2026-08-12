@@ -27,7 +27,7 @@ const noNativeControls = {
       {
         selector: "JSXOpeningElement[name.name='dialog']",
         message:
-          "业务代码禁止使用原生 <dialog>，请使用 @/components/ui/dialog 的 Dialog。",
+          "业务代码禁止使用原生 <dialog>，请使用合适的 shadcn/Base UI 对话框组件。",
       },
       {
         selector:
