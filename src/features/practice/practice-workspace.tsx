@@ -63,10 +63,6 @@ export function PracticeWorkspace() {
   const traceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    inputRef.current = input;
-  }, [input]);
-
-  useEffect(() => {
     if (hasHydrated && usePracticeStore.getState().session.status === "ready") {
       startSession();
     }
@@ -79,6 +75,10 @@ export function PracticeWorkspace() {
     setInput("");
     setTypedKeys([]);
   }
+
+  useEffect(() => {
+    inputRef.current = "";
+  }, [questionResetKey]);
 
   useEffect(() => {
     if (canAnswer(status)) {
