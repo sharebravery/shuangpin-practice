@@ -72,3 +72,20 @@ test("输入法 composing 状态不会阻断错误后的实体按键重输", asy
   await expect(page.getByText(/已练\s*1/)).toBeVisible({ timeout: 2_000 });
   await expect(input).toHaveValue("");
 });
+
+test("答对后提交键位高亮与轨迹一起短暂保留", async ({ page }) => {
+  await page.goto("/");
+  const input = page.locator("#practice-input");
+  await input.waitFor({ state: "attached" });
+
+  const answer = await currentCode(page);
+  await page.keyboard.type(answer);
+
+  await expect(page.getByText(/已练\s*1/)).toBeVisible({ timeout: 2_000 });
+  await expect(input).toHaveValue("");
+  await expect(page.locator(`button[data-keycap="${answer[0]}"]`)).toHaveAttribute(
+    "data-feedback",
+    "typed",
+  );
+  await expect(page.locator("[data-input-trace]")).toBeVisible();
+});

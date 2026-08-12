@@ -354,7 +354,7 @@ export function PracticeWorkspace() {
             layout={layout}
             showTrace={showTrace}
             activeKey={activeKey}
-            typedKeys={echoKeys}
+            typedKeys={echoKeys.length > 0 ? echoKeys : traceKeys}
             traceKeys={traceKeys}
             traceErrorIndexes={traceErrorIndexes}
             correctKeys={correctKeys}
