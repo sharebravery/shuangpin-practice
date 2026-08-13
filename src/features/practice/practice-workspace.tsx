@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { usePracticeStore } from "@/stores/practice-store";
+import { isAcceptedPrefix } from "@/lib/shuangpin/validate";
 import { PracticeToolbar } from "./practice-toolbar";
 import { PracticePrompt } from "./practice-prompt";
 import { PracticeInput, focusPracticeInput, PRACTICE_INPUT_ID } from "./practice-input";
@@ -103,6 +104,10 @@ export function PracticeWorkspace() {
   );
 
   const expectedLength = question?.kind === "mapping" ? 1 : 2;
+  const acceptedAnswers =
+    question?.kind === "phrase"
+      ? question.charAccepted[phraseIndex] ?? []
+      : question?.accepted ?? [];
   const inputDisabled = !canAnswer(status);
 
   const flashKey = useCallback((key: string) => {
@@ -159,11 +164,16 @@ export function PracticeWorkspace() {
       const lastKey = visualKeys.at(-1);
       if (lastKey) flashKey(lastKey);
 
+      if (nextInput && !isAcceptedPrefix(nextInput, acceptedAnswers)) {
+        submitAttempt(nextInput);
+        return;
+      }
+
       if (nextInput.length >= expectedLength) {
         submitAttempt(nextInput);
       }
     },
-    [expectedLength, flashKey, submitAttempt],
+    [acceptedAnswers, expectedLength, flashKey, submitAttempt],
   );
 
   const processKey = useCallback(
@@ -259,10 +269,13 @@ export function PracticeWorkspace() {
       ? lastAttempt.split("")
       : [];
 
-  const correctKeys = status === "wrong" ? answerChars : [];
   const errorKeys = showingWrongAttempt
     ? echoKeys.filter((key, index) => key !== answerChars[index])
     : [];
+  const correctKeys =
+    status === "wrong"
+      ? answerChars.filter((key) => !errorKeys.includes(key))
+      : [];
   const traceErrorIndexes = showingWrongAttempt
     ? echoKeys
         .map((key, index) => (key !== answerChars[index] ? index : -1))
