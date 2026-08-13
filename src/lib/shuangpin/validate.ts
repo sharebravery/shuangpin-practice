@@ -25,6 +25,12 @@ export function isAcceptedAnswer(input: string, accepted: string[]): boolean {
   return accepted.some((a) => normalizeAnswer(a) === norm);
 }
 
+/** 判断当前输入是否仍可能组成任意一个可接受答案。 */
+export function isAcceptedPrefix(input: string, accepted: string[]): boolean {
+  const norm = normalizeAnswer(input);
+  return accepted.some((a) => normalizeAnswer(a).startsWith(norm));
+}
+
 /**
  * 校验输入长度是否达到预期答案长度。
  * 用于「达到答案长度后自动判断」的交互。
