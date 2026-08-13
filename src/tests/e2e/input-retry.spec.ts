@@ -89,3 +89,29 @@ test("答对后提交键位高亮与轨迹一起短暂保留", async ({ page }) 
   );
   await expect(page.locator("[data-input-trace]")).toBeVisible();
 });
+
+test("第二键误按到第一位时立即判错并清空，不占用第二位", async ({ page }) => {
+  await page.goto("/");
+  const input = page.locator("#practice-input");
+  await input.waitFor({ state: "attached" });
+
+  const answer = await currentCode(page);
+  const misplacedSecond =
+    answer[1] !== answer[0] ? answer[1] : guaranteedWrongKey(answer);
+
+  await page.keyboard.press(misplacedSecond);
+
+  await expect(page.getByText(/^正确\s/)).toBeVisible();
+  await expect(input).toHaveValue("");
+  await expect(page.locator(`button[data-keycap="${misplacedSecond}"]`)).toHaveAttribute(
+    "data-feedback",
+    "error",
+  );
+
+  await page.keyboard.press(answer[0]);
+  await expect(input).toHaveValue(answer[0]);
+  await page.keyboard.press(answer[1]);
+
+  await expect(page.getByText(/已练\s*1/)).toBeVisible({ timeout: 2_000 });
+  await expect(input).toHaveValue("");
+});
