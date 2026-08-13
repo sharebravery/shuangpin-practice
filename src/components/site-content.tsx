@@ -71,7 +71,7 @@ export function SiteContent() {
           <AccordionContent className={contentClassName}>
             <ul className="ml-4 list-disc">
               <li>选择双拼方案与练习模式后，直接输入编码即可开始。</li>
-              <li>达到答案长度会自动判断；答对直接进入下一题，答错显示正确编码与拆解后继续。</li>
+              <li>输入会即时校验；答对直接进入下一题，答错显示正确编码与拆解后重新输入当前题。</li>
               <li><code>Esc</code> 清空当前输入。</li>
               <li><code>Space</code> 在输入为空时暂停或继续。</li>
               <li>点击主练习区可重新聚焦输入。</li>
